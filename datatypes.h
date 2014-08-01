@@ -22,6 +22,7 @@ typedef union {
 	uint64_t		 *u64;
 	double			 *frac;
 	char			 *str;
+	void			 *any;
 } meterdata;
 
 typedef struct {
@@ -30,7 +31,7 @@ typedef struct {
 
 	meterid_t		 id;
 	time_t			 lastmodified;
-	uint32_t		 count;
+	int				 count;
 	meterdata		 d;
 } meter;
 
@@ -75,6 +76,6 @@ meter *host_set_meter_str  (host *h, meter_id id, const char *str);
 
 uint32_t	meter_get_uint (meter *, unsigned int pos);
 double		meter_get_frac (meter *, unsigned int pos);
-const char *meter_get_str (meter *, unsigned int pos);
+const char *meter_get_str (meter *);
 
 #endif

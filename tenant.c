@@ -28,7 +28,7 @@ tenant *tenant_find (uuid_t tenantid) {
 			t = t->next;
 		}
 		else {
-			nt = tenant_alloc;
+			nt = tenant_alloc();
 			nt->uuid = tenantid;
 			t->next = nt;
 			nt->prev = t;
