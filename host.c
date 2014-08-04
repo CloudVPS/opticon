@@ -121,4 +121,3 @@ const char *meter_get_str (meter *m) {
 	return m->d.str;
 }
 
-double
