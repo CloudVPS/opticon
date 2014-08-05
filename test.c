@@ -1,6 +1,7 @@
 #include <datatypes.h>
 #include <util.h>
 #include <assert.h>
+#include <stdio.h>
 
 int main (int argc, const char *argv[]) {
 	const char *stenantid = "001b71534f4b4f1cb281cc06b134f98f";
@@ -11,6 +12,7 @@ int main (int argc, const char *argv[]) {
 	
 	tenant_create (tenantid, "test");
 	tenant *T = tenant_find (tenantid);
+	printf ("%llu\n", tenantid.msb);
 	assert (T->uuid.lsb == 0x001b71534f4b4f1c);
 	assert (T->uuid.msb == 0xb281cc06b134f98f);
 	host *H = host_find (tenantid, hostid);

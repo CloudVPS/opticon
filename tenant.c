@@ -1,5 +1,6 @@
 #include <datatypes.h>
 #include <util.h>
+#include <string.h>
 
 tenantlist TENANTS;
 
@@ -39,4 +40,11 @@ tenant *tenant_find (uuid_t tenantid) {
 	}
 	
 	return NULL;
+}
+
+tenant *tenant_create (uuid_t tenantid, const char *key) {
+	tenant *t = tenant_find (tenantid);
+	if (t->key) free (t->key);
+	t->key = strdup (key);
+	return t;
 }
