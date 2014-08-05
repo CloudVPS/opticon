@@ -59,6 +59,16 @@ uint64_t ASCIITABLE[] = {
 }
 
 meterid_t makeid (const char *label, metertype_t type, int pos) {
-	meterid_t res = 0;
-	
+	meterid_t res = (meterid_t) type;
+	int bshift = 56;
+	const char *crsr = label;
+	char c;
+	while ((c = *crsr) && bshift > 1) {
+		if (c>0) {
+			res |= (ASCIITABLE[c] << bshift);
+			bshift -= 5;
+		}
+		crsr++;
+	}
+	return res;
 }
