@@ -72,3 +72,21 @@ meterid_t makeid (const char *label, metertype_t type, int pos) {
 	}
 	return res;
 }
+
+void id2str (meterid_t id, char *into) {
+	char *out = into;
+	char *end = into;
+	char t;
+	uint64_t tmp;
+	int bshift = 56;
+	*out = 0;
+	while (bshift > 1) {
+		tmp = ((id & MMASK_NAME) >> bshift) & 0x1f;
+		t = IDTABLE[tmp];
+		*out = t;
+		if (t != ' ') end = out;
+		out++;
+		bshift -= 5;
+	}
+	*(end+1) = 0;
+}

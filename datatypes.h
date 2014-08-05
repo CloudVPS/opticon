@@ -18,7 +18,6 @@ typedef uint32_t		status_t;
 #define MMASK_COUNT		0x0000000000000007
 #define MMASK_NAME		0x3ffffffffffffff8
 
-meterid_t 	makeid (const char *label, metertype_t type, int pos);
 void	  	id2label (meterid_t id, char *into);
 metertype_t	id2type (meterid_t id);
 
