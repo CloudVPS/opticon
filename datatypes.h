@@ -74,7 +74,7 @@ host *host_find (uuid_t tenantid, uuid_t hostid);
 meter *host_get_meter (host *h, meterid_t id);
 meter *host_set_meter_uint (host *h, meterid_t id, 
 							unsigned int count,
-							unsigned int *data);
+							uint64_t *data);
 meter *host_set_meter_frac (host *h, meterid_t id,
 							unsigned int count,
 							double *data);

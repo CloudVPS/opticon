@@ -1,4 +1,5 @@
 #include <datatypes.h>
+#include <util.h>
 
 tenantlist TENANTS;
 
@@ -23,7 +24,7 @@ tenant *tenant_find (uuid_t tenantid) {
 		return nt;
 	}
 	while (t) {
-		if (t->uuid == tenantid) return t;
+		if (uuidcmp (t->uuid, tenantid)) return t;
 		if (t->next) {
 			t = t->next;
 		}
@@ -36,4 +37,6 @@ tenant *tenant_find (uuid_t tenantid) {
 			return nt;
 		}
 	}
+	
+	return NULL;
 }
