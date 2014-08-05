@@ -1,6 +1,10 @@
 #include <datatypes.h>
 #include <util.h>
 
+/** Allocate and initialize a host structure.
+  * \return Pointer to the initialized struct. Caller is responsible for
+  *         freeing allocated memory.
+  */
 host *host_alloc (void) {
 	host *res = (host *) malloc (sizeof (host));
 	res->prev = NULL;
@@ -11,6 +15,10 @@ host *host_alloc (void) {
 	return res;
 }
 
+/** Find or create a host structure for a specified tenant. 
+  * \param tenantid The UUID for the tenant.
+  * \param hostid The UUID for the host.
+  */
 host *host_find (uuid_t tenantid, uuid_t hostid) {
 	host *h = NULL;
 	host *nh = NULL;
@@ -41,6 +49,7 @@ host *host_find (uuid_t tenantid, uuid_t hostid) {
 	return NULL;
 }
 
+/** Allocate and initialize a meter structure. */
 meter *meter_alloc (void) {
 	meter *res = (meter *) malloc (sizeof (meter));
 	res->next = NULL;
@@ -50,42 +59,12 @@ meter *meter_alloc (void) {
 	return res;
 }
 
-void *meter_allocarray (meter *m, int c) {
-	int rc = c;
-	uint64_t tp = m->id & MMASK_TYPE;
-	if (rc==0) rc=1;
-	size_t elmsz = 1;
-	switch (tp) {
-		case MTYPE_INT:
-			elmsz = sizeof (uint64_t);
-			break;
-		
-		case MTYPE_FRAC:
-			elmsz = sizeof (double);
-			break;
-		
-		default:
-			elmsz = 256;
-			break;
-	}
-	if (m->d.any == NULL) {
-		return (void *) malloc (elmsz);
-	}
-	return (void *) realloc (m->d.any, elmsz);
-}
-
-void meter_setsize (meter *m, int c) {
-	if (c == m->count) return;
-	if (c == -1) {
-		if (m->d.any != NULL) free (m->d.any);
-		m->count = -1;
-	}
-	else if (c >= 0) {
-		m->count = c;
-		meter_allocarray (m, c);
-	}
-}
-
+/** Get (or create) a specific meter for a host.
+  * \param host The host structure.
+  * \param id The meterid (label and type).
+  * \return Pointer to the meter structure, which will be
+  *         linked into the host's meterlist.
+  */
 meter *host_get_meter (host *h, meterid_t id) {
 	meterid_t rid = (id & (MMASK_TYPE | MMASK_NAME));
 	meter *m = h->first;
@@ -110,23 +89,27 @@ meter *host_get_meter (host *h, meterid_t id) {
 	return NULL;
 }
 
+/** Get a specific indexed integer value out of a meter */
 uint32_t meter_get_uint (meter *m, unsigned int pos) {
 	if (pos > m->count) return 0;
 	if ((m->id & MMASK_TYPE) != MTYPE_INT) return 0;
 	return m->d.u64[pos];
 }
 
+/** Get a specific indexed fractional value out of a meter */
 double meter_get_frac (meter *m, unsigned int pos) {
 	if (pos > m->count) return 0.0;
 	if ((m->id & MMASK_TYPE) != MTYPE_INT) return 0.0;
 	return m->d.frac[pos];
 }
 
+/** Get a string value out of a meter */
 const char *meter_get_str (meter *m) {
 	if ((m->id & MMASK_TYPE) != MTYPE_STR) return "";
 	return m->d.str;
 }
 
+/** Fill up a meter with integer values */
 meter *host_set_meter_uint (host *h, meterid_t id,
 							unsigned int cnt,
 							uint64_t *data) {

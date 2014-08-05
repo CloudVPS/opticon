@@ -1,10 +1,19 @@
 #include <datatypes.h>
 #include <util.h>
 
+/** Compare two UUIDs.
+  * \param first First UUID.
+  * \param second Second UUID.
+  * \return 0 if they differ, 1 if they're the same.
+  */
 int uuidcmp (uuid_t first, uuid_t second) {
 	return (first.msb == second.msb && first.lsb == second.lsb);
 }
 
+/** Turn a UUID string into a UUID value.
+  * \param str The input string
+  * \return The UUID value.
+  */
 uuid_t mkuuid (const char *str) {
 	uuid_t res = {0,0};
 	const char *crsr = str;
@@ -58,6 +67,11 @@ uint64_t ASCIITABLE[] = {
 	16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 0, 0, 0, 0, 0
 };
 
+/** Construct a meterid.
+  * \param label The meter's label (max 11 characters).
+  * \param type The meter's type (MTYPE_INT, etc).
+  * \return A meterid_t value.
+  */
 meterid_t makeid (const char *label, metertype_t type, int pos) {
 	meterid_t res = (meterid_t) type;
 	int bshift = 56;
@@ -73,6 +87,10 @@ meterid_t makeid (const char *label, metertype_t type, int pos) {
 	return res;
 }
 
+/** Extract an ASCII name from a meterid_t value.
+  * \param id The meterid to parse.
+  * \param into String to copy the ASCII data into (minimum size of 12).
+  */
 void id2str (meterid_t id, char *into) {
 	char *out = into;
 	char *end = into;

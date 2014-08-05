@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+/* Flag types and masks */
 typedef uint64_t		meterid_t;
 typedef uint64_t		metertype_t;
 typedef uint32_t		status_t;
@@ -21,8 +22,10 @@ typedef uint32_t		status_t;
 void	  	id2label (meterid_t id, char *into);
 metertype_t	id2type (meterid_t id);
 
+/* UUIDs are normally passed by value */
 typedef struct { uint64_t msb; uint64_t lsb; } uuid_t;
 
+/* Union for within a meter structure */
 typedef union {
 	uint64_t		 *u64;
 	double			 *frac;
@@ -30,6 +33,7 @@ typedef union {
 	void			 *any;
 } meterdata;
 
+/* Structure representing a specific meter bound to a host */
 typedef struct meter_s {
 	struct meter_s	*next;
 	struct meter_s	*prev;
@@ -40,6 +44,7 @@ typedef struct meter_s {
 	meterdata		 d;
 } meter;
 
+/* Structure representing a monitored host */
 typedef struct host_s {
 	struct host_s	*next;
 	struct host_s	*prev;
@@ -49,6 +54,7 @@ typedef struct host_s {
 	meter			*last;
 } host;	
 
+/* Structure representing a keystone tenant */
 typedef struct tenant_s {
 	struct tenant_s	*next;
 	struct tenant_s	*prev;
@@ -58,6 +64,7 @@ typedef struct tenant_s {
 	char			*key;
 } tenant;
 
+/* List of tenants */
 typedef struct {
 	tenant			*first;
 	tenant			*last;
@@ -65,6 +72,7 @@ typedef struct {
 
 extern tenantlist TENANTS;
 
+/* Creation and lookup of all relevant structures */
 tenant *tenant_find (uuid_t tenantid);
 tenant *tenant_create (uuid_t tenantid, const char *key);
 
