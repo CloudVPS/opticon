@@ -1,4 +1,5 @@
 #include <datatypes.h>
+#include <util.h>
 
 host *host_alloc (void) {
 	host *res = (host *) malloc (sizeof (host));
@@ -18,14 +19,14 @@ host *host_find (uuid_t tenantid, uuid_t hostid) {
 	
 	h = t->first;
 	if (! h) {
-		h = host_alloc;
+		h = host_alloc();
 		h->uuid = hostid;
 		t->first = t->last = h;
 		return h;
 	}
 	
 	while (h) {
-		if (h->uuid == hostid) return h;
+		if (uuidcmp (h->uuid, hostid)) return h;
 		if (h->next) h = h->next;
 		else {
 			nh = host_alloc();
@@ -36,6 +37,8 @@ host *host_find (uuid_t tenantid, uuid_t hostid) {
 			return nh;
 		}
 	}
+	
+	return NULL;
 }
 
 meter *meter_alloc (void) {
@@ -44,11 +47,12 @@ meter *meter_alloc (void) {
 	res->prev = NULL;
 	res->count = -1;
 	res->d.u64 = NULL;
+	return res;
 }
 
 void *meter_allocarray (meter *m, int c) {
 	int rc = c;
-	int tp = m->id & MMASK_TYPE;
+	uint64_t tp = m->id & MMASK_TYPE;
 	if (rc==0) rc=1;
 	size_t elmsz = 1;
 	switch (tp) {
@@ -85,7 +89,7 @@ void meter_setsize (meter *m, int c) {
 meter *host_get_meter (host *h, meterid_t id) {
 	meterid_t rid = (id & (MMASK_TYPE | MMASK_NAME));
 	meter *m = h->first;
-	neter *nm = NULL;
+	meter *nm = NULL;
 	if (! m) {
 		nm = meter_alloc();
 		h->first = h->last = nm;
@@ -102,6 +106,8 @@ meter *host_get_meter (host *h, meterid_t id) {
 			return nm;
 		}
 	}
+	
+	return NULL;
 }
 
 uint32_t meter_get_uint (meter *m, unsigned int pos) {
@@ -117,7 +123,7 @@ double meter_get_frac (meter *m, unsigned int pos) {
 }
 
 const char *meter_get_str (meter *m) {
-	if ((m->id & MMASK_TYPE) !+ MTYPE_STR) return "";
+	if ((m->id & MMASK_TYPE) != MTYPE_STR) return "";
 	return m->d.str;
 }
 

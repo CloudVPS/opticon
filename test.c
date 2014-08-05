@@ -8,8 +8,11 @@ int main (int argc, const char *argv[]) {
 	
 	tenant_create (tenantid, "test");
 	tenant *T = tenant_find (tenantid);
+	assert (T->uuid.lsb == 0x001b71534f4b4f1c);
+	assert (T->uuid.msb == 0xb281cc06b134f98f);
 	host *H = host_find (tenantid, hostid);
-	meterid_t meterid = makeid ("net.in",MTYPE_INT,0);
+	meterid_t meterid = makeid ("net.i.kbps",MTYPE_INT,0);
 	meter *M = host_set_meter_uint (host, meterid, 0, [100ULL]);
-	
+	meterid = makeid ("net.i.pps",MTYPE_INT,0);
+	M = host_set_meter_uint (host, meterid, 0, [100ULL]);
 }
