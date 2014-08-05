@@ -4,6 +4,7 @@
 #include <stdint.h>
 #include <time.h>
 #include <stdlib.h>
+#include <string.h>
 
 typedef uint64_t		meterid_t;
 typedef uint64_t		metertype_t;

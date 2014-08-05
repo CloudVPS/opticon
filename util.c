@@ -37,3 +37,28 @@ uuid_t mkuuid (const char *str) {
 	return res;
 }
 
+/* 5 bit character mapping for ids */
+const char *IDTABLE = " abcdefghijklmnopqrstuvwxyz.-_/@";
+uint64_t ASCIITABLE[] = {
+	// 0x00
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	// 0x10
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	// 0x20
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 28, 27, 30,
+	// 0x30
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	// 0x40
+	31, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15,
+	// 0x50
+	16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 0, 0, 0, 0, 29,
+	// 0x60
+	0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15,
+	// 0x70
+	16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 0, 0, 0, 0, 0
+}
+
+meterid_t makeid (const char *label, metertype_t type, int pos) {
+	meterid_t res = 0;
+	
+}

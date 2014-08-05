@@ -127,3 +127,20 @@ const char *meter_get_str (meter *m) {
 	return m->d.str;
 }
 
+meter *host_set_meter_uint (host *h, meterid_t id,
+							unsigned int cnt,
+							uint64_t *data) {
+	
+	unsigned int count = cnt ? cnt : 1;
+	unsigned int i;
+	meter *m = host_get_meter (h, id);
+	
+	if (m->d.any != NULL) {
+		free (m->d.any);
+		m->d.any = NULL;
+	}
+	
+	m->d.u64 = (uint64_t *) malloc (count * sizeof (uint64_t));
+	memcpy (m->d.u64, data, count * sizeof (uint64_t));
+	return m;
+}
