@@ -19,4 +19,5 @@ int main (int argc, const char *argv[]) {
 	meter *M = host_set_meter_uint (H, meterid, 0, meterdata);
 	meterid = makeid ("net.i.pps",MTYPE_INT,0);
 	M = host_set_meter_uint (H, meterid, 0, meterdata);
+	assert (meter_get_uint (M, 0) == 100ULL);
 }
