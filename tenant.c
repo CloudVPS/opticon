@@ -10,6 +10,7 @@ void tenant_init (void) {
 
 tenant *tenant_alloc (void) {
 	tenant *res = (tenant *) malloc (sizeof(tenant));
+	res->first = res->last = NULL;
 	res->prev = res->next = NULL;
 	res->key = NULL;
 	return res;
