@@ -15,7 +15,7 @@ tenant *tenant_alloc (void) {
 	return res;
 }
 
-tenant *tenant_find (uuid_t tenantid) {
+tenant *tenant_find (uuid tenantid) {
 	tenant *nt;
 	tenant *t = TENANTS.first;
 	if (! t) {
@@ -42,7 +42,7 @@ tenant *tenant_find (uuid_t tenantid) {
 	return NULL;
 }
 
-tenant *tenant_create (uuid_t tenantid, const char *key) {
+tenant *tenant_create (uuid tenantid, const char *key) {
 	tenant *t = tenant_find (tenantid);
 	if (t->key) free (t->key);
 	t->key = strdup (key);

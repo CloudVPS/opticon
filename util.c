@@ -1,12 +1,14 @@
 #include <datatypes.h>
 #include <util.h>
+#include <stdio.h>
+#include <unistd.h>
 
 /** Compare two UUIDs.
   * \param first First UUID.
   * \param second Second UUID.
   * \return 0 if they differ, 1 if they're the same.
   */
-int uuidcmp (uuid_t first, uuid_t second) {
+int uuidcmp (uuid first, uuid second) {
 	return (first.msb == second.msb && first.lsb == second.lsb);
 }
 
@@ -14,8 +16,8 @@ int uuidcmp (uuid_t first, uuid_t second) {
   * \param str The input string
   * \return The UUID value.
   */
-uuid_t mkuuid (const char *str) {
-	uuid_t res = {0,0};
+uuid mkuuid (const char *str) {
+	uuid res = {0,0};
 	const char *crsr = str;
 	char c;
 	int out = 0;
@@ -107,4 +109,53 @@ void id2str (meterid_t id, char *into) {
 		bshift -= 5;
 	}
 	*(end+1) = 0;
+}
+
+void dump_value (metertype_t type, meter *m, int pos, int outfd) {
+	char buf[1024];
+	switch (type) {
+		case MTYPE_INT:
+			sprintf (buf, "%llu", m->d.u64[pos]);
+			break;
+		
+		case MTYPE_FRAC:
+			sprintf (buf, "%f", m->d.frac[pos]);
+			break;
+		
+		case MTYPE_STR:
+			sprintf (buf, "\"%s\"", m->d.str);
+			break;
+			
+		default:
+			buf[0] = '\0';
+			break;
+	}
+	write (outfd, buf, strlen (buf));
+}
+
+void dump_host_json (host *h, int outfd) {
+	char buffer[256];
+	meter *m = h->first;
+	int i;
+	int first=1;
+	while (m) {
+		if (first) first=0;
+		else write (outfd, ",\n", 2);
+		write (outfd, "\"", 1);
+		id2str (m->id, buffer);
+		write (outfd, buffer, strlen(buffer));
+		write (outfd, "\":", 2);
+		if (m->count > 0) {
+			write (outfd, "[", 1);
+		}
+		for (i=0; (i==0)||(i<m->count); ++i) {
+			dump_value (m->id & MMASK_TYPE, m, i, outfd);
+			if ((i+1)<m->count) write (outfd, ",",1);
+		}
+		if (m->count > 0) {
+			write (outfd, "]", 1);
+		}
+		m=m->next;
+	}
+	write (outfd,"\n",1);
 }

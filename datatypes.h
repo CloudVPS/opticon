@@ -23,7 +23,7 @@ void	  	id2label (meterid_t id, char *into);
 metertype_t	id2type (meterid_t id);
 
 /* UUIDs are normally passed by value */
-typedef struct { uint64_t msb; uint64_t lsb; } uuid_t;
+typedef struct { uint64_t msb; uint64_t lsb; } uuid;
 
 /* Union for within a meter structure */
 typedef union {
@@ -48,7 +48,7 @@ typedef struct meter_s {
 typedef struct host_s {
 	struct host_s	*next;
 	struct host_s	*prev;
-	uuid_t			 uuid;
+	uuid			 uuid;
 	status_t		 status;
 	meter			*first;
 	meter			*last;
@@ -60,7 +60,7 @@ typedef struct tenant_s {
 	struct tenant_s	*prev;
 	host			*first;
 	host			*last;
-	uuid_t			 uuid;
+	uuid			 uuid;
 	char			*key;
 } tenant;
 
@@ -73,11 +73,11 @@ typedef struct {
 extern tenantlist TENANTS;
 
 /* Creation and lookup of all relevant structures */
-tenant *tenant_find (uuid_t tenantid);
-tenant *tenant_create (uuid_t tenantid, const char *key);
+tenant *tenant_find (uuid tenantid);
+tenant *tenant_create (uuid tenantid, const char *key);
 
 host *host_alloc (void);
-host *host_find (uuid_t tenantid, uuid_t hostid);
+host *host_find (uuid tenantid, uuid hostid);
 
 meter *host_get_meter (host *h, meterid_t id);
 meter *host_set_meter_uint (host *h, meterid_t id, 

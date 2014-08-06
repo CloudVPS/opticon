@@ -3,9 +3,10 @@
 
 #include <datatypes.h>
 
-int uuidcmp (uuid_t first, uuid_t second);
-uuid_t mkuuid (const char *str);
+int uuidcmp (uuid first, uuid second);
+uuid mkuuid (const char *str);
 void id2str (meterid_t id, char *into);
 meterid_t makeid (const char *label, metertype_t type, int pos);
+void dump_host_json (host *, int);
 
 #endif

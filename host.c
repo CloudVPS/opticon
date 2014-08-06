@@ -19,7 +19,7 @@ host *host_alloc (void) {
   * \param tenantid The UUID for the tenant.
   * \param hostid The UUID for the host.
   */
-host *host_find (uuid_t tenantid, uuid_t hostid) {
+host *host_find (uuid tenantid, uuid hostid) {
 	host *h = NULL;
 	host *nh = NULL;
 	tenant *t = tenant_find (tenantid);
@@ -72,6 +72,7 @@ meter *host_get_meter (host *h, meterid_t id) {
 	if (! m) {
 		nm = meter_alloc();
 		h->first = h->last = nm;
+		nm->id = rid;
 		return nm;
 	}
 	while (m) {
@@ -82,6 +83,7 @@ meter *host_get_meter (host *h, meterid_t id) {
 			m->next = nm;
 			nm->prev = m;
 			h->last = nm;
+			nm->id = rid;
 			return nm;
 		}
 	}
@@ -117,6 +119,7 @@ meter *host_set_meter_uint (host *h, meterid_t id,
 	unsigned int count = cnt ? cnt : 1;
 	unsigned int i;
 	meter *m = host_get_meter (h, id);
+	m->count = cnt;
 	
 	if (m->d.any != NULL) {
 		free (m->d.any);
