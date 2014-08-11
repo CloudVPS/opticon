@@ -24,15 +24,16 @@ typedef struct sessionlist_s {
 	session				*last;
 } sessionlist;
 
-extern sessionlist SESSIONS:
+extern sessionlist SESSIONS[256];
 
 void		 sessionlist_init (void);
 session		*session_alloc (void);
 void		 session_link (session *);
 
-void		 register_session (uuid tenantid, uuid hostid, 
+int			 session_register (uuid tenantid, uuid hostid, 
 							   uint32_t addrpart, uint32_t sess_id,
 					 		   aeskey sess_key);
-aeskey		 get_session_key (uint32_t addr, uint32_t sess_id);
+					 		   
+session		*session_find (uint32_t addr, uint32_t sess_id);
 
 #endif
