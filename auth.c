@@ -2,12 +2,14 @@
 
 // http://www.literatecode.com/get/aes256.c
 
+/** Initialize session-related global storage. */
 void sessionlist_init (void) {
 	for (int i=0; i<256; ++i) {
 		SESSIONS[i].first = SESSIONS[i].last = NULL;
 	}
 }
 
+/** Allocate and initialize session object. */
 session *session_alloc (void) {
 	session *res = (session *) malloc (sizeof (session));
 	res->next = res->prev = NULL;
@@ -18,6 +20,7 @@ session *session_alloc (void) {
 	return res;
 }
 
+/** Link a new session into the proper bucket. */
 void session_link (session *s) {
 	uint32_t sid = s->sessid ^ s->addr;
 	uint8_t bucket = (sid >> 24) |
@@ -35,6 +38,8 @@ void session_link (session *s) {
 	}
 }
 
+/** Register a new session (or update an existing session to
+  * stop it from expiring. */
 int session_register (uuid tenantid, uuid hostid,
 					  uint32_t addrpart, uint32_t sess_id.
 					  aeskey sess_key) {
