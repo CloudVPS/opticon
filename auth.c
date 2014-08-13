@@ -1,4 +1,13 @@
+#include <string.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <stdio.h>
+
+#include <util.h>
+#include <datatypes.h>
 #include <auth.h>
+
+sessionlist SESSIONS[256];
 
 // http://www.literatecode.com/get/aes256.c
 
@@ -14,7 +23,7 @@ session *session_alloc (void) {
 	session *res = (session *) malloc (sizeof (session));
 	res->next = res->prev = NULL;
 	res->addr = res->sessid = 0;
-	res->key.data = {0,0,0,0,0,0,0,0};
+	bzero (res->key.data, 8);
 	res->lastcycle = time (NULL);
 	res->host = NULL;
 	return res;
@@ -40,20 +49,21 @@ void session_link (session *s) {
 
 /** Register a new session (or update an existing session to
   * stop it from expiring. */
-int session_register (uuid tenantid, uuid hostid,
-					  uint32_t addrpart, uint32_t sess_id.
-					  aeskey sess_key) {
+session *session_register (uuid tenantid, uuid hostid,
+						   uint32_t addrpart, uint32_t sess_id,
+						   aeskey sess_key) {
 	host *h = host_find (tenantid, hostid);
 	session *s;
-	if (! h) return 0;
+	if (! h) return NULL;
 
-	if (s = session_find (hostid, addrpart)) {
+	if ((s = session_find (addrpart, sess_id))) {
 		s->lastcycle = time (NULL);
-		return 1;
+		s->key = sess_key;
+		return s;
 	}
 		
 	s = session_alloc();
-	if (! s) return 0;
+	if (! s) return NULL;
 	
 	s->tenantid = tenantid;
 	s->hostid = hostid;
@@ -62,11 +72,11 @@ int session_register (uuid tenantid, uuid hostid,
 	s->key = sess_key;
 	
 	session_link (s);
-	return 1;
+	return s;
 }
 
 session *session_find (uint32_t addrpart, uint32_t sess_id) {
-	uint32_t sid = s->sessid ^ s->addr;
+	uint32_t sid = sess_id ^ addrpart;
 	uint8_t bucket = (sid >> 24) |
 					 ((sid & 0x00ff0000) >> 16) |
 					 ((sid & 0x0000ff00) >> 8) |
@@ -80,10 +90,11 @@ session *session_find (uint32_t addrpart, uint32_t sess_id) {
 }
 
 void session_expire (time_t cutoff) {
-	session *s;
-	for (uint8_t i=0; i<=255; ++i) {
+	session *s, *ns;
+	for (int i=0; i<=255; ++i) {
 		s = SESSIONS[i].first;
 		while (s) {
+			ns = s->next;
 			if (s->lastcycle < cutoff) {
 				if (s->prev) {
 					if (s->next) {
@@ -107,7 +118,31 @@ void session_expire (time_t cutoff) {
 				
 				free (s);
 			}
-			s = s->next;
+			s = ns;
 		}
 	}
+}
+
+void session_print (session *s, int into) {
+	char buf[256];
+	char stenantid[48], shostid[48];
+	uuid2str (s->tenantid, stenantid);
+	uuid2str (s->hostid, shostid);
+	
+	sprintf (buf, "Session %08x\n"
+				  "Tenant %s\n"
+				  "Host %s\n",
+				  s->sessid,
+				  stenantid,
+				  shostid);
+	
+	write (into, buf, strlen (buf));
+}
+
+aeskey aeskey_create (void) {
+	aeskey res;
+	int fdevr = open ("/dev/random",O_RDONLY);
+	read (fdevr, res.data, 8);
+	close (fdevr);
+	return res;
 }

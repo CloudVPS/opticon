@@ -111,6 +111,16 @@ void id2str (meterid_t id, char *into) {
 	*(end+1) = 0;
 }
 
+void uuid2str (uuid u, char *into) {
+	sprintf (into, "%08llx-%04llx-%04llx-"
+				   "%04llx-%012llx",
+				   ((u.lsb & 0xffffffff00000000) >> 32),
+				   ((u.lsb & 0x00000000ffff0000) >> 16),
+				   ((u.lsb & 0x000000000000ffff)),
+				   ((u.msb & 0xffff000000000000) >> 48),
+				   ((u.msb & 0x0000ffffffffffff)));
+}
+
 void dump_value (metertype_t type, meter *m, int pos, int outfd) {
 	char buf[1024];
 	switch (type) {

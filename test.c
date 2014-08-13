@@ -2,6 +2,9 @@
 #include <util.h>
 #include <assert.h>
 #include <stdio.h>
+#include <auth.h>
+
+#define FD_STDOUT 1
 
 int main (int argc, const char *argv[]) {
 	const char *stenantid = "001b71534f4b4f1cb281cc06b134f98f";
@@ -11,6 +14,8 @@ int main (int argc, const char *argv[]) {
 	uuid hostid = mkuuid (shostid);
 	uint64_t kbpsdata[1] = {100ULL};
 	uint64_t ppsdata[2] = {150ULL,100ULL};
+	
+	sessionlist_init();
 	
 	tenant_create (tenantid, "test");
 	tenant *T = tenant_find (tenantid);
@@ -28,5 +33,17 @@ int main (int argc, const char *argv[]) {
 	meterid = makeid ("net.out.pps",MTYPE_INT,0);
 	M = host_set_meter_uint (H, meterid, 2, ppsdata);
 	
-	dump_host_json (H, 1);
+	aeskey key = aeskey_create();
+	session *S = session_register (tenantid, hostid,
+								   0x0a000001, 0x31337666,
+								   key);
+	
+	S = session_find (0x0a000001, 0x31337666);
+	assert (S != NULL);
+	session_print (S, FD_STDOUT);
+	session_expire (time(NULL)+1);
+	S = session_find (0x0a000001, 0x31337666);
+	assert (S == NULL);
+	
+	dump_host_json (H, FD_STDOUT);
 }

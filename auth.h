@@ -2,6 +2,7 @@
 #define _AUTH_H 1
 
 #include <datatypes.h>
+#include <time.h>
 
 typedef struct aeskey_s {
 	uint8_t data[8];
@@ -26,14 +27,20 @@ typedef struct sessionlist_s {
 
 extern sessionlist SESSIONS[256];
 
+aeskey		 aeskey_create (void);
+
 void		 sessionlist_init (void);
 session		*session_alloc (void);
 void		 session_link (session *);
 
-int			 session_register (uuid tenantid, uuid hostid, 
+session		*session_register (uuid tenantid, uuid hostid, 
 							   uint32_t addrpart, uint32_t sess_id,
 					 		   aeskey sess_key);
 					 		   
 session		*session_find (uint32_t addr, uint32_t sess_id);
+void		 session_expire (time_t);
 
 #endif
+
+
+//== 
