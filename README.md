@@ -15,6 +15,7 @@ pollers tend to fail.
 
 Opticon consists of three components. Monitored servers run
 *opticon-agent*. On the other side, *opticon-collector* and
-*opticon-api* handle the interaction.
+*opticon-api* handle the collection of data and interaction with users
+respectively.
 
 
