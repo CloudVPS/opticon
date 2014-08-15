@@ -111,6 +111,11 @@ void id2str (meterid_t id, char *into) {
 	*(end+1) = 0;
 }
 
+/** Write out a UUID to a string in ASCII 
+  * \param u The UUID
+  * \param into String buffer for the result, should fit 36 characters plus
+  *             nul-terminator.
+  */
 void uuid2str (uuid u, char *into) {
 	sprintf (into, "%08llx-%04llx-%04llx-"
 				   "%04llx-%012llx",
@@ -121,6 +126,12 @@ void uuid2str (uuid u, char *into) {
 				   ((u.msb & 0x0000ffffffffffff)));
 }
 
+/** Write out a meter value in JSON value format.
+  * \param type The metertype to read and encode
+  * \param m The meter
+  * \param pos The array position within the meter
+  * \param outfd The file descriptor to write to
+  */
 void dump_value (metertype_t type, meter *m, int pos, int outfd) {
 	char buf[1024];
 	switch (type) {
@@ -143,6 +154,10 @@ void dump_value (metertype_t type, meter *m, int pos, int outfd) {
 	write (outfd, buf, strlen (buf));
 }
 
+/** Write out a host's state as JSON data.
+  * \param h The host object
+  * \param outfd File descriptor to write to
+  */
 void dump_host_json (host *h, int outfd) {
 	char buffer[256];
 	meter *m = h->first;
