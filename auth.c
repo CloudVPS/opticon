@@ -6,6 +6,7 @@
 #include <util.h>
 #include <datatypes.h>
 #include <auth.h>
+#include <base64.h>
 
 sessionlist SESSIONS[256];
 
@@ -130,17 +131,22 @@ void session_expire (time_t cutoff) {
 /** Dump information about a session into a filedescriptor. */
 void session_print (session *s, int into) {
 	char buf[256];
+	char *keystr;
 	char stenantid[48], shostid[48];
 	uuid2str (s->tenantid, stenantid);
 	uuid2str (s->hostid, shostid);
+	keystr = base64_encode ((char *) s->key.data, 32, NULL);
 	
 	sprintf (buf, "Session %08x\n"
 				  "Tenant %s\n"
-				  "Host %s\n",
+				  "Host %s\n"
+				  "Key %s\n",
 				  s->sessid,
 				  stenantid,
-				  shostid);
+				  shostid,
+				  keystr);
 	
+	free (keystr);
 	write (into, buf, strlen (buf));
 }
 
