@@ -142,7 +142,7 @@ void session_print (session *s, int into) {
 aeskey aeskey_create (void) {
 	aeskey res;
 	int fdevr = open ("/dev/random",O_RDONLY);
-	read (fdevr, res.data, 8);
+	read (fdevr, res.data, 32);
 	close (fdevr);
 	return res;
 }

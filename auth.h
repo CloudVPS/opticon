@@ -5,7 +5,7 @@
 #include <time.h>
 
 typedef struct aeskey_s {
-	uint8_t data[8];
+	uint8_t data[32];
 } aeskey;
 
 typedef struct session_s {
