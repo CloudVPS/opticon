@@ -101,7 +101,7 @@ uint32_t meter_get_uint (meter *m, unsigned int pos) {
 /** Get a specific indexed fractional value out of a meter */
 double meter_get_frac (meter *m, unsigned int pos) {
 	if (pos > m->count) return 0.0;
-	if ((m->id & MMASK_TYPE) != MTYPE_INT) return 0.0;
+	if ((m->id & MMASK_TYPE) != MTYPE_FRAC) return 0.0;
 	return m->d.frac[pos];
 }
 
