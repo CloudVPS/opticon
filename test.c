@@ -15,6 +15,7 @@ int main (int argc, const char *argv[]) {
 	uint64_t kbpsdata[1] = {100ULL};
 	uint64_t ppsdata[2] = {150ULL,100ULL};
 	
+	tenant_init();
 	sessionlist_init();
 	
 	tenant_create (tenantid, "test");
