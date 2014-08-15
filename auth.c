@@ -75,6 +75,8 @@ session *session_register (uuid tenantid, uuid hostid,
 	return s;
 }
 
+/** Look up a session by 32 bits worth of IP address data and a 32 bits
+    session-id. */
 session *session_find (uint32_t addrpart, uint32_t sess_id) {
 	uint32_t sid = sess_id ^ addrpart;
 	uint8_t bucket = (sid >> 24) |
@@ -89,6 +91,8 @@ session *session_find (uint32_t addrpart, uint32_t sess_id) {
 	return NULL;
 }
 
+/** Expire sessions that have been last updated before a given
+    cut-off point. */
 void session_expire (time_t cutoff) {
 	session *s, *ns;
 	for (int i=0; i<=255; ++i) {
@@ -123,6 +127,7 @@ void session_expire (time_t cutoff) {
 	}
 }
 
+/** Dump information about a session into a filedescriptor. */
 void session_print (session *s, int into) {
 	char buf[256];
 	char stenantid[48], shostid[48];
@@ -139,6 +144,7 @@ void session_print (session *s, int into) {
 	write (into, buf, strlen (buf));
 }
 
+/** Generate a random AES256 key */
 aeskey aeskey_create (void) {
 	aeskey res;
 	int fdevr = open ("/dev/random",O_RDONLY);
