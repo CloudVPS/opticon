@@ -41,6 +41,3 @@ session		*session_find (uint32_t addr, uint32_t sess_id);
 void		 session_expire (time_t);
 
 #endif
-
-
-//== 
