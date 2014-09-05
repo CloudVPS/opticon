@@ -18,6 +18,7 @@ int main (int argc, const char *argv[]) {
 	meterid_t M_NET_IN_PPS = makeid ("net/in.pps",MTYPE_INT,0);
 	meterid_t M_NET_OUT_PPS = makeid ("net/out.pps",MTYPE_INT,0);
 	meterid_t M_HOSTNAME = makeid ("hostname",MTYPE_STR,0);
+	meterid_t M_UNAME = makeid ("uname",MTYPE_STR,0);
 
 	uint64_t D_NET_IN_KBS[2] = {100ULL,70ULL};
 	uint64_t D_NET_OUT_KBS[2] = {250ULL, 90ULL};
@@ -84,14 +85,15 @@ int main (int argc, const char *argv[]) {
 	assert (T->uuid.msb == 0xb281cc06b134f98f);
 	host *H = host_find (tenantid, hostid);
 	id2str (M_NET_IN_KBS, tstr);
-	meter *M = host_set_meter_uint (H, M_NET_IN_KBS, 2, D_NET_IN_KBS);
-	M = host_set_meter_uint (H, M_NET_IN_PPS, 2, D_NET_IN_PPS);
-	assert (meter_get_uint (M, 1) == 100ULL);
-	M = host_set_meter_uint (H, M_NET_OUT_KBS, 2, D_NET_OUT_KBS);
-	M = host_set_meter_uint (H, M_NET_OUT_PPS, 2, D_NET_OUT_PPS);
-	M = host_get_meter (H, M_HOSTNAME);
+	meter *M = host_get_meter (H, M_HOSTNAME);
 	meter_setcount (M, 0);
 	meter_set_str (M, 0, "webserver-01.heikneuter.nl");
+	
+	M = host_get_meter (H, M_UNAME);
+	meter_setcount (M, 0);
+	meter_set_str (M, 0, "Linux lab.madscience.nl 2.6.18-prep #1 SMP "
+						 "Mon Dec 20 13:49:26 CET 2010 x86_64 "
+						 "x86_64 x86_64 GNU/Linux");
 	
 	M = host_get_meter (H, M_PCPU);
 	meter_setcount (M, 0);
@@ -121,6 +123,12 @@ int main (int argc, const char *argv[]) {
 	meter_setcount (M, 0);
 	meter_set_uint (M, 0, 122020);
 	
+	M = host_set_meter_uint (H, M_NET_IN_KBS, 2, D_NET_IN_KBS);
+	M = host_set_meter_uint (H, M_NET_IN_PPS, 2, D_NET_IN_PPS);
+	assert (meter_get_uint (M, 1) == 100ULL);
+	M = host_set_meter_uint (H, M_NET_OUT_KBS, 2, D_NET_OUT_KBS);
+	M = host_set_meter_uint (H, M_NET_OUT_PPS, 2, D_NET_OUT_PPS);
+
 	M = host_get_meter (H, M_TOP_PID);
 	meter_setcount (M, 11);
 	for (i=0; i<11; ++i) meter_set_uint (M, i, D_TOP_PID[i]);
@@ -137,23 +145,24 @@ int main (int argc, const char *argv[]) {
 	meter_setcount (M, 11);
 	for (i=0; i<11; ++i) meter_set_frac (M, i, D_TOP_PMEM[i]);
 	
-	M = host_get_meter (H, M_TOP_USER);
+	M = host_get_meter (H, M_TOP_NAME);
 	meter_setcount (M, 11);
 	for (i=0; i<11; ++i) meter_set_str (M, i, D_TOP_NAME[i]);
 	
 	aeskey key = aeskey_create();
+	encoder *E = new_file_encoder (stdout);
 	session *S = session_register (tenantid, hostid,
 								   0x0a000001, 0x31337666,
 								   key);
 	
 	S = session_find (0x0a000001, 0x31337666);
 	assert (S != NULL);
-	session_print (S, FD_STDOUT);
+	session_print (S, E);
 	session_expire (time(NULL)+1);
 	S = session_find (0x0a000001, 0x31337666);
 	assert (S == NULL);
 	
-	dump_host_json (H, FD_STDOUT);
+	dump_host_json (H, E);
 	
 	M = host_get_meter (H, M_NET_IN_PPS);
 	M = meter_next_sibling (M);

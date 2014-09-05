@@ -179,9 +179,9 @@ void uuid2str (uuid u, char *into) {
   * \param type The metertype to read and encode
   * \param m The meter
   * \param pos The array position within the meter
-  * \param outfd The file descriptor to write to
+  * \param into The encoder to use
   */
-void dump_value (metertype_t type, meter *m, int pos, int outfd) {
+void dump_value (metertype_t type, meter *m, int pos, encoder *into) {
 	char buf[1024];
 	switch (type) {
 		case MTYPE_INT:
@@ -200,35 +200,35 @@ void dump_value (metertype_t type, meter *m, int pos, int outfd) {
 			buf[0] = '\0';
 			break;
 	}
-	write (outfd, buf, strlen (buf));
+	encoder_write (into, buf, strlen (buf));
 }
 
-void dump_path_value (meter *m, int pos, int outfd, int indent) {
+void dump_path_value (meter *m, int pos, encoder *into, int indent) {
 	meter *mm = m;
 	char buf[1024];
 	if (indent) {
-		write (outfd, "    {", 5);
+		encoder_write (into, "    {", 5);
 	}
 	else {
-		write (outfd, "{", 1);
+		encoder_write (into, "{", 1);
 	}
 	while (mm) {
 		nodeid2str (mm->id & MMASK_NAME, buf);
-		write (outfd, "\"", 1);
-		write (outfd, buf, strlen(buf));
-		write (outfd, "\":",2);
-		dump_value (mm->id & MMASK_TYPE, mm, pos, outfd);
+		encoder_write (into, "\"", 1);
+		encoder_write (into, buf, strlen(buf));
+		encoder_write (into, "\":",2);
+		dump_value (mm->id & MMASK_TYPE, mm, pos, into);
 		mm = meter_next_sibling (mm);
-		if (mm) write (outfd, ",", 1);
+		if (mm) encoder_write (into, ",", 1);
 	}
-	write (outfd, "}", 1);
+	encoder_write (into, "}", 1);
 }
 
 /** Write out a host's state as JSON data.
   * \param h The host object
-  * \param outfd File descriptor to write to
+  * \param into Encoder to use
   */
-void dump_host_json (host *h, int outfd) {
+void dump_host_json (host *h, encoder *into) {
 	char buffer[256];
 	uint64_t pathbuffer[128];
 	int paths = 0;
@@ -256,42 +256,42 @@ void dump_host_json (host *h, int outfd) {
 		}
 		
 		if (first) first=0;
-		else write (outfd, ",\n", 2);
-		write (outfd, "\"", 1);
+		else encoder_write (into, ",\n", 2);
+		encoder_write (into, "\"", 1);
 
 		if (pathmask) {
 			id2str (m->id & pathmask, buffer);
-			write (outfd, buffer, strlen(buffer));
-			write (outfd, "\":", 2);
+			encoder_write (into, buffer, strlen(buffer));
+			encoder_write (into, "\":", 2);
 			if (m->count > 0) {
-				write (outfd, "[\n", 2);
+				encoder_write (into, "[\n", 2);
 			}
 			
 			for (i=0; (i==0)||(i<m->count); ++i) {
-				if (i) write (outfd, ",\n", 2);
-				dump_path_value (m,i,outfd,(m->count ? 1 : 0));
+				if (i) encoder_write (into, ",\n", 2);
+				dump_path_value (m,i,into,(m->count ? 1 : 0));
 			}
 			
 			if (m->count > 0) {
-				write (outfd, "\n]", 2);
+				encoder_write (into, "\n]", 2);
 			}
 		}
 		else {
 			id2str (m->id, buffer);
-			write (outfd, buffer, strlen(buffer));
-			write (outfd, "\":", 2);
+			encoder_write (into, buffer, strlen(buffer));
+			encoder_write (into, "\":", 2);
 			if (m->count > 0) {
-				write (outfd, "[", 1);
+				encoder_write (into, "[", 1);
 			}
 			for (i=0; (i==0)||(i<m->count); ++i) {
-				dump_value (m->id & MMASK_TYPE, m, i, outfd);
-				if ((i+1)<m->count) write (outfd, ",",1);
+				dump_value (m->id & MMASK_TYPE, m, i, into);
+				if ((i+1)<m->count) encoder_write (into, ",",1);
 			}
 			if (m->count > 0) {
-				write (outfd, "]", 1);
+				encoder_write (into, "]", 1);
 			}
 		}
 		m=m->next;
 	}
-	write (outfd,"\n",1);
+	encoder_write (into,"\n",1);
 }
