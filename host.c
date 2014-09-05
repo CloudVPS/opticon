@@ -200,6 +200,7 @@ void meter_set_str (meter *m, unsigned int pos, const char *val) {
 	m->d.str[pos].str[127] = '\0';
 }
 
+/** Find the next sibling for a meter with a path prefix */
 meter *meter_next_sibling (meter *m) {
 	int spos = idhaspath (m->id);
 	if (! spos) return NULL;
