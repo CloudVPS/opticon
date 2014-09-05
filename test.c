@@ -81,23 +81,27 @@ int main (int argc, const char *argv[]) {
 	M = host_set_meter_uint (H, M_NET_OUT_KBS, 2, D_NET_OUT_KBS);
 	M = host_set_meter_uint (H, M_NET_OUT_PPS, 2, D_NET_OUT_PPS);
 	M = host_get_meter (H, M_HOSTNAME);
-	meter_setsize (M, 0);
+	meter_setcount (M, 0);
 	meter_set_str (M, 0, "webserver-01.heikneuter.nl");
 	
 	M = host_get_meter (H, M_TOP_PID);
-	meter_setsize (M, 11);
+	meter_setcount (M, 11);
 	for (i=0; i<11; ++i) meter_set_uint (M, i, D_TOP_PID[i]);
+	
 	M = host_get_meter (H, M_TOP_USER);
-	meter_setsize (M, 11);
+	meter_setcount (M, 11);
 	for (i=0; i<11; ++i) meter_set_str (M, i, D_TOP_USER[i]);
+	
 	M = host_get_meter (H, M_TOP_PCPU);
-	meter_setsize (M, 11);
+	meter_setcount (M, 11);
 	for (i=0; i<11; ++i) meter_set_frac (M, i, D_TOP_PCPU[i]);
+	
 	M = host_get_meter (H, M_TOP_PMEM);
-	meter_setsize (M, 11);
+	meter_setcount (M, 11);
 	for (i=0; i<11; ++i) meter_set_frac (M, i, D_TOP_PMEM[i]);
+	
 	M = host_get_meter (H, M_TOP_USER);
-	meter_setsize (M, 11);
+	meter_setcount (M, 11);
 	for (i=0; i<11; ++i) meter_set_str (M, i, D_TOP_NAME[i]);
 	
 	aeskey key = aeskey_create();

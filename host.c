@@ -150,7 +150,7 @@ meter *host_set_meter_str (host *h, meterid_t id,
 }
 
 /** Initialize a meter to a specific set size */
-void meter_setsize (meter *m, unsigned int count) {
+void meter_setcount (meter *m, unsigned int count) {
 	int cnt = count ? count : 1;
 	m->count = count;
 	if (m->d.any) {
