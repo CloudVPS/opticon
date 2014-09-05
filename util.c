@@ -111,6 +111,29 @@ void id2str (meterid_t id, char *into) {
 	*(end+1) = 0;
 }
 
+void nodeid2str (meterid_t id, char *into) {
+	char *out = into;
+	char *end = into;
+	char t;
+	uint64_t tmp;
+	int bshift = 56;
+	int dowrite = 0;
+	*out = 0;
+	while (bshift > 1) {
+		tmp = ((id & MMASK_NAME) >> bshift) & 0x1f;
+		t = IDTABLE[tmp];
+		if (t == '/') dowrite = 1;
+		else if (dowrite)
+		{
+			*out = t;
+			if (t != ' ') end = out;
+			out++;
+		}
+		bshift -= 5;
+	}
+	*(end+1) = 0;
+}
+
 /** returns the offset of a path separator, if any */
 uint64_t idhaspath (meterid_t id) {
 	int res = 0;
@@ -180,6 +203,22 @@ void dump_value (metertype_t type, meter *m, int pos, int outfd) {
 	write (outfd, buf, strlen (buf));
 }
 
+void dump_path_value (meter *m, int pos, int outfd) {
+	meter *mm = m;
+	char buf[1024];
+	write (outfd, "{", 1);
+	while (mm) {
+		nodeid2str (mm->id & MMASK_NAME, buf);
+		write (outfd, "\"", 1);
+		write (outfd, buf, strlen(buf));
+		write (outfd, "\":",2);
+		dump_value (mm->id & MMASK_TYPE, mm, pos, outfd);
+		mm = meter_next_sibling (mm);
+		if (mm) write (outfd, ",", 1);
+	}
+	write (outfd, "}", 1);
+}
+
 /** Write out a host's state as JSON data.
   * \param h The host object
   * \param outfd File descriptor to write to
@@ -188,25 +227,64 @@ void dump_host_json (host *h, int outfd) {
 	char buffer[256];
 	uint64_t pathbuffer[128];
 	int paths = 0;
+	uint64_t pathmask = 0;
 	meter *m = h->first;
+	meter *mm;
 	int i;
 	int first=1;
+	int dobrk = 0;
 	while (m) {
+		pathmask = idhaspath (m->id);
+		if (pathmask) {
+			dobrk = 0;
+			for (i=0; i<paths; ++i) {
+				if (pathbuffer[i] == pathmask) {
+					dobrk = 1;
+					break;
+				}
+			}
+			if (dobrk) {
+				m = m->next;
+				continue;
+			}
+			pathbuffer[paths++] = pathmask;
+		}
+		
 		if (first) first=0;
 		else write (outfd, ",\n", 2);
 		write (outfd, "\"", 1);
-		id2str (m->id, buffer);
-		write (outfd, buffer, strlen(buffer));
-		write (outfd, "\":", 2);
-		if (m->count > 0) {
-			write (outfd, "[", 1);
+
+		if (pathmask) {
+			id2str (m->id & pathmask, buffer);
+			write (outfd, buffer, strlen(buffer));
+			write (outfd, "\":", 2);
+			if (m->count > 0) {
+				write (outfd, "[", 1);
+			}
+			
+			for (i=0; (i==0)||(i<m->count); ++i) {
+				if (i) write (outfd, ",", 1);
+				dump_path_value (m,i,outfd);
+			}
+			
+			if (m->count > 0) {
+				write (outfd, "]", 1);
+			}
 		}
-		for (i=0; (i==0)||(i<m->count); ++i) {
-			dump_value (m->id & MMASK_TYPE, m, i, outfd);
-			if ((i+1)<m->count) write (outfd, ",",1);
-		}
-		if (m->count > 0) {
-			write (outfd, "]", 1);
+		else {
+			id2str (m->id, buffer);
+			write (outfd, buffer, strlen(buffer));
+			write (outfd, "\":", 2);
+			if (m->count > 0) {
+				write (outfd, "[", 1);
+			}
+			for (i=0; (i==0)||(i<m->count); ++i) {
+				dump_value (m->id & MMASK_TYPE, m, i, outfd);
+				if ((i+1)<m->count) write (outfd, ",",1);
+			}
+			if (m->count > 0) {
+				write (outfd, "]", 1);
+			}
 		}
 		m=m->next;
 	}
