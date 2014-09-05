@@ -163,6 +163,7 @@ int main (int argc, const char *argv[]) {
 	assert (S == NULL);
 	
 	dump_host_json (H, E);
+	encoder_close (E);
 	
 	M = host_get_meter (H, M_NET_IN_PPS);
 	M = meter_next_sibling (M);
