@@ -111,6 +111,22 @@ void id2str (meterid_t id, char *into) {
 	*(end+1) = 0;
 }
 
+/** returns the offset of a path separator, if any */
+int idhaspath (meterid_t id) {
+	int res = 0;
+	char t;
+	uint64_t tmp;
+	int bshift = 56;
+	while (bshift > 1) {
+		tmp = ((id & MMASK_NAME) >> bshift) & 0x1f;
+		t = IDTABLE[tmp];
+		if (t == '/') return res;
+		res++;
+		bshift -= 5;
+	}
+	return 0;
+}
+
 /** Write out a UUID to a string in ASCII 
   * \param u The UUID
   * \param into String buffer for the result, should fit 36 characters plus

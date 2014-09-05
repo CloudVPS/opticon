@@ -199,3 +199,20 @@ void meter_set_str (meter *m, unsigned int pos, const char *val) {
 	strncpy (m->d.str[pos].str, val, 127);
 	m->d.str[pos].str[127] = '\0';
 }
+
+meter *meter_next_sibling (meter *m) {
+	int spos = idhaspath (m->id);
+	if (! spos) return NULL;
+	int bshift = 56;
+	uint64_t mask = 0;
+	for (int i=0; i<spos; ++i) {
+		mask |= (0x1f << bshift);
+		bshift -= 5;
+	}
+	meter *crsr = m->next;
+	while (crsr) {
+		if ((crsr->id & mask) == (m->id & mask)) return crsr;
+		crsr = crsr->next; 
+	}
+	return NULL;
+}

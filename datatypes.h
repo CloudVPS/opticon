@@ -92,7 +92,8 @@ meter 		*host_set_meter_frac (host *h, meterid_t id,
 meter 		*host_set_meter_str  (host *h, meterid_t id,
 								  unsigned int count,
 								  const fstring *str);
-								  
+
+meter		*meter_next_sibling (meter *m);								  
 void		 meter_setsize (meter *m, unsigned int count);
 void		 meter_set_uint (meter *m, unsigned int pos, uint64_t val);
 void		 meter_set_frac (meter *m, unsigned int pos, double val);
