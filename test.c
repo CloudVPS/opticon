@@ -12,7 +12,7 @@ int main (int argc, const char *argv[]) {
 	char tstr[16];
 	uuid tenantid = mkuuid (stenantid);
 	uuid hostid = mkuuid (shostid);
-	uint64_t kbpsdata[1] = {100ULL};
+	uint64_t kbpsdata[2] = {100ULL,70ULL};
 	uint64_t ppsdata[2] = {150ULL,100ULL};
 	
 	tenant_init();
@@ -23,15 +23,15 @@ int main (int argc, const char *argv[]) {
 	assert (T->uuid.lsb == 0x001b71534f4b4f1c);
 	assert (T->uuid.msb == 0xb281cc06b134f98f);
 	host *H = host_find (tenantid, hostid);
-	meterid_t meterid = makeid ("net.in.kbs",MTYPE_INT,0);
+	meterid_t meterid = makeid ("net/in.kbs",MTYPE_INT,0);
 	id2str (meterid, tstr);
-	meter *M = host_set_meter_uint (H, meterid, 0, kbpsdata);
-	meterid = makeid ("net.in.pps",MTYPE_INT,0);
+	meter *M = host_set_meter_uint (H, meterid, 2, kbpsdata);
+	meterid = makeid ("net/in.pps",MTYPE_INT,0);
 	M = host_set_meter_uint (H, meterid, 2, ppsdata);
 	assert (meter_get_uint (M, 1) == 100ULL);
-	meterid = makeid ("net.out.kbs",MTYPE_INT,0);
-	M = host_set_meter_uint (H, meterid, 0, kbpsdata);
-	meterid = makeid ("net.out.pps",MTYPE_INT,0);
+	meterid = makeid ("net/out.kbs",MTYPE_INT,0);
+	M = host_set_meter_uint (H, meterid, 2, kbpsdata);
+	meterid = makeid ("net/out.pps",MTYPE_INT,0);
 	M = host_set_meter_uint (H, meterid, 2, ppsdata);
 	meterid = makeid ("hostname",MTYPE_STR,0);
 	M = host_get_meter (H, meterid);
@@ -51,4 +51,9 @@ int main (int argc, const char *argv[]) {
 	assert (S == NULL);
 	
 	dump_host_json (H, FD_STDOUT);
+	
+	meterid = makeid ("net/in.pps",MTYPE_INT,0);
+	M = host_get_meter (H, meterid);
+	M = meter_next_sibling (M);
+	assert (M != NULL);
 }

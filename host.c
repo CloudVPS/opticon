@@ -200,13 +200,15 @@ void meter_set_str (meter *m, unsigned int pos, const char *val) {
 	m->d.str[pos].str[127] = '\0';
 }
 
+void breakme (void) {}
+
 meter *meter_next_sibling (meter *m) {
 	int spos = idhaspath (m->id);
 	if (! spos) return NULL;
 	int bshift = 56;
 	uint64_t mask = 0;
 	for (int i=0; i<spos; ++i) {
-		mask |= (0x1f << bshift);
+		mask |= ((0x1fULL) << bshift);
 		bshift -= 5;
 	}
 	meter *crsr = m->next;
