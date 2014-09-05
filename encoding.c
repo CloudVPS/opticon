@@ -26,6 +26,7 @@ encoder *new_file_encoder (FILE *F) {
 	encoder *res = (encoder *) malloc (sizeof (encoder));
 	res->storage = F;
 	res->write = file_write;
+	res->close = file_close;
 	return res;
 }
 
@@ -35,6 +36,8 @@ encoder *new_buffer_encoder (char *buf, size_t sz) {
 	S->buf = buf;
 	S->bufsz = sz;
 	S->pos = 0;
+	res->write = buffer_write;
+	res->close = buffer_close;
 	return res;
 }
 
