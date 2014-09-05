@@ -238,7 +238,7 @@ void dump_host_json (host *h, int outfd) {
 		if (pathmask) {
 			dobrk = 0;
 			for (i=0; i<paths; ++i) {
-				if (pathbuffer[i] == pathmask) {
+				if (pathbuffer[i] == (m->id & pathmask)) {
 					dobrk = 1;
 					break;
 				}
@@ -247,7 +247,7 @@ void dump_host_json (host *h, int outfd) {
 				m = m->next;
 				continue;
 			}
-			pathbuffer[paths++] = pathmask;
+			pathbuffer[paths++] = (m->id & pathmask);
 		}
 		
 		if (first) first=0;
