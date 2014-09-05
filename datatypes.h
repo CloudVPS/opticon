@@ -14,6 +14,7 @@ typedef uint32_t		status_t;
 #define MTYPE_INT 		0x0000000000000000
 #define MTYPE_FRAC		0x4000000000000000
 #define MTYPE_STR   	0x8000000000000000
+#define MTYPE_GRID		0xc000000000000000
 
 #define MMASK_TYPE		0xc000000000000000
 #define MMASK_COUNT		0x0000000000000007
@@ -25,11 +26,13 @@ metertype_t	id2type (meterid_t id);
 /* UUIDs are normally passed by value */
 typedef struct { uint64_t msb; uint64_t lsb; } uuid;
 
+typedef struct { char str[128]; } fstring;
+
 /* Union for within a meter structure */
 typedef union {
 	uint64_t		 *u64;
 	double			 *frac;
-	char			 *str;
+	fstring			 *str;
 	void			 *any;
 } meterdata;
 
@@ -86,10 +89,12 @@ meter *host_set_meter_uint (host *h, meterid_t id,
 meter *host_set_meter_frac (host *h, meterid_t id,
 							unsigned int count,
 							double *data);
-meter *host_set_meter_str  (host *h, meterid_t id, const char *str);
+meter *host_set_meter_str  (host *h, meterid_t id,
+							unsigned int count,
+							const fstring *str);
 
 uint32_t	meter_get_uint (meter *, unsigned int pos);
 double		meter_get_frac (meter *, unsigned int pos);
-const char *meter_get_str (meter *);
+const char *meter_get_str (meter *, unsigned int pos);
 
 #endif

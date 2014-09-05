@@ -93,22 +93,23 @@ meter *host_get_meter (host *h, meterid_t id) {
 
 /** Get a specific indexed integer value out of a meter */
 uint32_t meter_get_uint (meter *m, unsigned int pos) {
-	if (pos > m->count) return 0;
+	if (pos >= m->count) return 0;
 	if ((m->id & MMASK_TYPE) != MTYPE_INT) return 0;
 	return m->d.u64[pos];
 }
 
 /** Get a specific indexed fractional value out of a meter */
 double meter_get_frac (meter *m, unsigned int pos) {
-	if (pos > m->count) return 0.0;
+	if (pos >= m->count) return 0.0;
 	if ((m->id & MMASK_TYPE) != MTYPE_FRAC) return 0.0;
 	return m->d.frac[pos];
 }
 
 /** Get a string value out of a meter */
-const char *meter_get_str (meter *m) {
+const char *meter_get_str (meter *m, unsigned int pos) {
+	if (pos >= m->count) return 0;
 	if ((m->id & MMASK_TYPE) != MTYPE_STR) return "";
-	return m->d.str;
+	return (const char *) m->d.str[pos].str;
 }
 
 /** Fill up a meter with integer values */
@@ -129,4 +130,21 @@ meter *host_set_meter_uint (host *h, meterid_t id,
 	m->d.u64 = (uint64_t *) malloc (count * sizeof (uint64_t));
 	memcpy (m->d.u64, data, count * sizeof (uint64_t));
 	return m;
+}
+
+/** Fill up a meter with string values */
+meter *host_set_meter_str (host *h, meterid_t id,
+						   unsigned int cnt,
+						   const fstring *str) {
+	unsigned int count = cnt ? cnt : 1;
+	unsigned int i;
+	meter *m = host_get_meter (h, id);
+	m->count = cnt;
+	if (m->d.any != NULL) {
+		free (m->d.any);
+		m->d.any = NULL;
+	}
+	m->d.str = (fstring *) malloc (count * sizeof (fstring));
+	memcpy (m->d.str, str, count * sizeof (fstring));
+	return m;	
 }

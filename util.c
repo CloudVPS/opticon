@@ -144,7 +144,7 @@ void dump_value (metertype_t type, meter *m, int pos, int outfd) {
 			break;
 		
 		case MTYPE_STR:
-			sprintf (buf, "\"%s\"", m->d.str);
+			sprintf (buf, "\"%s\"", m->d.str[pos].str);
 			break;
 			
 		default:
