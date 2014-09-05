@@ -206,7 +206,7 @@ void dump_value (metertype_t type, meter *m, int pos, int outfd) {
 void dump_path_value (meter *m, int pos, int outfd) {
 	meter *mm = m;
 	char buf[1024];
-	write (outfd, "{", 1);
+	write (outfd, "    {", 5);
 	while (mm) {
 		nodeid2str (mm->id & MMASK_NAME, buf);
 		write (outfd, "\"", 1);
@@ -259,16 +259,16 @@ void dump_host_json (host *h, int outfd) {
 			write (outfd, buffer, strlen(buffer));
 			write (outfd, "\":", 2);
 			if (m->count > 0) {
-				write (outfd, "[", 1);
+				write (outfd, "[\n", 2);
 			}
 			
 			for (i=0; (i==0)||(i<m->count); ++i) {
-				if (i) write (outfd, ",", 1);
+				if (i) write (outfd, ",\n", 2);
 				dump_path_value (m,i,outfd);
 			}
 			
 			if (m->count > 0) {
-				write (outfd, "]", 1);
+				write (outfd, "\n]", 2);
 			}
 		}
 		else {
