@@ -112,7 +112,7 @@ void id2str (meterid_t id, char *into) {
 }
 
 /** returns the offset of a path separator, if any */
-int idhaspath (meterid_t id) {
+uint64_t idhaspath (meterid_t id) {
 	int res = 0;
 	char t;
 	uint64_t tmp;
@@ -120,11 +120,21 @@ int idhaspath (meterid_t id) {
 	while (bshift > 1) {
 		tmp = ((id & MMASK_NAME) >> bshift) & 0x1f;
 		t = IDTABLE[tmp];
-		if (t == '/') return res;
+		if (t == '/') return idmask(res);
 		res++;
 		bshift -= 5;
 	}
 	return 0;
+}
+
+uint64_t idmask (int sz) {
+	uint64_t mask = 0;
+	int bshift = 56;
+	for (int i=0; i<sz; ++i) {
+		mask |= ((0x1fULL) << bshift);
+		bshift -= 5;
+	}
+	return mask;
 }
 
 /** Write out a UUID to a string in ASCII 
@@ -176,6 +186,8 @@ void dump_value (metertype_t type, meter *m, int pos, int outfd) {
   */
 void dump_host_json (host *h, int outfd) {
 	char buffer[256];
+	uint64_t pathbuffer[128];
+	int paths = 0;
 	meter *m = h->first;
 	int i;
 	int first=1;

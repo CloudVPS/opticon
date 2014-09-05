@@ -22,6 +22,7 @@ typedef uint32_t		status_t;
 
 void	  	id2label (meterid_t id, char *into);
 metertype_t	id2type (meterid_t id);
+uint64_t	idmask (int sz);
 
 /* UUIDs are normally passed by value */
 typedef struct { uint64_t msb; uint64_t lsb; } uuid;

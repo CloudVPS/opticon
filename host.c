@@ -202,14 +202,9 @@ void meter_set_str (meter *m, unsigned int pos, const char *val) {
 
 /** Find the next sibling for a meter with a path prefix */
 meter *meter_next_sibling (meter *m) {
-	int spos = idhaspath (m->id);
-	if (! spos) return NULL;
-	int bshift = 56;
-	uint64_t mask = 0;
-	for (int i=0; i<spos; ++i) {
-		mask |= ((0x1fULL) << bshift);
-		bshift -= 5;
-	}
+	uint64_t mask = idhaspath (m->id);
+	if (! mask) return NULL;
+
 	meter *crsr = m->next;
 	while (crsr) {
 		if ((crsr->id & mask) == (m->id & mask)) return crsr;
