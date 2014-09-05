@@ -33,6 +33,10 @@ int main (int argc, const char *argv[]) {
 	M = host_set_meter_uint (H, meterid, 0, kbpsdata);
 	meterid = makeid ("net.out.pps",MTYPE_INT,0);
 	M = host_set_meter_uint (H, meterid, 2, ppsdata);
+	meterid = makeid ("hostname",MTYPE_STR,0);
+	M = host_get_meter (H, meterid);
+	meter_setsize (M, 0);
+	meter_set_str (M, 0, "webserver-01.heikneuter.nl");
 	
 	aeskey key = aeskey_create();
 	session *S = session_register (tenantid, hostid,

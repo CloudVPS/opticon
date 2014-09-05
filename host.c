@@ -149,6 +149,7 @@ meter *host_set_meter_str (host *h, meterid_t id,
 	return m;	
 }
 
+/** Initialize a meter to a specific set size */
 void meter_setsize (meter *m, unsigned int count) {
 	int cnt = count ? count : 1;
 	m->count = count;
@@ -177,18 +178,21 @@ void meter_setsize (meter *m, unsigned int count) {
 	}
 }
 
+/** Setter for a specific integer value inside a meter array */
 void meter_set_uint (meter *m, unsigned int pos, uint64_t val) {
 	if ((m->id & MMASK_TYPE) != MTYPE_INT) return;
 	if (pos >= (m->count ? m->count : 1)) return; 
 	m->d.u64[pos] = val;
 }
 
+/** Setter for a specific fractional value inside a meter array */
 void meter_set_frac (meter *m, unsigned int pos, double val) {
 	if ((m->id & MMASK_TYPE) != MTYPE_FRAC) return;
 	if (pos >= (m->count ? m->count : 1)) return;
 	m->d.frac[pos] = val;
 }
 
+/** Setter for a specific string value inside a meter array */
 void meter_set_str (meter *m, unsigned int pos, const char *val) {
 	if ((m->id & MMASK_TYPE) != MTYPE_STR) return;
 	if (pos >= (m->count ? m->count : 1)) return;
