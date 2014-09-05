@@ -148,3 +148,50 @@ meter *host_set_meter_str (host *h, meterid_t id,
 	memcpy (m->d.str, str, count * sizeof (fstring));
 	return m;	
 }
+
+void meter_setsize (meter *m, unsigned int count) {
+	int cnt = count ? count : 1;
+	m->count = count;
+	if (m->d.any) {
+		free (m->d.any);
+		m->d.any = NULL;
+	}
+	
+	switch (m->id & MMASK_TYPE) {
+		case MTYPE_INT:
+			m->d.u64 = (uint64_t *) calloc (cnt, sizeof (uint64_t));
+			break;
+		
+		case MTYPE_FRAC:
+			m->d.frac = (double *) calloc (cnt, sizeof (double));
+			break;
+		
+		case MTYPE_STR:
+			m->d.str = (fstring *) calloc (cnt, sizeof (fstring));
+			break;
+		
+		default:
+			m->d.any = NULL;
+			m->count = -1;
+			break;
+	}
+}
+
+void meter_set_uint (meter *m, unsigned int pos, uint64_t val) {
+	if ((m->id & MMASK_TYPE) != MTYPE_INT) return;
+	if (pos >= (m->count ? m->count : 1)) return; 
+	m->d.u64[pos] = val;
+}
+
+void meter_set_frac (meter *m, unsigned int pos, double val) {
+	if ((m->id & MMASK_TYPE) != MTYPE_FRAC) return;
+	if (pos >= (m->count ? m->count : 1)) return;
+	m->d.frac[pos] = val;
+}
+
+void meter_set_str (meter *m, unsigned int pos, const char *val) {
+	if ((m->id & MMASK_TYPE) != MTYPE_STR) return;
+	if (pos >= (m->count ? m->count : 1)) return;
+	strncpy (m->d.str[pos].str, val, 127);
+	m->d.str[pos].str[127] = '\0';
+}
