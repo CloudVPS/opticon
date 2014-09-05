@@ -35,6 +35,10 @@ int main (int argc, const char *argv[]) {
 	meterid_t M_SWAP_SIZE = makeid ("swap/size",MTYPE_INT,0);
 	meterid_t M_SWAP_FREE = makeid ("swap/free",MTYPE_INT,0);
 	
+	meterid_t M_PCPU = makeid ("pcpu",MTYPE_FRAC,0);
+	meterid_t M_PIOWAIT = makeid ("piowait",MTYPE_FRAC,0);
+	meterid_t M_LOADAVG = makeid ("loadavg",MTYPE_FRAC,0);
+	
 	uint64_t D_TOP_PID[11] = {
 		27562,28074,27983,27560,28311,19082,2411,2082,6129,1862,2564
 	};
@@ -88,6 +92,18 @@ int main (int argc, const char *argv[]) {
 	M = host_get_meter (H, M_HOSTNAME);
 	meter_setcount (M, 0);
 	meter_set_str (M, 0, "webserver-01.heikneuter.nl");
+	
+	M = host_get_meter (H, M_PCPU);
+	meter_setcount (M, 0);
+	meter_set_frac (M, 0, 100.0);
+	
+	M = host_get_meter (H, M_PIOWAIT);
+	meter_setcount (M, 0);
+	meter_set_frac (M, 0, 3.0);
+	
+	M = host_get_meter (H, M_LOADAVG);
+	meter_setcount (M, 0);
+	meter_set_frac (M, 0, 6.03);
 	
 	M = host_get_meter (H, M_MEM_SIZE);
 	meter_setcount (M, 0);
