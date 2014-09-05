@@ -63,7 +63,7 @@ int main (int argc, const char *argv[]) {
 		"mysqld",
 		"spamd",
 		"n2txd",
-		"zarafa-seaarch"
+		"zarafa-search"
 	};
 	
 	tenant_init();
