@@ -30,6 +30,11 @@ int main (int argc, const char *argv[]) {
 	meterid_t M_TOP_PMEM = makeid ("top/pmem",MTYPE_FRAC,0);
 	meterid_t M_TOP_NAME = makeid ("top/name",MTYPE_STR,0);
 	
+	meterid_t M_MEM_SIZE = makeid ("mem/size",MTYPE_INT,0);
+	meterid_t M_MEM_FREE = makeid ("mem/free",MTYPE_INT,0);
+	meterid_t M_SWAP_SIZE = makeid ("swap/size",MTYPE_INT,0);
+	meterid_t M_SWAP_FREE = makeid ("swap/free",MTYPE_INT,0);
+	
 	uint64_t D_TOP_PID[11] = {
 		27562,28074,27983,27560,28311,19082,2411,2082,6129,1862,2564
 	};
@@ -83,6 +88,22 @@ int main (int argc, const char *argv[]) {
 	M = host_get_meter (H, M_HOSTNAME);
 	meter_setcount (M, 0);
 	meter_set_str (M, 0, "webserver-01.heikneuter.nl");
+	
+	M = host_get_meter (H, M_MEM_SIZE);
+	meter_setcount (M, 0);
+	meter_set_uint (M, 0, 524288);
+	
+	M = host_get_meter (H, M_MEM_FREE);
+	meter_setcount (M, 0);
+	meter_set_uint (M, 0, 424250);
+	
+	M = host_get_meter (H, M_SWAP_SIZE);
+	meter_setcount (M, 0);
+	meter_set_uint (M, 0, 1048576);
+	
+	M = host_get_meter (H, M_SWAP_FREE);
+	meter_setcount (M, 0);
+	meter_set_uint (M, 0, 122020);
 	
 	M = host_get_meter (H, M_TOP_PID);
 	meter_setcount (M, 11);
