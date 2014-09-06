@@ -33,9 +33,9 @@ session *session_alloc (void) {
 /** Link a new session into the proper bucket. */
 void session_link (session *s) {
     uint32_t sid = s->sessid ^ s->addr;
-    uint8_t bucket = (sid >> 24) |
-                     ((sid & 0x00ff0000) >> 16) |
-                     ((sid & 0x0000ff00) >> 8) |
+    uint8_t bucket = (sid >> 24) ^
+                     ((sid & 0x00ff0000) >> 16) ^
+                     ((sid & 0x0000ff00) >> 8) ^
                      (sid & 0xff);
     if (SESSIONS[bucket].first) {
         // link in at top.
