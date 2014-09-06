@@ -151,27 +151,20 @@ int main (int argc, const char *argv[]) {
     for (i=0; i<11; ++i) meter_set_str (M, i, D_TOP_NAME[i]);
     
     aeskey key = aeskey_create();
-    ioport *IO = ioport_create_filewriter (stdout);
-    codec *C = codec_create_json();
     session *S = session_register (tenantid, hostid,
                                    0x0a000001, 0x31337666,
                                    key);
     
     S = session_find (0x0a000001, 0x31337666);
     assert (S != NULL);
-    session_print (S, IO);
     session_expire (time(NULL)+1);
     S = session_find (0x0a000001, 0x31337666);
     assert (S == NULL);
     
-    codec_encode_host (C, IO, H);
-    ioport_close (IO);
-    codec_release (C);
-    
     char bouncebuf[4096];
     
-    C = codec_create_pkt();
-    IO = ioport_create_buffer (bouncebuf, 4096);
+    codec *C = codec_create_pkt();
+    ioport *IO = ioport_create_buffer (bouncebuf, 4096);
     
     if (! codec_encode_host (C, IO, H)) {
         fprintf (stderr, "Encode failed\n");
