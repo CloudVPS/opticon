@@ -20,8 +20,8 @@ typedef struct ioport_s {
 } ioport;
 
 typedef struct bufferstorage_s {
-    char *buf;
-    size_t bufsz;
+    char 		*buf;
+    size_t		 bufsz;
     unsigned int pos;
 } bufferstorage;
 
