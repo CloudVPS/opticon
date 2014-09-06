@@ -150,5 +150,6 @@ int jsoncodec_encode_host (ioport *into, host *h) {
 }
 
 int jsoncodec_decode_host (ioport *io, host *h) {
+    fprintf (stderr, "%% JSON decoding not supported\n");
     return 0;
 }
