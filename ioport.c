@@ -1,4 +1,5 @@
 #include <ioport.h>
+#include <math.h>
 
 int filewriter_write (ioport *io, const char *dat, size_t sz) {
     FILE *F = (FILE *) io->storage;
@@ -48,14 +49,14 @@ ioport *ioport_create_buffer (char *buf, size_t sz) {
 
 int ioport_write (ioport *io, const char *data, size_t sz) {
     if (io->bitpos) {
-    	if (! ioport_flush_bits (io)) return 0;
+        if (! ioport_flush_bits (io)) return 0;
     }
     return io->write (io, data, sz);
 }
 
 int ioport_write_byte (ioport *io, uint8_t b) {
     if (io->bitpos) {
-    	if (! ioport_flush_bits (io)) return 0;
+        if (! ioport_flush_bits (io)) return 0;
     }
     return io->write (io, (const char *) &b, 1);
 }
@@ -91,5 +92,64 @@ int ioport_flush_bits (ioport *io) {
     if (! io->bitpos) return 1;
     if (! io->write (io, (const char *)&(io->bitbuffer), 1)) return 0;
     io->bitpos = io->bitbuffer = 0;
+    return 1;
+}
+
+static const char *ENCSET = "abcdefghijklmnopqrstuvwxyz#/-_"
+                            " 0123456789ABCDEFGHJKLMNPQSTUVWXZ";
+
+static uint8_t DECSET[128] = {
+    63,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,
+    255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,
+    30,255,255,26,255,255,255,255,255,255,255,255,255,28,255,27,31,
+    32,33,34,35,36,37,38,39,40,255,255,255,255,255,255,255,41,42,43,
+    44,45,46,47,48,255,49,50,51,52,53,255,54,55,255,56,57,58,59,60,61,
+    255,62,255,255,255,255,29,255,0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,
+    15,16,17,18,19,20,21,22,23,24,25,255,255,255,255
+};
+
+int ioport_write_encstring (ioport *io, const char *str) {
+    uint8_t i;
+    char out_ascii[128];
+    size_t outsz = 0;
+    size_t len = strlen (str);
+    if (len > 127) return 0;
+    for (i=0;i<len;++i) {
+        if ((str[i]>127) || (DECSET[str[i]] == 255)) {
+            if (! ioport_write_byte (io, len)) return 0;
+            return ioport_write (io, str, len);
+        }
+    }
+    for (i=0;i<len;++i) {
+        if (! ioport_write_bits (io, DECSET[str[i]], 6)) return 0;
+    }
+    return ioport_flush_bits (io);
+}
+
+int ioport_write_encfrac (ioport *io, double d) {
+    if (d <= 0.0) return ioport_write (io, "\0\0", 2);
+    if (d >= 255.999) {
+        return ioport_write_byte (io,255) &&
+               ioport_write_byte (io,255);
+    }
+    double fl = floor (d);
+    double fr = (d - fl) * 255;
+    if (! ioport_write_byte (io, (uint8_t) fl)) return 0;
+    return ioport_write_byte (io, (uint8_t) fr);
+}
+
+int ioport_write_encint (ioport *io, uint64_t i) {
+    uint64_t msk;
+    uint8_t byte;
+    uint8_t started = 0;
+    for (int bitpos=56;bitpos>=0;bitpos-=7) {
+        msk = 0x7f << bitpos;
+        byte = (i & msk) >> bitpos;
+        if (byte || started) {
+            if (bitpos) byte |= 0x80;
+            started = 1;
+            if (! ioport_write_byte (io, byte)) return 0;
+        }
+    }
     return 1;
 }

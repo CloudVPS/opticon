@@ -36,6 +36,9 @@ int      ioport_write_uuid (ioport *io, uuid u);
 int      ioport_write_byte (ioport *io, uint8_t b);
 int      ioport_write_bits (ioport *io, uint8_t d, uint8_t numbits);
 int      ioport_flush_bits (ioport *io);
+int      ioport_write_encstring (ioport *io, const char *str);
+int      ioport_write_encfrac (ioport *io, double d);
+int      ioport_write_encint (ioport *io, uint64_t i);
 
 #endif
 
