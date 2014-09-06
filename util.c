@@ -76,10 +76,10 @@ uint64_t ASCIITABLE[] = {
   */
 meterid_t makeid (const char *label, metertype_t type, int pos) {
     meterid_t res = (meterid_t) type;
-    int bshift = 56;
+    int bshift = 57;
     const char *crsr = label;
     char c;
-    while ((c = *crsr) && bshift > 1) {
+    while ((c = *crsr) && bshift > 2) {
         if (c>0) {
             res |= (ASCIITABLE[c] << bshift);
             bshift -= 5;
@@ -98,9 +98,9 @@ void id2str (meterid_t id, char *into) {
     char *end = into;
     char t;
     uint64_t tmp;
-    int bshift = 56;
+    int bshift = 57;
     *out = 0;
-    while (bshift > 1) {
+    while (bshift > 2) {
         tmp = ((id & MMASK_NAME) >> bshift) & 0x1f;
         t = IDTABLE[tmp];
         *out = t;
@@ -116,10 +116,10 @@ void nodeid2str (meterid_t id, char *into) {
     char *end = into;
     char t;
     uint64_t tmp;
-    int bshift = 56;
+    int bshift = 57;
     int dowrite = 0;
     *out = 0;
-    while (bshift > 1) {
+    while (bshift > 2) {
         tmp = ((id & MMASK_NAME) >> bshift) & 0x1f;
         t = IDTABLE[tmp];
         if (t == '/') dowrite = 1;
@@ -139,8 +139,8 @@ uint64_t idhaspath (meterid_t id) {
     int res = 0;
     char t;
     uint64_t tmp;
-    int bshift = 56;
-    while (bshift > 1) {
+    int bshift = 57;
+    while (bshift > 2) {
         tmp = ((id & MMASK_NAME) >> bshift) & 0x1f;
         t = IDTABLE[tmp];
         if (t == '/') return idmask(res);
@@ -152,7 +152,7 @@ uint64_t idhaspath (meterid_t id) {
 
 uint64_t idmask (int sz) {
     uint64_t mask = 0;
-    int bshift = 56;
+    int bshift = 57;
     for (int i=0; i<sz; ++i) {
         mask |= ((0x1fULL) << bshift);
         bshift -= 5;

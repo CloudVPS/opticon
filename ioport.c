@@ -1,5 +1,6 @@
 #include <ioport.h>
 #include <math.h>
+#include <arpa/inet.h>
 
 int filewriter_write (ioport *io, const char *dat, size_t sz) {
     FILE *F = (FILE *) io->storage;
@@ -96,12 +97,12 @@ int ioport_flush_bits (ioport *io) {
 }
 
 static const char *ENCSET = "abcdefghijklmnopqrstuvwxyz#/-_"
-                            " 0123456789ABCDEFGHJKLMNPQSTUVWXZ";
+                            " 0123456789ABCDEFGHJKLMNPQSTUVWXZ.";
 
 static uint8_t DECSET[128] = {
-    63,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,
     255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,
-    30,255,255,26,255,255,255,255,255,255,255,255,255,28,255,27,31,
+    255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,
+    30,255,255,26,255,255,255,255,255,255,255,255,255,28,63,27,31,
     32,33,34,35,36,37,38,39,40,255,255,255,255,255,255,255,41,42,43,
     44,45,46,47,48,255,49,50,51,52,53,255,54,55,255,56,57,58,59,60,61,
     255,62,255,255,255,255,29,255,0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,
@@ -153,4 +154,10 @@ int ioport_write_encint (ioport *io, uint64_t i) {
         }
     }
     return 1;
+}
+
+int ioport_write_u64 (ioport *io, uint64_t i) {
+    uint64_t netorder = ((uint64_t) ntohl (i&0xffffffffLLU)) << 32;
+    netorder |= ntohl ((i & 0xffffffff00000000LLU) >> 32);
+    return ioport_write (io, (const char *)&netorder, sizeof (netorder));
 }

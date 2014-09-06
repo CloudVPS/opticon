@@ -19,8 +19,8 @@ typedef uint32_t        status_t;
 #define MTYPE_GRID      0xc000000000000000
 
 #define MMASK_TYPE      0xc000000000000000
-#define MMASK_COUNT     0x0000000000000007
-#define MMASK_NAME      0x3ffffffffffffff8
+#define MMASK_COUNT     0x000000000000000f
+#define MMASK_NAME      0x3ffffffffffffff0
 
 /* UUIDs are normally passed by value */
 typedef struct { uint64_t msb; uint64_t lsb; } uuid;

@@ -39,6 +39,7 @@ int      ioport_flush_bits (ioport *io);
 int      ioport_write_encstring (ioport *io, const char *str);
 int      ioport_write_encfrac (ioport *io, double d);
 int      ioport_write_encint (ioport *io, uint64_t i);
+int      ioport_write_u64 (ioport *io, uint64_t i);
 
 #endif
 
