@@ -150,7 +150,7 @@ int main (int argc, const char *argv[]) {
     for (i=0; i<11; ++i) meter_set_str (M, i, D_TOP_NAME[i]);
     
     aeskey key = aeskey_create();
-    ioport *IO = ioport_create_filereader (stdout);
+    ioport *IO = ioport_create_filewriter (stdout);
     session *S = session_register (tenantid, hostid,
                                    0x0a000001, 0x31337666,
                                    key);

@@ -76,6 +76,7 @@ typedef struct {
 
 extern tenantlist TENANTS;
 
+void         tenant_init (void);
 /* Creation and lookup of all relevant structures */
 tenant      *tenant_find (uuid tenantid);
 tenant      *tenant_create (uuid tenantid, const char *key);
