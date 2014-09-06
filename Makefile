@@ -17,7 +17,7 @@ endif
 
 CFLAGS+=-DOSNAME=$(OSNAME) -DOSREL=$(OSREL) -DOSRELMAJOR=$(OSRELMAJOR)
 
-OBJS_TEST = host.o tenant.o test.o util.o auth.o base64.o ioport.o
+OBJS_TEST = host.o tenant.o test.o util.o auth.o base64.o ioport.o codec.o
 
 all: test
 

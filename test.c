@@ -3,6 +3,7 @@
 #include <assert.h>
 #include <stdio.h>
 #include <auth.h>
+#include <codec.h>
 
 #define FD_STDOUT 1
 
@@ -151,6 +152,7 @@ int main (int argc, const char *argv[]) {
     
     aeskey key = aeskey_create();
     ioport *IO = ioport_create_filewriter (stdout);
+    codec *C = codec_create_json();
     session *S = session_register (tenantid, hostid,
                                    0x0a000001, 0x31337666,
                                    key);
@@ -162,7 +164,7 @@ int main (int argc, const char *argv[]) {
     S = session_find (0x0a000001, 0x31337666);
     assert (S == NULL);
     
-    dump_host_json (H, IO);
+    C->encode_host (IO, H);
     ioport_close (IO);
     
     M = host_get_meter (H, M_NET_IN_PPS);
