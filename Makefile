@@ -21,6 +21,10 @@ OBJS_TEST = host.o tenant.o test.o util.o auth.o base64.o ioport.o codec.o
 
 all: test
 
+doc:
+	@mkdir -p doc/doxygen
+	doxygen doxygen.conf
+
 test: $(OBJS_TEST)
 	$(CC) -o test $(OBJS_TEST)
 
