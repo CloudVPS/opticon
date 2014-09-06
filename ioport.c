@@ -1,25 +1,25 @@
 #include <ioport.h>
 
-int filewriter_write (ioport *e, const char *dat, size_t sz) {
-    FILE *F = (FILE *) e->storage;
+int filewriter_write (ioport *io, const char *dat, size_t sz) {
+    FILE *F = (FILE *) io->storage;
     return (fwrite (dat, sz, 1, F) == sz);
 }
 
-void filewriter_close (ioport *e) {
-    free (e);
+void filewriter_close (ioport *io) {
+    free (io);
 }
 
-int buffer_write (ioport *e, const char *dat, size_t sz) {
-    bufferstorage *S = (bufferstorage *) e->storage;
+int buffer_write (ioport *io, const char *dat, size_t sz) {
+    bufferstorage *S = (bufferstorage *) io->storage;
     if (S->pos + sz > S->bufsz) return 0;
     memcpy (S->buf + S->pos, dat, sz);
     S->pos += sz;
     return 1;
 }
 
-void buffer_close (ioport *e) {
-    free (e->storage);
-    free (e);
+void buffer_close (ioport *io) {
+    free (io->storage);
+    free (io);
 }
 
 ioport *ioport_create_filewriter (FILE *F) {
