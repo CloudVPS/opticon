@@ -1,15 +1,15 @@
 #include <encoding.h>
 
-int file_write (encoder *e, const char *dat, size_t sz) {
+int filereader_write (ioport *e, const char *dat, size_t sz) {
     FILE *F = (FILE *) e->storage;
     return (fwrite (dat, sz, 1, F) == sz);
 }
 
-void file_close (encoder *e) {
+void filereader_close (ioport *e) {
     free (e);
 }
 
-int buffer_write (encoder *e, const char *dat, size_t sz) {
+int buffer_write (ioport *e, const char *dat, size_t sz) {
     bufferstorage *S = (bufferstorage *) e->storage;
     if (S->pos + sz > S->bufsz) return 0;
     memcpy (S->buf + S->pos, dat, sz);
@@ -17,21 +17,21 @@ int buffer_write (encoder *e, const char *dat, size_t sz) {
     return 1;
 }
 
-void buffer_close (encoder *e) {
+void buffer_close (ioport *e) {
     free (e->storage);
     free (e);
 }
 
-encoder *new_file_encoder (FILE *F) {
-    encoder *res = (encoder *) malloc (sizeof (encoder));
+ioport *ioport_create_filereader (FILE *F) {
+    ioport *res = (ioport *) malloc (sizeof (ioport));
     res->storage = F;
-    res->write = file_write;
-    res->close = file_close;
+    res->write = filereader_write;
+    res->close = filereader_close;
     return res;
 }
 
-encoder *new_buffer_encoder (char *buf, size_t sz) {
-    encoder *res = (encoder *) malloc (sizeof (encoder));
+ioport *ioport_create_buffer (char *buf, size_t sz) {
+    ioport *res = (ioport *) malloc (sizeof (ioport));
     bufferstorage *S = res->storage = malloc (sizeof (bufferstorage));
     S->buf = buf;
     S->bufsz = sz;
@@ -41,10 +41,10 @@ encoder *new_buffer_encoder (char *buf, size_t sz) {
     return res;
 }
 
-int encoder_write (encoder *e, const char *data, size_t sz) {
+int ioport_write (ioport *e, const char *data, size_t sz) {
     return e->write (e, data, sz);
 }
 
-void encoder_close (encoder *e) {
+void ioport_close (ioport *e) {
     e->close (e);
 }

@@ -130,7 +130,7 @@ void session_expire (time_t cutoff) {
 }
 
 /** Dump information about a session into a filedescriptor. */
-void session_print (session *s, encoder *into) {
+void session_print (session *s, ioport *into) {
     char buf[256];
     char *keystr;
     char stenantid[48], shostid[48];
@@ -148,7 +148,7 @@ void session_print (session *s, encoder *into) {
                   keystr);
     
     free (keystr);
-    encoder_write (into, buf, strlen (buf));
+    ioport_write (into, buf, strlen (buf));
 }
 
 /** Generate a random AES256 key */

@@ -179,9 +179,9 @@ void uuid2str (uuid u, char *into) {
   * \param type The metertype to read and encode
   * \param m The meter
   * \param pos The array position within the meter
-  * \param into The encoder to use
+  * \param into The ioport to use
   */
-void dump_value (metertype_t type, meter *m, int pos, encoder *into) {
+void dump_value (metertype_t type, meter *m, int pos, ioport *into) {
     char buf[1024];
     switch (type) {
         case MTYPE_INT:
@@ -200,35 +200,35 @@ void dump_value (metertype_t type, meter *m, int pos, encoder *into) {
             buf[0] = '\0';
             break;
     }
-    encoder_write (into, buf, strlen (buf));
+    ioport_write (into, buf, strlen (buf));
 }
 
-void dump_path_value (meter *m, int pos, encoder *into, int indent) {
+void dump_path_value (meter *m, int pos, ioport *into, int indent) {
     meter *mm = m;
     char buf[1024];
     if (indent) {
-        encoder_write (into, "    {", 5);
+        ioport_write (into, "    {", 5);
     }
     else {
-        encoder_write (into, "{", 1);
+        ioport_write (into, "{", 1);
     }
     while (mm) {
         nodeid2str (mm->id & MMASK_NAME, buf);
-        encoder_write (into, "\"", 1);
-        encoder_write (into, buf, strlen(buf));
-        encoder_write (into, "\":",2);
+        ioport_write (into, "\"", 1);
+        ioport_write (into, buf, strlen(buf));
+        ioport_write (into, "\":",2);
         dump_value (mm->id & MMASK_TYPE, mm, pos, into);
         mm = meter_next_sibling (mm);
-        if (mm) encoder_write (into, ",", 1);
+        if (mm) ioport_write (into, ",", 1);
     }
-    encoder_write (into, "}", 1);
+    ioport_write (into, "}", 1);
 }
 
 /** Write out a host's state as JSON data.
   * \param h The host object
-  * \param into Encoder to use
+  * \param into ioport to use
   */
-void dump_host_json (host *h, encoder *into) {
+void dump_host_json (host *h, ioport *into) {
     char buffer[256];
     uint64_t pathbuffer[128];
     int paths = 0;
@@ -256,42 +256,42 @@ void dump_host_json (host *h, encoder *into) {
         }
         
         if (first) first=0;
-        else encoder_write (into, ",\n", 2);
-        encoder_write (into, "\"", 1);
+        else ioport_write (into, ",\n", 2);
+        ioport_write (into, "\"", 1);
 
         if (pathmask) {
             id2str (m->id & pathmask, buffer);
-            encoder_write (into, buffer, strlen(buffer));
-            encoder_write (into, "\":", 2);
+            ioport_write (into, buffer, strlen(buffer));
+            ioport_write (into, "\":", 2);
             if (m->count > 0) {
-                encoder_write (into, "[\n", 2);
+                ioport_write (into, "[\n", 2);
             }
             
             for (i=0; (i==0)||(i<m->count); ++i) {
-                if (i) encoder_write (into, ",\n", 2);
+                if (i) ioport_write (into, ",\n", 2);
                 dump_path_value (m,i,into,(m->count ? 1 : 0));
             }
             
             if (m->count > 0) {
-                encoder_write (into, "\n]", 2);
+                ioport_write (into, "\n]", 2);
             }
         }
         else {
             id2str (m->id, buffer);
-            encoder_write (into, buffer, strlen(buffer));
-            encoder_write (into, "\":", 2);
+            ioport_write (into, buffer, strlen(buffer));
+            ioport_write (into, "\":", 2);
             if (m->count > 0) {
-                encoder_write (into, "[", 1);
+                ioport_write (into, "[", 1);
             }
             for (i=0; (i==0)||(i<m->count); ++i) {
                 dump_value (m->id & MMASK_TYPE, m, i, into);
-                if ((i+1)<m->count) encoder_write (into, ",",1);
+                if ((i+1)<m->count) ioport_write (into, ",",1);
             }
             if (m->count > 0) {
-                encoder_write (into, "]", 1);
+                ioport_write (into, "]", 1);
             }
         }
         m=m->next;
     }
-    encoder_write (into,"\n",1);
+    ioport_write (into,"\n",1);
 }

@@ -150,20 +150,20 @@ int main (int argc, const char *argv[]) {
     for (i=0; i<11; ++i) meter_set_str (M, i, D_TOP_NAME[i]);
     
     aeskey key = aeskey_create();
-    encoder *E = new_file_encoder (stdout);
+    ioport *IO = ioport_create_filereader (stdout);
     session *S = session_register (tenantid, hostid,
                                    0x0a000001, 0x31337666,
                                    key);
     
     S = session_find (0x0a000001, 0x31337666);
     assert (S != NULL);
-    session_print (S, E);
+    session_print (S, IO);
     session_expire (time(NULL)+1);
     S = session_find (0x0a000001, 0x31337666);
     assert (S == NULL);
     
-    dump_host_json (H, E);
-    encoder_close (E);
+    dump_host_json (H, IO);
+    ioport_close (IO);
     
     M = host_get_meter (H, M_NET_IN_PPS);
     M = meter_next_sibling (M);
