@@ -4,6 +4,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+/* ============================= FUNCTIONS ============================= */
+
 char *base64_encode (const char *src, size_t len, size_t *out_len);
 char *base64_decode (const char *src, size_t len, size_t *out_len);
 

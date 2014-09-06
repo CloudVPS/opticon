@@ -6,6 +6,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+/* =============================== TYPES =============================== */
+
 /* Flag types and masks */
 typedef uint64_t        meterid_t;
 typedef uint64_t        metertype_t;
@@ -19,10 +21,6 @@ typedef uint32_t        status_t;
 #define MMASK_TYPE      0xc000000000000000
 #define MMASK_COUNT     0x0000000000000007
 #define MMASK_NAME      0x3ffffffffffffff8
-
-void        id2label (meterid_t id, char *into);
-metertype_t id2type (meterid_t id);
-uint64_t    idmask (int sz);
 
 /* UUIDs are normally passed by value */
 typedef struct { uint64_t msb; uint64_t lsb; } uuid;
@@ -74,7 +72,15 @@ typedef struct {
     tenant          *last;
 } tenantlist;
 
+/* ============================== GLOBALS ============================== */
+
 extern tenantlist TENANTS;
+
+/* ============================= FUNCTIONS ============================= */
+
+void        id2label (meterid_t id, char *into);
+metertype_t id2type (meterid_t id);
+uint64_t    idmask (int sz);
 
 void         tenant_init (void);
 tenant      *tenant_find (uuid tenantid);

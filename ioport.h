@@ -6,6 +6,7 @@
 #include <string.h>
 #include <datatypes.h>
 
+/* =============================== TYPES =============================== */
 struct ioport_s;
 
 typedef int (*writefunc)(struct ioport_s *, const char *, size_t);
@@ -24,6 +25,8 @@ typedef struct bufferstorage_s {
     size_t		 bufsz;
     unsigned int pos;
 } bufferstorage;
+
+/* ============================= FUNCTIONS ============================= */
 
 ioport	*ioport_create_filewriter (FILE *);
 ioport	*ioport_create_buffer (char *buf, size_t sz);

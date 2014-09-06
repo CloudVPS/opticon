@@ -5,6 +5,8 @@
 #include <ioport.h>
 #include <time.h>
 
+/* =============================== TYPES =============================== */
+
 typedef struct aeskey_s {
     uint8_t data[32];
 } aeskey;
@@ -26,7 +28,11 @@ typedef struct sessionlist_s {
     session             *last;
 } sessionlist;
 
+/* ============================== GLOBALS ============================== */
+
 extern sessionlist SESSIONS[256];
+
+/* ============================= FUNCTIONS ============================= */
 
 aeskey       aeskey_create (void);
 

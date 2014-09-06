@@ -4,6 +4,8 @@
 #include <datatypes.h>
 #include <ioport.h>
 
+/* ============================= FUNCTIONS ============================= */
+
 int          uuidcmp (uuid first, uuid second);
 uuid         mkuuid (const char *str);
 void         uuid2str (uuid u, char *into);
