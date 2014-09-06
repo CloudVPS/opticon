@@ -47,12 +47,16 @@ ioport *ioport_create_buffer (char *buf, size_t sz) {
 }
 
 int ioport_write (ioport *io, const char *data, size_t sz) {
-    if (io->bitpos) ioport_flush_bits (io) || return 0;
+    if (io->bitpos) {
+    	if (! ioport_flush_bits (io)) return 0;
+    }
     return io->write (io, data, sz);
 }
 
 int ioport_write_byte (ioport *io, uint8_t b) {
-    if (io->bitpos) ioport_flush_bits (io) || return 0;
+    if (io->bitpos) {
+    	if (! ioport_flush_bits (io)) return 0;
+    }
     return io->write (io, (const char *) &b, 1);
 }
 
