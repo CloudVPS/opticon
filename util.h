@@ -2,7 +2,7 @@
 #define _UTIL_H 1
 
 #include <datatypes.h>
-#include <iport.h>
+#include <ioport.h>
 
 int          uuidcmp (uuid first, uuid second);
 uuid         mkuuid (const char *str);
