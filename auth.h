@@ -46,6 +46,6 @@ session     *session_register (uuid tenantid, uuid hostid,
                                
 session     *session_find (uint32_t addr, uint32_t sess_id);
 void         session_expire (time_t);
-void		 session_print (session *, ioport *);
+void         session_print (session *, ioport *);
 
 #endif
