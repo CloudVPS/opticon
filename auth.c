@@ -81,9 +81,9 @@ session *session_register (uuid tenantid, uuid hostid,
     session-id. */
 session *session_find (uint32_t addrpart, uint32_t sess_id) {
     uint32_t sid = sess_id ^ addrpart;
-    uint8_t bucket = (sid >> 24) |
-                     ((sid & 0x00ff0000) >> 16) |
-                     ((sid & 0x0000ff00) >> 8) |
+    uint8_t bucket = (sid >> 24) ^
+                     ((sid & 0x00ff0000) >> 16) ^
+                     ((sid & 0x0000ff00) >> 8) ^
                      (sid & 0xff);
     session *s = SESSIONS[bucket].first;
     while (s) {
