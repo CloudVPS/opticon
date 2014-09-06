@@ -4,7 +4,7 @@
 
 int filewriter_write (ioport *io, const char *dat, size_t sz) {
     FILE *F = (FILE *) io->storage;
-    return (fwrite (dat, sz, 1, F) == sz);
+    return (fwrite (dat, sz, 1, F) > 0);
 }
 
 void filewriter_close (ioport *io) {
