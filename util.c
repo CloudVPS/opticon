@@ -111,6 +111,12 @@ void id2str (meterid_t id, char *into) {
     *(end+1) = 0;
 }
 
+/** Extract that 'object' name from a meterid with a path
+  * separator in it. Note we only support one level of
+  * hierarchy. This is used for json encoding.
+  * \param id The meterid, e.g., <<foo/quux>>
+  * \param into The string to copy the id into.
+  */
 void nodeid2str (meterid_t id, char *into) {
     char *out = into;
     char *end = into;
@@ -150,6 +156,7 @@ uint64_t idhaspath (meterid_t id) {
     return 0;
 }
 
+/** generate a bitmask for sz characters into a meterid */
 uint64_t idmask (int sz) {
     uint64_t mask = 0;
     int bshift = 57;
