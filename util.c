@@ -252,6 +252,7 @@ void dump_host_json (host *h, ioport *into) {
                 m = m->next;
                 continue;
             }
+            if (paths>127) return;
             pathbuffer[paths++] = (m->id & pathmask);
         }
         
