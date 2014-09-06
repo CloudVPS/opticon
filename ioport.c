@@ -78,7 +78,7 @@ int ioport_write_bits (ioport *io, uint8_t d, uint8_t bits) {
     if (io->bitpos > 7) {
         if (! io->write (io, (const char *)&(io->bitbuffer), 1)) return 0;
         io->bitpos = bits2;
-        io->bitbuffer = data2;
+        io->bitbuffer = bits2 ? data2 << (8-bits2) : 0;
     }
     return 1;
 }
