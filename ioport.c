@@ -337,6 +337,7 @@ uint64_t ioport_read_encint (ioport *io) {
     return res;
 }
 
+/** Read an encoded fractional number from an ioport */
 double ioport_read_encfrac (ioport *io) {
     double res = 0;
     res = ioport_read_byte (io);

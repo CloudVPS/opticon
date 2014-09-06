@@ -198,6 +198,7 @@ int pktcodec_encode_host (ioport *io, host *h) {
     return 1;
 }
 
+/** Decode packet data into a host */
 int pktcodec_decode_host (ioport *io, host *h) {
     meterid_t mid;
     uint8_t count;
