@@ -178,6 +178,9 @@ int main (int argc, const char *argv[]) {
         return 1;
     }
     
+    bufferstorage *stor = (bufferstorage*) IO->storage;
+    printf ("\n--> Encoded in %i bytes\n\n", stor->pos);
+    
     host *HH = host_alloc();
     if (! codec_decode_host (C, IO, HH)) {
         fprintf (stderr, "Decode failed\n");

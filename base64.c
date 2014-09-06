@@ -4,18 +4,16 @@
 static const unsigned char base64_table[64] =
     "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
-/**
- * base64_encode - Base64 encode
- * @src: Data to be encoded
- * @len: Length of the data to be encoded
- * @out_len: Pointer to output length variable, or %NULL if not used
- * Returns: Allocated buffer of out_len bytes of encoded data,
- * or %NULL on failure
- *
- * Caller is responsible for freeing the returned buffer. Returned buffer is
- * nul terminated to make it easier to use as a C string. The nul terminator is
- * not included in out_len.
- */
+/** Encode a blob to base64
+  * Caller is responsible for freeing the returned buffer. Returned 
+  * buffer is nul terminated to make it easier to use as a C string. 
+  * The nul terminator is not included in out_len.
+  * \param src Data to be encoded
+  * \param len Length of the data to be encoded
+  * \param out_len Pointer to output length variable, or NULL if not used
+  * \return Allocated buffer of out_len bytes of encoded data,
+  *         or NULL on failure
+  */
 char *base64_encode (const char *ssrc, size_t len, size_t *out_len) {
     const unsigned char *src = (const unsigned char *) ssrc;
     unsigned char *out, *pos;
@@ -71,16 +69,14 @@ char *base64_encode (const char *ssrc, size_t len, size_t *out_len) {
 }
 
 
-/**
- * base64_decode - Base64 decode
- * @src: Data to be decoded
- * @len: Length of the data to be decoded
- * @out_len: Pointer to output length variable
- * Returns: Allocated buffer of out_len bytes of decoded data,
- * or %NULL on failure
- *
- * Caller is responsible for freeing the returned buffer.
- */
+/** Decode a base64 string to binary.
+  * Caller is responsible for freeing the returned buffer.
+  * \param src The string to be decoded
+  * \param len Length of src string
+  * \param out_len Pointer to output variable.
+  * \return Allocated buffer with out_len bytes of decoded data,
+  *         or NULL on failure.
+  */
 char *base64_decode (const char *ssrc, size_t len, size_t *out_len) {
     const unsigned char *src = (const unsigned char *) ssrc;
     unsigned char dtable[256], *out, *pos, in[4], block[4], tmp;
