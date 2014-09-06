@@ -120,6 +120,7 @@ int ioport_write_encstring (ioport *io, const char *str) {
             return ioport_write (io, str, len);
         }
     }
+    if (! ioport_write_byte (io, len | 0x80)) return 0;
     for (i=0;i<len;++i) {
         if (! ioport_write_bits (io, DECSET[str[i]], 6)) return 0;
     }
