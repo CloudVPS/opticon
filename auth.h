@@ -2,7 +2,7 @@
 #define _AUTH_H 1
 
 #include <datatypes.h>
-#include <encoding.h>
+#include <ioport.h>
 #include <time.h>
 
 typedef struct aeskey_s {

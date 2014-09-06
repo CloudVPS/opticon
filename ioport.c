@@ -1,4 +1,4 @@
-#include <encoding.h>
+#include <ioport.h>
 
 int filewriter_write (ioport *e, const char *dat, size_t sz) {
     FILE *F = (FILE *) e->storage;

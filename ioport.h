@@ -1,5 +1,5 @@
-#ifndef _ENCODING_H
-#define _ENCODING_H 1
+#ifndef _IOPORT_H
+#define _IOPORT_H 1
 
 #include <stdio.h>
 #include <stdlib.h>
