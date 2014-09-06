@@ -164,8 +164,9 @@ int main (int argc, const char *argv[]) {
     S = session_find (0x0a000001, 0x31337666);
     assert (S == NULL);
     
-    C->encode_host (IO, H);
+    codec_encode_host (C, IO, H);
     ioport_close (IO);
+    codec_release (C);
     
     M = host_get_meter (H, M_NET_IN_PPS);
     M = meter_next_sibling (M);

@@ -18,8 +18,11 @@ typedef struct codec_s {
 
 codec       *codec_create_json (void);
 codec       *codec_create_opticon (void);
+void         codec_release (codec *);
+int          codec_encode_host (codec *, ioport *, host *);
+int          codec_decode_host (codec *, ioport *, host *);
 
-int          jsoncodec_encode (ioport *, host *);
-int          jsoncodec_decode (ioport *, host *);
+int          jsoncodec_encode_host (ioport *, host *);
+int          jsoncodec_decode_host (ioport *, host *);
 
 #endif
