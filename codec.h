@@ -26,5 +26,6 @@ int          jsoncodec_encode_host (ioport *, host *);
 int          jsoncodec_decode_host (ioport *, host *);
 
 int          pktcodec_encode_host (ioport *, host *);
+int          pktcodec_decode_host (ioport *, host *);
 
 #endif

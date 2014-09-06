@@ -336,3 +336,11 @@ uint64_t ioport_read_encint (ioport *io) {
     
     return res;
 }
+
+double ioport_read_encfrac (ioport *io) {
+    double res = 0;
+    res = ioport_read_byte (io);
+    res += ((double)ioport_read_byte(io))/256.0;
+    return res;
+}
+

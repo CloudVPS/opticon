@@ -168,16 +168,30 @@ int main (int argc, const char *argv[]) {
     ioport_close (IO);
     codec_release (C);
     
-    FILE *F = fopen ("pkt.out","w");
+    char bouncebuf[4096];
+    
     C = codec_create_pkt();
-    IO = ioport_create_filewriter (F);
+    IO = ioport_create_buffer (bouncebuf, 4096);
+    
     if (! codec_encode_host (C, IO, H)) {
         fprintf (stderr, "Encode failed\n");
         return 1;
     }
+    
+    host *HH = host_alloc();
+    if (! codec_decode_host (C, IO, HH)) {
+        fprintf (stderr, "Decode failed\n");
+        return 1;
+    }
+    
     ioport_close (IO);
     codec_release (C);
-    fclose (F);
+
+    C = codec_create_json();
+    IO = ioport_create_filewriter (stdout);
+    codec_encode_host (C, IO, HH);
+    ioport_close (IO);
+    codec_release (C);
     
     M = host_get_meter (H, M_NET_IN_PPS);
     M = meter_next_sibling (M);

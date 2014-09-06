@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <util.h>
 
+/** Instantiate a JSON codec */
 codec *codec_create_json (void) {
     codec *res = (codec *) malloc (sizeof (codec));
     if (! res) return res;
@@ -10,22 +11,26 @@ codec *codec_create_json (void) {
     return res;
 }
 
+/** Instantiate a packet codec */
 codec *codec_create_pkt (void) {
     codec *res = (codec *) malloc (sizeof (codec));
     if (! res) return res;
     res->encode_host = pktcodec_encode_host;
-    res->decode_host = jsoncodec_decode_host; /* FIXME */
+    res->decode_host = pktcodec_decode_host;
     return res;
 }
 
+/** Destroy a codec */
 void codec_release (codec *c) {
     free (c);
 }
 
+/** Call on a codec to encode a host's data into an ioport */
 int codec_encode_host (codec *c, ioport *io, host *h) {
     return c->encode_host (io, h);
 }
 
+/** Call on a codec to load host data from an ioport */
 int codec_decode_host (codec *c, ioport *io, host *h) {
     return c->decode_host (io, h);
 }
@@ -58,6 +63,7 @@ void jsoncodec_dump_val (metertype_t type, meter *m, int pos, ioport *into) {
     ioport_write (into, buf, strlen (buf));
 }
 
+/** Dumps a meter with a path element */
 void jsoncodec_dump_pathval (meter *m, int pos, ioport *into, int ind) {
     meter *mm = m;
     char buf[1024];
@@ -153,11 +159,13 @@ int jsoncodec_encode_host (ioport *into, host *h) {
     return 0;
 }
 
+/** Decode host data from JSON (not implemented) */
 int jsoncodec_decode_host (ioport *io, host *h) {
     fprintf (stderr, "%% JSON decoding not supported\n");
     return 0;
 }
 
+/** Write out a meter value */
 int pktcodec_write_value (ioport *io, meter *m, uint8_t pos) {
     switch (m->id & MMASK_TYPE) {
         case MTYPE_INT:
@@ -171,6 +179,7 @@ int pktcodec_write_value (ioport *io, meter *m, uint8_t pos) {
     }
 }
 
+/** Encode host data in packet format */
 int pktcodec_encode_host (ioport *io, host *h) {
     meter *m = h->first;
     meterid_t id;
@@ -185,6 +194,42 @@ int pktcodec_encode_host (ioport *io, host *h) {
             if (! pktcodec_write_value (io, m, i)) return 0;
         }
         m = m->next;
+    }
+    return 1;
+}
+
+int pktcodec_decode_host (ioport *io, host *h) {
+    meterid_t mid;
+    uint8_t count;
+    char strbuf[128];
+    meter *M;
+    while (1) {
+        mid = ioport_read_u64 (io);
+        if (mid == 0) break;
+        
+        M = host_get_meter (h, mid);
+        count = mid & MMASK_COUNT;
+        meter_setcount (M, count);
+        if (! count) count=1;
+        for (uint8_t i=0; i<count; ++i) {
+            switch (mid & MMASK_TYPE) {
+                case MTYPE_INT:
+                    meter_set_uint (M, i, ioport_read_encint (io));
+                    break;
+                    
+                case MTYPE_FRAC:
+                    meter_set_frac (M, i, ioport_read_encfrac (io));
+                    break;
+                
+                case MTYPE_STR:
+                    ioport_read_encstring (io, strbuf);
+                    meter_set_str (M, i, strbuf);
+                    break;
+                
+                default:
+                    return 0;
+            }
+        }
     }
     return 1;
 }
