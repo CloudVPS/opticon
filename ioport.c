@@ -7,6 +7,10 @@ int filewriter_write (ioport *io, const char *dat, size_t sz) {
     return (fwrite (dat, sz, 1, F) > 0);
 }
 
+int filewriter_read (ioport *io, char *into, size_t sz) {
+    return 0;
+}
+
 void filewriter_close (ioport *io) {
     free (io);
 }
@@ -16,6 +20,15 @@ int buffer_write (ioport *io, const char *dat, size_t sz) {
     if (S->pos + sz > S->bufsz) return 0;
     memcpy (S->buf + S->pos, dat, sz);
     S->pos += sz;
+    return 1;
+}
+
+int buffer_read (ioport *io, char *into, size_t sz) {
+    bufferstorage *S = (bufferstorage *) io->storage;
+    if (S->rpos + sz > S->bufsz) return 0;
+    if (S->pos && (S->rpos + sz > S->pos)) return 0;
+    memcpy (into, S->buf + S->rpos, sz);
+    S->rpos += sz;
     return 1;
 }
 
@@ -29,6 +42,7 @@ ioport *ioport_create_filewriter (FILE *F) {
     res->storage = F;
     res->write = filewriter_write;
     res->close = filewriter_close;
+    res->read = filewriter_read;
     res->bitpos = 0;
     res->bitbuffer = 0;
     return res;
@@ -38,6 +52,7 @@ ioport *ioport_create_buffer (char *buf, size_t sz) {
     ioport *res = (ioport *) malloc (sizeof (ioport));
     res->write = buffer_write;
     res->close = buffer_close;
+    res->read = buffer_read;
     res->bitpos = 0;
     res->bitbuffer = 0;
     
@@ -45,6 +60,7 @@ ioport *ioport_create_buffer (char *buf, size_t sz) {
     S->buf = buf;
     S->bufsz = sz;
     S->pos = 0;
+    S->rpos = 0;
     return res;
 }
 
@@ -160,4 +176,40 @@ int ioport_write_u64 (ioport *io, uint64_t i) {
     uint64_t netorder = ((uint64_t) ntohl (i&0xffffffffLLU)) << 32;
     netorder |= ntohl ((i & 0xffffffff00000000LLU) >> 32);
     return ioport_write (io, (const char *)&netorder, sizeof (netorder));
+}
+
+int ioport_read (ioport *io, char *into, size_t sz) {
+    return io->read (io, into, sz);
+}
+
+uuid ioport_read_uuid (ioport *io) {
+    uuid res = {0,0};
+    return res;
+}
+
+uint8_t ioport_read_byte (ioport *io) {
+    uint8_t res = 0;
+    ioport_read (io, (char *)&res, 1);
+    return res;
+}
+
+uint8_t ioport_read_bits (ioport *io, uint8_t numbits) {
+    if (numbits > 8) return 0;
+    if (! numbits) return 0;
+    if (! io->bitpos) io->bitbuffer = ioport_read_byte (io);
+    uint8_t res = 0;
+    uint8_t shift = (8 - io->bitpos) - numbits;
+    uint8_t bits1 = (numbits + io->bitpos > 8) ? 8-io->bitpos : numbits;
+    uint8_t mask1 = BITMASKS[bits1] << shift;
+    uint8_t bits2 = numbits - bits1;
+    uint8_t shift2 = 8-bits2;
+    uint8_t mask2 = bits2 ? BITMASKS[bits2] << shift2 : 0;
+    res = (io->bitbuffer & mask1) >> shift << bits2;
+    if (bits2) {
+        io->bitbuffer = ioport_read_byte (io);
+        res |= (io->bitbuffer & mask2) >> shift2;
+        io->bitpos = bits2;
+    }
+    else io->bitpos = 0;
+    return res;
 }
