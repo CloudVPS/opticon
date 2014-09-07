@@ -1,5 +1,7 @@
 all:
+	@echo "=== Building libopticon ============================================="
 	@cd libopticon && make && cd ..
+	@echo "=== Building tests =================================================="
 	@cd test && make && cd ..
 
 clean:

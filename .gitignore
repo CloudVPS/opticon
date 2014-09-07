@@ -1,4 +1,5 @@
 doc/
 *.o
 test/test_roundtrip_encoding
+test/test_ioport
 lib/*.a

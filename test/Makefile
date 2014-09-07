@@ -17,10 +17,16 @@ endif
 
 CFLAGS+=-DOSNAME=$(OSNAME) -DOSREL=$(OSREL) -DOSRELMAJOR=$(OSRELMAJOR)
 
-all: test_roundtrip_encoding
+all: test_roundtrip_encoding test_ioport
+
+test_ioport: test_ioport.o
+	@echo "* LINK test_ioport"
+	@$(CC) -o test_ioport test_ioport.o \
+		  ../lib/libopticon.a -lz
 
 test_roundtrip_encoding: test_roundtrip_encoding.o
-	$(CC) -o test_roundtrip_encoding test_roundtrip_encoding.o \
+	@echo "* LINK test_roundtrip_encoding"
+	@$(CC) -o test_roundtrip_encoding test_roundtrip_encoding.o \
 		  ../lib/libopticon.a -lz
 
 clean:
@@ -28,4 +34,5 @@ clean:
 
 .SUFFIXES: .c .o
 .c.o:
-	$(CC) $(CFLAGS) -I../include -c $<
+	@echo "* COMPILE $<"
+	@$(CC) $(CFLAGS) -I../include -c $<

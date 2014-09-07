@@ -26,11 +26,13 @@ OBJS_LIBOPTICON = aes.o host.o tenant.o \
 all: ../lib/libopticon.a
 
 ../lib/libopticon.a: $(OBJS_LIBOPTICON)
-	ar cr ../lib/libopticon.a $(OBJS_LIBOPTICON)
+	@echo "* LINK libopticon.a"
+	@ar cr ../lib/libopticon.a $(OBJS_LIBOPTICON)
 
 clean:
 	rm -f *.o ../lib/libopticon.a
 
 .SUFFIXES: .c .o
 .c.o:
-	$(CC) $(CFLAGS) -I../include -c $<
+	@echo "* COMPILE $<"
+	@$(CC) $(CFLAGS) -I../include -c $<
