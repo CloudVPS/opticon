@@ -76,8 +76,9 @@ char *buffer_get_buffer (ioport *io) {
 }
 
 /** Create a filewriter instance.
-    \param F the FILE to connect
-    \return The freshly created ioport */
+  * \param F the FILE to connect
+  * \return The freshly created ioport 
+  */
 ioport *ioport_create_filewriter (FILE *F) {
     ioport *res = (ioport *) malloc (sizeof (ioport));
     res->storage = F;
@@ -93,9 +94,10 @@ ioport *ioport_create_filewriter (FILE *F) {
 }
 
 /** Create a buffer instance.
-    \param buf Backend buffer storage
-    \param sz The buffer's size
-    \return The freshly created ioport */
+  * \param buf Backend buffer storage
+  * \param sz The buffer's size
+  * \return The freshly created ioport 
+  */
 ioport *ioport_create_buffer (char *buf, size_t sz) {
     ioport *res = (ioport *) malloc (sizeof (ioport));
     res->write = buffer_write;
@@ -116,16 +118,18 @@ ioport *ioport_create_buffer (char *buf, size_t sz) {
 }
 
 /** Get the amount of available buffer space for writing into an
-    ioport. */
+  * ioport. 
+  */
 size_t ioport_write_available (ioport *io) {
     return io->write_available (io);
 }
 
 /** Write a blob of data to an ioport.
-    \param io The ioport to write to
-    \param data The blob
-    \param sz The blob size
-    \return 1 on success, 0 on failure */
+  * \param io The ioport to write to
+  * \param data The blob
+  * \param sz The blob size
+  * \return 1 on success, 0 on failure 
+  */
 int ioport_write (ioport *io, const char *data, size_t sz) {
     if (io->bitpos) {
         if (! ioport_flush_bits (io)) return 0;
@@ -134,9 +138,10 @@ int ioport_write (ioport *io, const char *data, size_t sz) {
 }
 
 /** Write a single byte to an ioport.
-    \param io The ioport
-    \param b The byte to write
-    \return 1 on success, 0 on failure */
+  * \param io The ioport
+  * \param b The byte to write
+  * \return 1 on success, 0 on failure 
+  */
 int ioport_write_byte (ioport *io, uint8_t b) {
     if (io->bitpos) {
         if (! ioport_flush_bits (io)) return 0;
@@ -165,11 +170,12 @@ char *ioport_get_buffer (ioport *io) {
 uint8_t BITMASKS[9] = {0x00, 0x01, 0x03, 0x07, 0x0f, 0x1f, 0x3f, 0x7f, 0xff};
 
 /** Write a specific number of bits to an ioport. Subsequent calls
-    will continue at the last bit offset. Bits are put into the
-    stream little-endian.
-    \param io The ioport
-    \param d The data
-    \param bits The number of bits to write (max 8) */
+  * will continue at the last bit offset. Bits are put into the
+  * stream little-endian.
+  * \param io The ioport
+  * \param d The data
+  * \param bits The number of bits to write (max 8) 
+  */
 int ioport_write_bits (ioport *io, uint8_t d, uint8_t bits) {
     if (bits>8) return 0;
     uint8_t bits1 = (io->bitpos + bits < 8) ? bits : 8-io->bitpos;
@@ -191,9 +197,10 @@ int ioport_write_bits (ioport *io, uint8_t d, uint8_t bits) {
 }
 
 /** Flush any outstanding bits left over from earlier calls to
-    ioport_write_bits(). This final byte will be 0-padded.
-    \param io The ioport.
-    \return 1 on success, 0 on failure. */
+  * ioport_write_bits(). This final byte will be 0-padded.
+  * \param io The ioport.
+  * \return 1 on success, 0 on failure. 
+  */
 int ioport_flush_bits (ioport *io) {
     if (! io->bitpos) return 1;
     if (! io->write (io, (const char *)&(io->bitbuffer), 1)) return 0;
@@ -215,10 +222,11 @@ static uint8_t DECSET[128] = {
 };
 
 /** Write an encoded string to an ioport. The string will be written
-    as either a plain pascal string, or a stream of 6-bit characters.
-    \param io The ioport
-    \param str The string to encode (maximum length 127 chars)
-    \return 1 on success, 0 on failure */
+  * as either a plain pascal string, or a stream of 6-bit characters.
+  * \param io The ioport
+  * \param str The string to encode (maximum length 127 chars)
+  * \return 1 on success, 0 on failure 
+  */
 int ioport_write_encstring (ioport *io, const char *str) {
     uint8_t i;
     char out_ascii[128];
@@ -239,10 +247,11 @@ int ioport_write_encstring (ioport *io, const char *str) {
 }
 
 /** Encode a floating point into an ioport as a 16-bit fixed point
-    number.
-    \param io The ioport
-    \param d The value to encode (between 0.0 and 255.999)
-    \return 1 on success, 0 on failure */
+  * number.
+  * \param io The ioport
+  * \param d The value to encode (between 0.0 and 255.999)
+  * \return 1 on success, 0 on failure 
+  */
 int ioport_write_encfrac (ioport *io, double d) {
     if (d <= 0.0) return ioport_write (io, "\0\0", 2);
     if (d >= 255.999) {
@@ -256,9 +265,10 @@ int ioport_write_encfrac (ioport *io, double d) {
 }
 
 /** Encode a 63 bits unsigned integer into an ioport.
-    \param io The iobuffer
-    \param i The integer to encode
-    \return 1 on success, 0 on failure */
+  * \param io The iobuffer
+  * \param i The integer to encode
+  * \return 1 on success, 0 on failure 
+  */
 int ioport_write_encint (ioport *io, uint64_t i) {
     uint64_t msk;
     uint8_t byte;
@@ -276,10 +286,11 @@ int ioport_write_encint (ioport *io, uint64_t i) {
 }
 
 /** Write a raw 64 bits unsigned integer to an ioport in an endian-
-    safe fashion.
-    \param io The ioport
-    \param i The integer to encode
-    \return 1 on success, 0 on failure */
+  * safe fashion.
+  * \param io The ioport
+  * \param i The integer to encode
+  * \return 1 on success, 0 on failure 
+  */
 int ioport_write_u64 (ioport *io, uint64_t i) {
     uint64_t netorder = ((uint64_t) htonl (i&0xffffffffLLU)) << 32;
     netorder |= htonl ((i & 0xffffffff00000000LLU) >> 32);
@@ -292,10 +303,11 @@ size_t ioport_read_available (ioport *io) {
 }
 
 /** Read data from an ioport.
-    \param io The ioport
-    \param into The buffer to read to
-    \param sz The number of bytes to read
-    \return 1 on success, 0 on failure */
+  * \param io The ioport
+  * \param into The buffer to read to
+  * \param sz The number of bytes to read
+  * \return 1 on success, 0 on failure 
+  */
 int ioport_read (ioport *io, char *into, size_t sz) {
     io->bitpos = io->bitbuffer = 0;
     return io->read (io, into, sz);
@@ -339,8 +351,9 @@ uint8_t ioport_read_bits (ioport *io, uint8_t numbits) {
 }
 
 /** Read an encoded string from an ioport.
-    \param io The ioport
-    \param into The string buffer (size 128). */
+  * \param io The ioport
+  * \param into The string buffer (size 128). 
+  */
 int ioport_read_encstring (ioport *io, char *into) {
     io->bitpos = io->bitbuffer = 0;
     uint8_t sz = ioport_read_byte (io);
