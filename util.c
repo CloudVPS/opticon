@@ -81,7 +81,7 @@ meterid_t makeid (const char *label, metertype_t type, int pos) {
     char c;
     while ((c = *crsr) && bshift > 2) {
         if (c>0) {
-            res |= (ASCIITABLE[c] << bshift);
+            res |= (ASCIITABLE[(int)c] << bshift);
             bshift -= 5;
         }
         crsr++;

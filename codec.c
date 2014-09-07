@@ -95,7 +95,6 @@ int jsoncodec_encode_host (ioport *into, host *h) {
     int paths = 0;
     uint64_t pathmask = 0;
     meter *m = h->first;
-    meter *mm;
     int i;
     int first=1;
     int dobrk = 0;

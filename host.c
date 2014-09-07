@@ -118,7 +118,6 @@ meter *host_set_meter_uint (host *h, meterid_t id,
                             uint64_t *data) {
     
     unsigned int count = cnt ? cnt : 1;
-    unsigned int i;
     meter *m = host_get_meter (h, id);
     m->count = cnt;
     
@@ -137,7 +136,6 @@ meter *host_set_meter_str (host *h, meterid_t id,
                            unsigned int cnt,
                            const fstring *str) {
     unsigned int count = cnt ? cnt : 1;
-    unsigned int i;
     meter *m = host_get_meter (h, id);
     m->count = cnt;
     if (m->d.any != NULL) {

@@ -229,19 +229,17 @@ static uint8_t DECSET[128] = {
   */
 int ioport_write_encstring (ioport *io, const char *str) {
     uint8_t i;
-    char out_ascii[128];
-    size_t outsz = 0;
     size_t len = strlen (str);
     if (len > 127) return 0;
     for (i=0;i<len;++i) {
-        if ((str[i]>127) || (DECSET[str[i]] == 255)) {
+        if ((str[i]>127) || (DECSET[(int)str[i]] == 255)) {
             if (! ioport_write_byte (io, len)) return 0;
             return ioport_write (io, str, len);
         }
     }
     if (! ioport_write_byte (io, len | 0x80)) return 0;
     for (i=0;i<len;++i) {
-        if (! ioport_write_bits (io, DECSET[str[i]], 6)) return 0;
+        if (! ioport_write_bits (io, DECSET[(int)str[i]], 6)) return 0;
     }
     return ioport_flush_bits (io);
 }

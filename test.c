@@ -37,7 +37,7 @@ int main (int argc, const char *argv[]) {
     meterid_t M_HOSTNAME = makeid ("hostname",MTYPE_STR,0);
     meterid_t M_UNAME = makeid ("uname",MTYPE_STR,0);
 
-    fstring D_NET_NAME[2] = {"eth0","eth1"};
+    fstring D_NET_NAME[2] = {{"eth0"},{"eth1"}};
     uint64_t D_NET_IN_KBS[2] = {100ULL,70ULL};
     uint64_t D_NET_OUT_KBS[2] = {250ULL, 90ULL};
     uint64_t D_NET_IN_PPS[2] = {150ULL,100ULL};
