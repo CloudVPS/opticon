@@ -175,20 +175,29 @@ int main (int argc, const char *argv[]) {
     
     bufferstorage *stor = (bufferstorage*) IO->storage;
     printf ("\n--> Encoded in %i bytes\n", stor->pos);
+    size_t orig_size = stor->pos;
     
     char compressed[4096];
     ioport *CmpIO = ioport_create_buffer (compressed, 4096);
     compress_data (IO, CmpIO);
-    printf ("--> Compressed %lu bytes\n\n", ioport_read_available (CmpIO));
-    ioport_close (CmpIO);
+    printf ("--> Compressed %lu bytes\n", ioport_read_available (CmpIO));
+    
+    char decompressed[4096];
+    ioport *DcmpIO = ioport_create_buffer (decompressed, 4096);
+    decompress_data (CmpIO, DcmpIO);
+    size_t bounce_size = ioport_read_available (DcmpIO);
+    printf ("--> Decompressed %lu bytes\n\n", bounce_size);
+
+    assert (bounce_size == orig_size);
 
     host *HH = host_alloc();
-    if (! codec_decode_host (C, IO, HH)) {
+    if (! codec_decode_host (C, DcmpIO, HH)) {
         fprintf (stderr, "Decode failed\n");
         return 1;
     }
     
-
+    ioport_close (DcmpIO);
+    ioport_close (CmpIO);
     ioport_close (IO);
     codec_release (C);
     
