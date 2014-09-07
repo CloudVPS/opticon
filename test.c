@@ -15,6 +15,7 @@ int main (int argc, const char *argv[]) {
     int i;
     uuid tenantid = mkuuid (stenantid);
     uuid hostid = mkuuid (shostid);
+    meterid_t M_NET_NAME = makeid ("net/name",MTYPE_STR,0);
     meterid_t M_NET_IN_KBS = makeid ("net/in.kbs",MTYPE_INT,0);
     meterid_t M_NET_OUT_KBS = makeid ("net/out.kbs",MTYPE_INT,0);
     meterid_t M_NET_IN_PPS = makeid ("net/in.pps",MTYPE_INT,0);
@@ -22,6 +23,7 @@ int main (int argc, const char *argv[]) {
     meterid_t M_HOSTNAME = makeid ("hostname",MTYPE_STR,0);
     meterid_t M_UNAME = makeid ("uname",MTYPE_STR,0);
 
+    fstring D_NET_NAME[2] = {"eth0","eth1"};
     uint64_t D_NET_IN_KBS[2] = {100ULL,70ULL};
     uint64_t D_NET_OUT_KBS[2] = {250ULL, 90ULL};
     uint64_t D_NET_IN_PPS[2] = {150ULL,100ULL};
@@ -89,13 +91,11 @@ int main (int argc, const char *argv[]) {
     id2str (M_NET_IN_KBS, tstr);
     meter *M = host_get_meter (H, M_HOSTNAME);
     meter_setcount (M, 0);
-    meter_set_str (M, 0, "webserver-01.heikneuter.nl");
+    meter_set_str (M, 0, "srv-01.heikneuter.nl");
     
     M = host_get_meter (H, M_UNAME);
     meter_setcount (M, 0);
-    meter_set_str (M, 0, "Linux lab.madscience.nl 2.6.18-prep #1 SMP "
-                         "Mon Dec 20 13:49:26 CET 2010 x86_64 "
-                         "x86_64 x86_64 GNU/Linux");
+    meter_set_str (M, 0, "Linux srv-01.heikneuter.nl 2.6.18-prep #1 SMP");
     
     M = host_get_meter (H, M_PCPU);
     meter_setcount (M, 0);
@@ -125,6 +125,7 @@ int main (int argc, const char *argv[]) {
     meter_setcount (M, 0);
     meter_set_uint (M, 0, 122020);
     
+    M = host_set_meter_str (H, M_NET_NAME, 2, D_NET_NAME);
     M = host_set_meter_uint (H, M_NET_IN_KBS, 2, D_NET_IN_KBS);
     M = host_set_meter_uint (H, M_NET_IN_PPS, 2, D_NET_IN_PPS);
     assert (meter_get_uint (M, 1) == 100ULL);
