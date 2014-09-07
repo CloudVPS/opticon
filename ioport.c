@@ -18,6 +18,12 @@ void filewriter_close (ioport *io) {
     free (io);
 }
 
+/** Available function for the filewriter ioport. Should be irrelevant,
+    since it is only used for compression. */
+size_t filewriter_available (ioport *io) {
+    return 1024;
+}
+
 /** Write method of the buffer ioport */
 int buffer_write (ioport *io, const char *dat, size_t sz) {
     bufferstorage *S = (bufferstorage *) io->storage;
@@ -43,6 +49,19 @@ void buffer_close (ioport *io) {
     free (io);
 }
 
+/** Return number of bytes still available for reading */
+size_t buffer_read_available (ioport *io) {
+    bufferstorage *S = (bufferstorage *) io->storage;
+    if (S->pos) return S->pos - S->rpos;
+    return S->bufsz - S->rpos;
+}
+
+/** Return available buffer space */
+size_t buffer_write_available (ioport *io) {
+    bufferstorage *S = (bufferstorage *) io->storage;
+    return S->bufsz - S->pos;
+}
+
 /** Create a filewriter instance.
     \param F the FILE to connect
     \return The freshly created ioport */
@@ -52,6 +71,8 @@ ioport *ioport_create_filewriter (FILE *F) {
     res->write = filewriter_write;
     res->close = filewriter_close;
     res->read = filewriter_read;
+    res->read_available = filewriter_available;
+    res->write_available = filewriter_available;
     res->bitpos = 0;
     res->bitbuffer = 0;
     return res;
@@ -66,6 +87,8 @@ ioport *ioport_create_buffer (char *buf, size_t sz) {
     res->write = buffer_write;
     res->close = buffer_close;
     res->read = buffer_read;
+    res->read_available = buffer_read_available;
+    res->write_available = buffer_write_available;
     res->bitpos = 0;
     res->bitbuffer = 0;
     
@@ -75,6 +98,12 @@ ioport *ioport_create_buffer (char *buf, size_t sz) {
     S->pos = 0;
     S->rpos = 0;
     return res;
+}
+
+/** Get the amount of available buffer space for writing into an
+    ioport. */
+size_t ioport_write_available (ioport *io) {
+    return io->write_available (io);
 }
 
 /** Write a blob of data to an ioport.
@@ -235,6 +264,11 @@ int ioport_write_u64 (ioport *io, uint64_t i) {
     uint64_t netorder = ((uint64_t) htonl (i&0xffffffffLLU)) << 32;
     netorder |= htonl ((i & 0xffffffff00000000LLU) >> 32);
     return ioport_write (io, (const char *)&netorder, sizeof (netorder));
+}
+
+/** Get the amount of bytes left for reading out of the ioport. */
+size_t ioport_read_available (ioport *io) {
+    return io->read_available (io);
 }
 
 /** Read data from an ioport.

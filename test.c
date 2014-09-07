@@ -189,6 +189,14 @@ int main (int argc, const char *argv[]) {
     ioport_close (IO);
     codec_release (C);
     
+    FILE *F = fopen ("pkt.out","w");
+    C = codec_create_pkt();
+    IO = ioport_create_filewriter (F);
+    codec_encode_host (C, IO, H);
+    ioport_close (IO);
+    codec_release (C);
+    fclose (F);
+    
     M = host_get_meter (H, M_NET_IN_PPS);
     M = meter_next_sibling (M);
     assert (M != NULL);
