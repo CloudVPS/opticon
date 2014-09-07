@@ -5,6 +5,7 @@
 #include <auth.h>
 #include <codec.h>
 #include <compress.h>
+#include <aes.h>
 
 #define FD_STDOUT 1
 
@@ -182,9 +183,19 @@ int main (int argc, const char *argv[]) {
     compress_data (IO, CmpIO);
     printf ("--> Compressed %lu bytes\n", ioport_read_available (CmpIO));
     
+    char encrypted[4096];
+    ioport *CryptIO = ioport_create_buffer (encrypted, 4096);
+    ioport_encrypt (&key, CmpIO, CryptIO);
+    printf ("--> Encrypted %lu bytes\n", ioport_read_available (CryptIO));
+    
+    char decrypted[4096];
+    ioport *DecrIO = ioport_create_buffer (decrypted, 4096);
+    ioport_decrypt (&key, CryptIO, DecrIO);
+    printf ("--> Decrypted %lu bytes\n", ioport_read_available (DecrIO));
+    
     char decompressed[4096];
     ioport *DcmpIO = ioport_create_buffer (decompressed, 4096);
-    decompress_data (CmpIO, DcmpIO);
+    decompress_data (DecrIO, DcmpIO);
     size_t bounce_size = ioport_read_available (DcmpIO);
     printf ("--> Decompressed %lu bytes\n\n", bounce_size);
 
@@ -197,6 +208,8 @@ int main (int argc, const char *argv[]) {
     }
     
     ioport_close (DcmpIO);
+    ioport_close (DecrIO);
+    ioport_close (CryptIO);
     ioport_close (CmpIO);
     ioport_close (IO);
     codec_release (C);
