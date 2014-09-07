@@ -29,7 +29,7 @@ all: ../lib/libopticon.a
 	ar cr ../lib/libopticon.a $(OBJS_LIBOPTICON)
 
 clean:
-	rm -f *.o
+	rm -f *.o ../lib/libopticon.a
 
 .SUFFIXES: .c .o
 .c.o:
