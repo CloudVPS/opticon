@@ -29,47 +29,47 @@ typedef struct { char str[128]; } fstring;
 
 /* Union for within a meter structure */
 typedef union {
-    uint64_t         *u64;
-    double           *frac;
-    fstring          *str;
-    void             *any;
+    uint64_t         *u64; /**< Integer representation */
+    double           *frac; /**< Fractional representation */
+    fstring          *str; /**< String representation */
+    void             *any; /**< Raw pointer */
 } meterdata;
 
 /* Structure representing a specific meter bound to a host */
 typedef struct meter_s {
-    struct meter_s  *next;
-    struct meter_s  *prev;
+    struct meter_s  *next; /**< List link */
+    struct meter_s  *prev; /**< List link */
 
-    meterid_t        id;
-    time_t           lastmodified;
-    int              count;
-    meterdata        d;
+    meterid_t        id; /**< id and type of the data */
+    time_t           lastmodified; /**< timeout information */
+    int              count; /**< Element count, 0 means direct value */
+    meterdata        d; /**< value */
 } meter;
 
 /* Structure representing a monitored host */
 typedef struct host_s {
-    struct host_s   *next;
-    struct host_s   *prev;
-    uuid             uuid;
-    status_t         status;
-    meter           *first;
-    meter           *last;
+    struct host_s   *next; /**< List link */
+    struct host_s   *prev; /**< List link */
+    uuid             uuid; /**< uuid of the host */
+    status_t         status; /**< current status (if relevant */
+    meter           *first; /**< first connected meter */
+    meter           *last; /**< last connected meter */
 } host; 
 
 /* Structure representing a keystone tenant */
 typedef struct tenant_s {
-    struct tenant_s *next;
-    struct tenant_s *prev;
-    host            *first;
-    host            *last;
-    uuid             uuid;
-    char            *key;
+    struct tenant_s *next; /**< List link */
+    struct tenant_s *prev; /**< List link */
+    host            *first; /**< First linked host */
+    host            *last; /**< Last linked host */
+    uuid             uuid; /**< The tenant's uuid */
+    char            *key; /**< Key used for auth packets */
 } tenant;
 
 /* List of tenants */
 typedef struct {
-    tenant          *first;
-    tenant          *last;
+    tenant          *first; /**< First tenant in the list */
+    tenant          *last; /**< Last tenant in the list */
 } tenantlist;
 
 /* ============================== GLOBALS ============================== */

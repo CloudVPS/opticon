@@ -9,6 +9,19 @@
 
 #define FD_STDOUT 1
 
+void hexdump_buffer (ioport *io) {
+    size_t sz = ioport_read_available (io);
+    size_t i;
+    char *buf = ioport_get_buffer (io);
+    if (! buf) return;
+    
+    for (i=0; i<sz; ++i) {
+        printf ("%02x ", (uint8_t) buf[i]);
+        if ((i&31) == 31) printf ("\n");
+    }
+    if (i&31) printf ("\n");
+}
+
 int main (int argc, const char *argv[]) {
     const char *stenantid = "001b71534f4b4f1cb281cc06b134f98f";
     const char *shostid = "6f943a0d-bcd9-42fa-b0c9-6ede92f9a46a";

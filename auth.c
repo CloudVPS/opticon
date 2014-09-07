@@ -10,8 +10,6 @@
 
 sessionlist SESSIONS[256];
 
-// http://www.literatecode.com/get/aes256.c
-
 /** Initialize session-related global storage. */
 void sessionlist_init (void) {
     for (int i=0; i<256; ++i) {

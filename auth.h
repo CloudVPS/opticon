@@ -12,20 +12,20 @@ typedef struct aeskey_s {
 } aeskey;
 
 typedef struct session_s {
-    struct session_s    *next;
-    struct session_s    *prev;
-    uuid                 tenantid;
-    uuid                 hostid;
-    uint32_t             addr;
-    uint32_t             sessid;
-    aeskey               key;
-    time_t               lastcycle;
-    host                *host;
+    struct session_s    *next; /**< List link */
+    struct session_s    *prev; /**< List link */
+    uuid                 tenantid; /**< Tenant uuid associated */
+    uuid                 hostid; /**< Host uuid associated */
+    uint32_t             addr; /**< IP-derived id */
+    uint32_t             sessid; /**< The sessionid */
+    aeskey               key; /**< Session AES key */
+    time_t               lastcycle; /**< Time since last key cycle */
+    host                *host; /**< Connected host */
 } session;
 
 typedef struct sessionlist_s {
-    session             *first;
-    session             *last;
+    session             *first; /**< This bucket's first session */
+    session             *last; /**< This bucket's last session */
 } sessionlist;
 
 /* ============================== GLOBALS ============================== */
