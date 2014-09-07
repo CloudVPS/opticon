@@ -1,3 +1,4 @@
 doc/
 *.o
-test
+test/test_roundtrip_encoding
+lib/*.a
