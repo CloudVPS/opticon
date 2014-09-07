@@ -21,7 +21,12 @@ void filewriter_close (ioport *io) {
 /** Available function for the filewriter ioport. Should be irrelevant,
     since it is only used for compression. */
 size_t filewriter_available (ioport *io) {
-    return 1024;
+    return 0;
+}
+
+/** Get buffer address. Defunct for filewriter */
+const char *filewriter_get_buffer (ioport *io) {
+    return NULL;
 }
 
 /** Write method of the buffer ioport */
@@ -62,6 +67,12 @@ size_t buffer_write_available (ioport *io) {
     return S->bufsz - S->pos;
 }
 
+/** Return address of the buffer */
+const char *buffer_get_buffer (ioport *io) {
+    bufferstorage *S = (bufferstorage *) io->storage;
+    return S->buf;
+}
+
 /** Create a filewriter instance.
     \param F the FILE to connect
     \return The freshly created ioport */
@@ -73,6 +84,7 @@ ioport *ioport_create_filewriter (FILE *F) {
     res->read = filewriter_read;
     res->read_available = filewriter_available;
     res->write_available = filewriter_available;
+    res->get_buffer = filewriter_get_buffer;
     res->bitpos = 0;
     res->bitbuffer = 0;
     return res;
@@ -89,6 +101,7 @@ ioport *ioport_create_buffer (char *buf, size_t sz) {
     res->read = buffer_read;
     res->read_available = buffer_read_available;
     res->write_available = buffer_write_available;
+    res->get_buffer = buffer_get_buffer;
     res->bitpos = 0;
     res->bitbuffer = 0;
     

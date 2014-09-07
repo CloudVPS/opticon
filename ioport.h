@@ -13,6 +13,7 @@ typedef int (*writefunc)(struct ioport_s *, const char *, size_t);
 typedef int (*readfunc)(struct ioport_s *, char *, size_t);
 typedef void (*closefunc)(struct ioport_s *);
 typedef size_t (*availfunc)(struct ioport_s *);
+typedef const char *(*bufferfunc)(struct ioport_s *);
 
 typedef struct ioport_s {
     writefunc    write;
@@ -20,6 +21,7 @@ typedef struct ioport_s {
     readfunc     read;
     availfunc    read_available;
     availfunc    write_available;
+    bufferfunc   get_buffer;
     void        *storage;
     uint8_t      bitpos;
     uint8_t      bitbuffer;
