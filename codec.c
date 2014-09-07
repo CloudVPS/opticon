@@ -49,7 +49,7 @@ void jsoncodec_dump_val (metertype_t type, meter *m, int pos, ioport *into) {
             break;
         
         case MTYPE_FRAC:
-            sprintf (buf, "%.2f", m->d.frac[pos]);
+            sprintf (buf, "%.3f", m->d.frac[pos]);
             break;
         
         case MTYPE_STR:
