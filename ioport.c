@@ -25,7 +25,7 @@ size_t filewriter_available (ioport *io) {
 }
 
 /** Get buffer address. Defunct for filewriter */
-const char *filewriter_get_buffer (ioport *io) {
+char *filewriter_get_buffer (ioport *io) {
     return NULL;
 }
 
@@ -33,7 +33,9 @@ const char *filewriter_get_buffer (ioport *io) {
 int buffer_write (ioport *io, const char *dat, size_t sz) {
     bufferstorage *S = (bufferstorage *) io->storage;
     if (S->pos + sz > S->bufsz) return 0;
-    memcpy (S->buf + S->pos, dat, sz);
+    if (S->buf + S->pos != dat) {
+        memcpy (S->buf + S->pos, dat, sz);
+    }
     S->pos += sz;
     return 1;
 }
@@ -68,7 +70,7 @@ size_t buffer_write_available (ioport *io) {
 }
 
 /** Return address of the buffer */
-const char *buffer_get_buffer (ioport *io) {
+char *buffer_get_buffer (ioport *io) {
     bufferstorage *S = (bufferstorage *) io->storage;
     return S->buf;
 }
@@ -153,6 +155,11 @@ int ioport_write_uuid (ioport *io, uuid u) {
 /** Close an ioport */
 void ioport_close (ioport *io) {
     io->close (io);
+}
+
+/** Get access to the buffer, if any */
+char *ioport_get_buffer (ioport *io) {
+    return io->get_buffer (io);
 }
 
 uint8_t BITMASKS[9] = {0x00, 0x01, 0x03, 0x07, 0x0f, 0x1f, 0x3f, 0x7f, 0xff};

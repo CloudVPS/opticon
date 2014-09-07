@@ -17,7 +17,7 @@ endif
 
 CFLAGS+=-DOSNAME=$(OSNAME) -DOSREL=$(OSREL) -DOSRELMAJOR=$(OSRELMAJOR)
 
-OBJS_TEST = host.o tenant.o test.o util.o auth.o base64.o ioport.o codec.o
+OBJS_TEST = host.o tenant.o test.o util.o auth.o base64.o ioport.o codec.o compress.o
 
 all: test
 
@@ -26,7 +26,7 @@ doc:
 	doxygen doxygen.conf
 
 test: $(OBJS_TEST)
-	$(CC) -o test $(OBJS_TEST)
+	$(CC) -o test $(OBJS_TEST) -lz
 
 clean:
 	rm -f *.o test

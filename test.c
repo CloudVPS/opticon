@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <auth.h>
 #include <codec.h>
+#include <compress.h>
 
 #define FD_STDOUT 1
 
@@ -172,31 +173,30 @@ int main (int argc, const char *argv[]) {
     }
     
     bufferstorage *stor = (bufferstorage*) IO->storage;
-    printf ("\n--> Encoded in %i bytes\n\n", stor->pos);
+    printf ("\n--> Encoded in %i bytes\n", stor->pos);
     
+    char compressed[4096];
+    ioport *CmpIO = ioport_create_buffer (compressed, 4096);
+    compress_data (IO, CmpIO);
+    printf ("--> Compressed %lu bytes\n\n", ioport_read_available (CmpIO));
+    ioport_close (CmpIO);
+
     host *HH = host_alloc();
     if (! codec_decode_host (C, IO, HH)) {
         fprintf (stderr, "Decode failed\n");
         return 1;
     }
     
+
     ioport_close (IO);
     codec_release (C);
-
+    
     C = codec_create_json();
     IO = ioport_create_filewriter (stdout);
     codec_encode_host (C, IO, HH);
     ioport_close (IO);
     codec_release (C);
-    
-    FILE *F = fopen ("pkt.out","w");
-    C = codec_create_pkt();
-    IO = ioport_create_filewriter (F);
-    codec_encode_host (C, IO, H);
-    ioport_close (IO);
-    codec_release (C);
-    fclose (F);
-    
+        
     M = host_get_meter (H, M_NET_IN_PPS);
     M = meter_next_sibling (M);
     assert (M != NULL);
