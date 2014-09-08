@@ -31,16 +31,19 @@ FILE *localdb_open_indexfile (localdb *ctx, datestamp dt) {
 	return fopen (dbpath, "rw+");
 }
 
+/** Get record for a specific time stamp. FIXME unimplemented. */
 int localdb_get_record (db *d, time_t when, host *into) {
     return 0;
 }
 
+/** Get an integer value range for a specific time spam. FIXME unimplemented. */
 uint64_t *localdb_get_value_range_int (db *d, time_t start, time_t end,
                                        int numsamples, const char *key,
                                        uint8_t arrayindex) {
     return NULL;
 }
 
+/** Get a fractional value range for a specific time spam. FIXME unimplemented.*/
 double *localdb_get_value_range_frac (db *d, time_t start, time_t end,
                                       int numsamples, const char *key,
                                       uint8_t arrayindex) {
