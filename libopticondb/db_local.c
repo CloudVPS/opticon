@@ -1,4 +1,7 @@
 #include <db_local.h>
+#include <ioport.h>
+#include <codec.h>
+#include <stdio.h>
 
 /** Convert epoch time to a GMT date stamp integer, to be used as part of
   * the filename of underlying database files.
@@ -14,18 +17,34 @@ datestamp time2date (time_t in) {
 
 /** Open the database file for a specified datestamp */
 FILE *localdb_open_dbfile (localdb *ctx, datestamp dt) {
-	char *dbpath = (char *) malloc (strlen (ctx->db.path) + 16);
+	char *dbpath = (char *) malloc (strlen (ctx->path) + 16);
 	if (! dbpath) return NULL;
-	sprintf (dbpath, "%s/%u.db", ctx->db.path, dt);
+	sprintf (dbpath, "%s/%u.db", ctx->path, dt);
 	return fopen (dbpath, "rw+");
 }
 
 /** Open the index file for a specified datestamp */
 FILE *localdb_open_indexfile (localdb *ctx, datestamp dt) {
-	char *dbpath = (char *) malloc (strlen (ctx->db.path) + 16);
+	char *dbpath = (char *) malloc (strlen (ctx->path) + 16);
 	if (! dbpath) return NULL;
-	sprintf (dbpath, "%s/%u.idx", ctx->db.path, dt);
+	sprintf (dbpath, "%s/%u.idx", ctx->path, dt);
 	return fopen (dbpath, "rw+");
+}
+
+int localdb_get_record (db *d, time_t when, host *into) {
+    return 0;
+}
+
+uint64_t *localdb_get_value_range_int (db *d, time_t start, time_t end,
+                                       int numsamples, const char *key,
+                                       uint8_t arrayindex) {
+    return NULL;
+}
+
+double *localdb_get_value_range_frac (db *d, time_t start, time_t end,
+                                      int numsamples, const char *key,
+                                      uint8_t arrayindex) {
+    return NULL;
 }
 
 /** Append a record to the database */

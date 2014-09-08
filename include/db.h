@@ -1,6 +1,11 @@
 #ifndef _DB_H
 #define _DB_H 1
 
+#include <time.h>
+#include <datatypes.h>
+
+struct db_s;
+
 typedef int (*get_record_f)(struct db_s *, time_t, host *);
 typedef uint64_t *(*get_vrangei_f)(struct db_s *, time_t, time_t, int,
                                    const char *, uint8_t);

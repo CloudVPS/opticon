@@ -1,5 +1,7 @@
 doc/
+.DS_Store
 *.o
 test/test_roundtrip_encoding
 test/test_ioport
+test/test_aes
 lib/*.a
