@@ -15,12 +15,6 @@ typedef struct db_s {
     save_record_f    save_record;
 } db;
 
-typedef struct localdb_s {
-    db               db;
-    char            *path;
-} localdb;
-
-db          *db_open_local (const char *path);
 int          db_get_record (db *d, time_t when, host *into);
 uint64_t    *db_get_value_range_int (db *d, time_t start, time_t end,
                                      int numsamples, const char *key,
