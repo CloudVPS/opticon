@@ -75,6 +75,7 @@ int localdb_save_record (db *dbctx, time_t when, host *h) {
 	ioport_close (ixport);
 	fclose (dbf);
 	fclose (ixf);
+	codec_release (cod);
 	return 1;
 }
 
@@ -88,4 +89,3 @@ db *db_open_local (const char *path) {
     res->path = strdup (path);
     return (db *) res;
 }
-
