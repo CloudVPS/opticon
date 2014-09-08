@@ -26,6 +26,7 @@ int main (int argc, const char *argv[]) {
     const char *stenantid = "001b71534f4b4f1cb281cc06b134f98f";
     const char *shostid = "6f943a0d-bcd9-42fa-b0c9-6ede92f9a46a";
     char tstr[16];
+    time_t tnow = time (NULL);
     int i;
     uuid tenantid = mkuuid (stenantid);
     uuid hostid = mkuuid (shostid);
@@ -198,12 +199,12 @@ int main (int argc, const char *argv[]) {
     
     char encrypted[4096];
     ioport *CryptIO = ioport_create_buffer (encrypted, 4096);
-    ioport_encrypt (&key, CmpIO, CryptIO);
+    ioport_encrypt (&key, CmpIO, CryptIO, tnow);
     printf ("--> Encrypted %lu bytes\n", ioport_read_available (CryptIO));
     
     char decrypted[4096];
     ioport *DecrIO = ioport_create_buffer (decrypted, 4096);
-    ioport_decrypt (&key, CryptIO, DecrIO);
+    ioport_decrypt (&key, CryptIO, DecrIO, tnow);
     printf ("--> Decrypted %lu bytes\n", ioport_read_available (DecrIO));
     
     char decompressed[4096];

@@ -29,6 +29,11 @@ char *filewriter_get_buffer (ioport *io) {
     return NULL;
 }
 
+/** Reset reading stream, not implemented */
+void filewriter_reset_read (ioport *io) {
+    return;
+}
+
 /** Write method of the buffer ioport */
 int buffer_write (ioport *io, const char *dat, size_t sz) {
     bufferstorage *S = (bufferstorage *) io->storage;
@@ -75,6 +80,12 @@ char *buffer_get_buffer (ioport *io) {
     return S->buf;
 }
 
+/** Reset read position */
+void buffer_reset_read (ioport *io) {
+    bufferstorage *S = (bufferstorage *) io->storage;
+    S->rpos = 0;
+}
+
 /** Create a filewriter instance.
   * \param F the FILE to connect
   * \return The freshly created ioport 
@@ -88,6 +99,7 @@ ioport *ioport_create_filewriter (FILE *F) {
     res->read_available = filewriter_available;
     res->write_available = filewriter_available;
     res->get_buffer = filewriter_get_buffer;
+    res->reset_read = filewriter_reset_read;
     res->bitpos = 0;
     res->bitbuffer = 0;
     return res;
@@ -106,6 +118,7 @@ ioport *ioport_create_buffer (char *buf, size_t sz) {
     res->read_available = buffer_read_available;
     res->write_available = buffer_write_available;
     res->get_buffer = buffer_get_buffer;
+    res->reset_read = buffer_reset_read;
     res->bitpos = 0;
     res->bitbuffer = 0;
     
@@ -165,6 +178,10 @@ void ioport_close (ioport *io) {
 /** Get access to the buffer, if any */
 char *ioport_get_buffer (ioport *io) {
     return io->get_buffer (io);
+}
+
+void ioport_reset_read (ioport *io) {
+    return io->reset_read (io);
 }
 
 uint8_t BITMASKS[9] = {0x00, 0x01, 0x03, 0x07, 0x0f, 0x1f, 0x3f, 0x7f, 0xff};

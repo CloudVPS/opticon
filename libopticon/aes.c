@@ -297,7 +297,7 @@ void aes256_decrypt_ecb(aes256_context *ctx, uint8_t *buf)
     aes_addRoundKey( buf, ctx->key); 
 } /* aes256_decrypt */
 
-int ioport_encrypt (aeskey *k, ioport *in, ioport *out) {
+int ioport_encrypt (aeskey *k, ioport *in, ioport *out, time_t ts) {
     size_t left;
     aes256_context ctx;
     aes256_init (&ctx, (uint8_t *) k);
@@ -305,22 +305,32 @@ int ioport_encrypt (aeskey *k, ioport *in, ioport *out) {
     left = ioport_read_available (in);
     ioport_write_encint (out, left);
     
+    uint64_t tstamp = (uint64_t) ts;
     uint8_t buf[16];
+    uint8_t bufpos = 6;
+    buf[0] = (tstamp & 0xff0000000000ULL) >> 40;
+    buf[1] = (tstamp & 0xff00000000ULL) >> 32;
+    buf[2] = (tstamp & 0xff000000ULL) >> 24;
+    buf[3] = (tstamp & 0xff0000ULL) >> 16;
+    buf[4] = (tstamp & 0xff00ULL) >> 8;
+    buf[5] = (tstamp & 0xff);
+    
     do {
         if (! left) break;
-        if (left > 16) left = 16;
-        ioport_read (in, (char*) buf, left);
-        for (int i=left;i<16;++i) buf[i] = rand() & 0xff;
+        if (left > (16-bufpos)) left = (16-bufpos);
+        ioport_read (in, (char*) buf+bufpos, left);
+        for (int i=(left+bufpos);i<16;++i) buf[i] = rand() & 0xff;
         aes256_encrypt_ecb (&ctx, buf);
         ioport_write (out, (char *) buf, 16);
         left = ioport_read_available (in);
+        bufpos = 0;
     } while (left > 0);
     
     aes256_done (&ctx);
     return 1;
 }
 
-int ioport_decrypt (aeskey *k, ioport *in, ioport *out) {
+int ioport_decrypt (aeskey *k, ioport *in, ioport *out, time_t ts) {
     size_t left;
     size_t sz;
     size_t done = 0;
@@ -329,6 +339,11 @@ int ioport_decrypt (aeskey *k, ioport *in, ioport *out) {
     
     sz = ioport_read_encint (in);
     left = sz - done;
+    uint64_t pts = 0;
+    uint64_t uts = (uint64_t) ts;
+    uint64_t diff = 0;
+    int absorb_ts = 1;
+    
     
     uint8_t buf[16];
     do {
@@ -336,8 +351,24 @@ int ioport_decrypt (aeskey *k, ioport *in, ioport *out) {
         if (left > 16) left = 16;
         ioport_read (in, (char*) buf, 16);
         aes256_decrypt_ecb (&ctx, buf);
-        ioport_write (out, (char *) buf, left);
-        done += left;
+        if (absorb_ts) {
+            pts = ((uint64_t)buf[0]) << 40 |
+                  ((uint64_t)buf[1]) << 32 |
+                  ((uint64_t)buf[2]) << 24 |
+                  ((uint64_t)buf[3]) << 16 |
+                  ((uint64_t)buf[4]) << 8 |
+                  ((uint64_t)buf[5]);
+         
+            diff = (pts < uts) ? (uts-pts) : (pts - uts);
+            if (diff > 180) return 0;
+            ioport_write (out, (char *) buf+6, left-6);
+            done += (left - 6);
+            absorb_ts = 0;
+        }
+        else {
+            ioport_write (out, (char *) buf, left);
+            done += left;
+        }
         left = sz - done;
     } while (left > 0);
     
