@@ -8,6 +8,7 @@
 #include <aes.h>
 #include <db.h>
 #include <db_local.h>
+#include <sys/stat.h>
 
 int main (int argc, const char *argv[]) {
     time_t tnow = time (NULL);
@@ -19,7 +20,8 @@ int main (int argc, const char *argv[]) {
     host *h = host_alloc();
     meterid_t M_TEST = makeid ("test",MTYPE_INT,0);
     meter *m_test = host_get_meter (h, M_TEST);
-    db *d = db_open_local (".");
+    mkdir ("./tmpdb", 0755);
+    db *d = db_open_local ("./tmpdb");
     
     meter_setcount (m_test, 0);
     meter_set_uint (m_test, 0, 10);
@@ -37,5 +39,8 @@ int main (int argc, const char *argv[]) {
     assert (meter_get_uint (m_test, 0) == 15);
     assert (db_get_record (d, t3 + 15, h));
     assert (meter_get_uint (m_test, 0) == 12);
+    
+    system ("rm -rf ./tmpdb");
+    
     return 0;
 }
