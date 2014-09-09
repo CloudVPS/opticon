@@ -128,7 +128,7 @@ int localdb_get_record (db *d, time_t when, host *into) {
         ioport_close (dbport);
         return 0;
     }
-    uint64_t realtm = ioport_read_u64 (dbport);
+    (void) ioport_read_u64 (dbport);
     int res = codec_decode_host (cod, dbport, into);
     fclose (dbf);
     fclose (ixf);
