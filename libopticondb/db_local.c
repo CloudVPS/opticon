@@ -78,7 +78,34 @@ uint64_t localdb_find_index (FILE *fix, time_t ts) {
 
 /** Get record for a specific time stamp. FIXME unimplemented. */
 int localdb_get_record (db *d, time_t when, host *into) {
-    return 0;
+    localdb *self = (localdb *) d;
+    datestamp dt = time2date (when)l
+    FILE *dbf = localdb_open_dbfile (self, dt);
+    FILE *ixf = localdb_open_indexfile (self, dt);
+    uint64_t offs = localdb_find_index (ixf, when);
+    if (offs == LOCALDB_OFFS_INVALID) {
+        fclose (dbf);
+        fclose (ixf);
+        return 0;
+    }
+    fseek (ixf, offs, SEEK_SET);
+    ioport *dbport = ioport_create_filereader (dbf);
+    codec *cod = codec_create_pkt();
+    uint64_t pad = ioport_read_u64 (dbport);
+    if (pad != 0) {
+        fclose (dbf);
+        fclose (ixf);
+        codec_release (cod);
+        ioport_close (dbport);
+        return 0;
+    }
+    uint64_t realtm = ioport_read_u64 (dbport);
+    int res = codec_decode_host (cod, dbport, into);
+    fclose (dbf);
+    fclose (ixf);
+    codec_release (cod);
+    ioport_close (dbport);
+    return res;
 }
 
 /** Get an integer value range for a specific time spam. FIXME unimplemented. */
