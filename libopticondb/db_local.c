@@ -3,6 +3,8 @@
 #include <codec.h>
 #include <stdio.h>
 
+#define LOCALDB_OFFS_INVALID 0xffffffffffffffffULL
+
 /** Convert epoch time to a GMT date stamp integer, to be used as part of
   * the filename of underlying database files.
   */
@@ -29,6 +31,46 @@ FILE *localdb_open_indexfile (localdb *ctx, datestamp dt) {
 	if (! dbpath) return NULL;
 	sprintf (dbpath, "%s/%u.idx", ctx->path, dt);
 	return fopen (dbpath, "rw+");
+}
+
+uint64_t localdb_read64 (FILE *fix) {
+    uint64_t dt, res;
+    fread (&dt, sizeof (res), 1, fix);
+    res = ((uint64_t) ntohl (dt & 0xffffffffLLU)) << 32;
+    res |= ntohl ((dt & 0xffffffff00000000LLU) >> 32);
+    return res;
+}
+
+uint64_t localdb_find_index (FILE *fix, time_t ts) {
+    uint64_t first_when;
+    uint64_t last_when;
+    fseek (fix, 0, SEEK_START);
+    first_when = localdb_read64 (fix);
+    fseek (fix, (2*sizeof(uint_64)), SEEK_END);
+    uint64_t count = (ftell (fix) / (2*sizeof(uint64_t)))+1;
+    if (count < 2) return 0;
+    last_when = localdb_read64 (fix);
+    if (first_when > ts) return LOCALDB_OFFS_INVALID;
+    if (last_when < ts) return LOCALDB_OFFS_INVALID;
+    uint64_t range = last_when - first_when;
+    uint64_t diff = ts - first_when;
+    uint64_t pos = (count * diff) / range;
+    uint64_t tsatpos = localdb_read64 (fix);
+    uint64_t lastmatch;
+    if (tsatpos <= ts) {
+        while (tsatpos <= ts) {
+            lastmatch = localdb_read64 (fix);
+            tsatpos = localdb_read64 (fix);
+        }
+        return lastmatch;
+    }
+    lastmatch = localdb_read64 (fix);
+    while (tsatpos > ts) {
+        fseek (fix, -(4*sizeof(uint64_t)), SEEK_CUR);
+        tsatpos = localdb_read64 (fix);
+        lastmatch = localdb_read64 (fix);
+    }
+    return lastmatch;
 }
 
 /** Get record for a specific time stamp. FIXME unimplemented. */
@@ -69,8 +111,8 @@ int localdb_save_record (db *dbctx, time_t when, host *h) {
 	ioport_write_encint (dbport, when);
 	codec_encode_host (cod, dbport, h);
 	
-	ioport_write_encint (ixport, when);
-	ioport_write_encint (ixport, dbpos);
+	ioport_write_u64 (ixport, when);
+	ioport_write_u64 (ixport, dbpos);
 	ioport_close (dbport);
 	ioport_close (ixport);
 	fclose (dbf);
