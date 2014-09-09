@@ -39,6 +39,7 @@ typedef struct bufferstorage_s {
 /* ============================= FUNCTIONS ============================= */
 
 ioport      *ioport_create_filewriter (FILE *);
+ioport      *ioport_create_filereader (FILE *);
 ioport      *ioport_create_buffer (char *buf, size_t sz);
 void         ioport_close (ioport *io);
 char        *ioport_get_buffer (ioport *io);

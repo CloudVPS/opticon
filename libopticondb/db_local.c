@@ -79,7 +79,7 @@ uint64_t localdb_find_index (FILE *fix, time_t ts) {
 /** Get record for a specific time stamp. FIXME unimplemented. */
 int localdb_get_record (db *d, time_t when, host *into) {
     localdb *self = (localdb *) d;
-    datestamp dt = time2date (when)l
+    datestamp dt = time2date (when);
     FILE *dbf = localdb_open_dbfile (self, dt);
     FILE *ixf = localdb_open_indexfile (self, dt);
     uint64_t offs = localdb_find_index (ixf, when);
