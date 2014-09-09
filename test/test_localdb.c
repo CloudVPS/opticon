@@ -50,6 +50,6 @@ int main (int argc, const char *argv[]) {
     assert (db_get_record (d, tnow, h));
     assert (meter_get_uint (m_test, 0) == 24);
     
-    //system ("rm -rf ./tmpdb");
+    system ("rm -rf ./tmpdb");
     return 0;
 }
