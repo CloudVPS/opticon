@@ -45,6 +45,10 @@ FILE *localdb_open_indexfile (localdb *ctx, uuid hostid, datestamp dt) {
     return res;
 }
 
+/** Utility function for reading an encoded 64 bits integer out
+  * of a FILE stream. This because setting up an iobuffer for
+  * just this task stinks for the index.
+  */
 uint64_t localdb_read64 (FILE *fix) {
     uint64_t dt, res;
     if (fread (&dt, sizeof (res), 1, fix) == 0) {
@@ -55,6 +59,13 @@ uint64_t localdb_read64 (FILE *fix) {
     return res;
 }
 
+/** Get the offset for the closest matching record to a given timestamp
+  * out of an indexfile.
+  * \param fix The indexfile
+  * \param ts The desired timestamp.
+  * \return Offset inside the dbfile of the wanted record, or
+  *         LOCALDB_OFFS_INVALID if something went wrong.
+  */
 uint64_t localdb_find_index (FILE *fix, time_t ts) {
     uint64_t first_when;
     uint64_t last_when;
