@@ -33,6 +33,9 @@ int main (int argc, const char *argv[]) {
     
     assert (db_get_record (d, t1, h));
     assert (meter_get_uint (m_test, 0) == 10);
-    
+    assert (db_get_record (d, t2, h));
+    assert (meter_get_uint (m_test, 0) == 15);
+    assert (db_get_record (d, t3 + 15, h));
+    assert (meter_get_uint (m_test, 0) == 12);
     return 0;
 }

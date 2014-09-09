@@ -106,7 +106,7 @@ void         meter_set_uint (meter *m, unsigned int pos, uint64_t val);
 void         meter_set_frac (meter *m, unsigned int pos, double val);
 void         meter_set_str (meter *m, unsigned int pos, const char *str);
 
-uint32_t     meter_get_uint (meter *, unsigned int pos);
+uint64_t     meter_get_uint (meter *, unsigned int pos);
 double       meter_get_frac (meter *, unsigned int pos);
 const char  *meter_get_str (meter *, unsigned int pos);
 

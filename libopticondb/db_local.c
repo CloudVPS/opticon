@@ -35,7 +35,9 @@ FILE *localdb_open_indexfile (localdb *ctx, datestamp dt) {
 
 uint64_t localdb_read64 (FILE *fix) {
     uint64_t dt, res;
-    fread (&dt, sizeof (res), 1, fix);
+    if (fread (&dt, sizeof (res), 1, fix) == 0) {
+        return 0;
+    }
     res = ((uint64_t) ntohl (dt & 0xffffffffLLU)) << 32;
     res |= ntohl ((dt & 0xffffffff00000000LLU) >> 32);
     return res;
@@ -44,9 +46,13 @@ uint64_t localdb_read64 (FILE *fix) {
 uint64_t localdb_find_index (FILE *fix, time_t ts) {
     uint64_t first_when;
     uint64_t last_when;
-    fseek (fix, 0, SEEK_SET);
+    if (fseek (fix, 0, SEEK_SET) != 0) {
+        return LOCALDB_OFFS_INVALID;
+    }
     first_when = localdb_read64 (fix);
-    fseek (fix, (2*sizeof(uint64_t)), SEEK_END);
+    if (fseek (fix, -(2*sizeof(uint64_t)), SEEK_END) != 0) {
+        return LOCALDB_OFFS_INVALID;
+    }
     uint64_t count = (ftell (fix) / (2*sizeof(uint64_t)))+1;
     if (count < 2) return 0;
     last_when = localdb_read64 (fix);
@@ -93,7 +99,7 @@ int localdb_get_record (db *d, time_t when, host *into) {
         fclose (ixf);
         return 0;
     }
-    if (fseek (ixf, offs, SEEK_SET) != 0) {
+    if (fseek (dbf, offs, SEEK_SET) != 0) {
         fclose (dbf);
         fclose (ixf);
         return 0;
