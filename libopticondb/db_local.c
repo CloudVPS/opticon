@@ -1,7 +1,9 @@
 #include <db_local.h>
 #include <ioport.h>
 #include <codec.h>
+#include <util.h>
 #include <stdio.h>
+#include <sys/stat.h>
 
 #define LOCALDB_OFFS_INVALID 0xffffffffffffffffULL
 
@@ -18,19 +20,29 @@ datestamp time2date (time_t in) {
 }
 
 /** Open the database file for a specified datestamp */
-FILE *localdb_open_dbfile (localdb *ctx, datestamp dt) {
-	char *dbpath = (char *) malloc (strlen (ctx->path) + 16);
+FILE *localdb_open_dbfile (localdb *ctx, uuid hostid, datestamp dt) {
+    char uuidstr[40];
+	char *dbpath = (char *) malloc (strlen (ctx->path) + 64);
 	if (! dbpath) return NULL;
-	sprintf (dbpath, "%s/%u.db", ctx->path, dt);
-	return fopen (dbpath, "a+");
+
+	uuid2str (hostid, uuidstr);
+	sprintf (dbpath, "%s/%s-%u.db", ctx->path, uuidstr, dt);
+	FILE *res = fopen (dbpath, "a+");
+	free (dbpath);
+	return res;
 }
 
 /** Open the index file for a specified datestamp */
-FILE *localdb_open_indexfile (localdb *ctx, datestamp dt) {
-	char *dbpath = (char *) malloc (strlen (ctx->path) + 16);
+FILE *localdb_open_indexfile (localdb *ctx, uuid hostid, datestamp dt) {
+    char uuidstr[40];
+	char *dbpath = (char *) malloc (strlen (ctx->path) + 64);
 	if (! dbpath) return NULL;
-	sprintf (dbpath, "%s/%u.idx", ctx->path, dt);
-	return fopen (dbpath, "a+");
+
+	uuid2str (hostid, uuidstr);
+	sprintf (dbpath, "%s/%s-%u.idx", ctx->path, uuidstr, dt);
+	FILE *res = fopen (dbpath, "a+");
+	free (dbpath);
+	return res;
 }
 
 uint64_t localdb_read64 (FILE *fix) {
@@ -105,8 +117,8 @@ uint64_t localdb_find_index (FILE *fix, time_t ts) {
 int localdb_get_record (db *d, time_t when, host *into) {
     localdb *self = (localdb *) d;
     datestamp dt = time2date (when);
-    FILE *dbf = localdb_open_dbfile (self, dt);
-    FILE *ixf = localdb_open_indexfile (self, dt);
+    FILE *dbf = localdb_open_dbfile (self, into->uuid, dt);
+    FILE *ixf = localdb_open_indexfile (self, into->uuid, dt);
     uint64_t offs = localdb_find_index (ixf, when);
     if (offs == LOCALDB_OFFS_INVALID) {
         fclose (dbf);
@@ -119,20 +131,17 @@ int localdb_get_record (db *d, time_t when, host *into) {
         return 0;
     }
     ioport *dbport = ioport_create_filereader (dbf);
-    codec *cod = codec_create_pkt();
     uint64_t pad = ioport_read_u64 (dbport);
     if (pad != 0) {
         fclose (dbf);
         fclose (ixf);
-        codec_release (cod);
         ioport_close (dbport);
         return 0;
     }
     (void) ioport_read_u64 (dbport);
-    int res = codec_decode_host (cod, dbport, into);
+    int res = codec_decode_host (self->codec, dbport, into);
     fclose (dbf);
     fclose (ixf);
-    codec_release (cod);
     ioport_close (dbport);
     return res;
 }
@@ -157,11 +166,10 @@ int localdb_save_record (db *dbctx, time_t when, host *h) {
 	datestamp dt = time2date (when);
 	off_t dbpos = 0;
 	
-	FILE *dbf = localdb_open_dbfile (self, dt);
-	FILE *ixf = localdb_open_indexfile (self, dt);
+	FILE *dbf = localdb_open_dbfile (self, h->uuid, dt);
+	FILE *ixf = localdb_open_indexfile (self, h->uuid, dt);
 	ioport *dbport = ioport_create_filewriter (dbf);
 	ioport *ixport = ioport_create_filewriter (ixf);
-	codec *cod = codec_create_pkt();
 	
 	fseek (dbf, 0, SEEK_END);
 	fseek (ixf, 0, SEEK_END);
@@ -169,7 +177,7 @@ int localdb_save_record (db *dbctx, time_t when, host *h) {
 	
 	ioport_write_u64 (dbport, 0);
 	ioport_write_u64 (dbport, when);
-	codec_encode_host (cod, dbport, h);
+	codec_encode_host (self->codec, dbport, h);
 	
 	ioport_write_u64 (ixport, when);
 	ioport_write_u64 (ixport, dbpos);
@@ -177,17 +185,32 @@ int localdb_save_record (db *dbctx, time_t when, host *h) {
 	ioport_close (ixport);
 	fclose (dbf);
 	fclose (ixf);
-	codec_release (cod);
 	return 1;
 }
 
 /** Open and initialize a localdb handle */
-db *db_open_local (const char *path) {
+db *db_open_local (const char *path, uuid tenant) {
+    struct stat st;
+    char uuidstr[40];
     localdb *res = (localdb *) malloc (sizeof (localdb));
     res->db.get_record = localdb_get_record;
     res->db.get_value_range_int = localdb_get_value_range_int;
     res->db.get_value_range_frac = localdb_get_value_range_frac;
     res->db.save_record = localdb_save_record;
-    res->path = strdup (path);
+    res->path = (char *) malloc (strlen(path) + 96);
+    uuid2str (tenant, uuidstr);
+    sprintf (res->path, "%s/%c%c", path, uuidstr[0], uuidstr[1]);
+    if (stat (res->path, &st) != 0) {
+        mkdir (res->path, 0750);
+    }
+    sprintf (res->path + strlen(res->path), "/%c%c", uuidstr[2], uuidstr[3]);
+    if (stat (res->path, &st) != 0) {
+        mkdir (res->path, 0750);
+    }
+    sprintf (res->path + strlen(res->path), "/%s", uuidstr);
+    if (stat (res->path, &st) != 0) {
+        mkdir (res->path, 0750);
+    }
+    res->codec = codec_create_pkt();
     return (db *) res;
 }

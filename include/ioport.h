@@ -67,4 +67,3 @@ uint64_t     ioport_read_encint (ioport *io);
 uint64_t     ioport_read_u64 (ioport *io);
 
 #endif
-
