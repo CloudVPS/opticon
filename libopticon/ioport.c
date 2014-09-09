@@ -207,7 +207,10 @@ int ioport_write_uuid (ioport *io, uuid u) {
     return 0;
 }
 
-/** Close an ioport */
+/** Close an ioport. Also deallocates associated memory. Pointer will
+  * be invalid.
+  * \param io The ioport
+  */
 void ioport_close (ioport *io) {
     io->close (io);
 }
