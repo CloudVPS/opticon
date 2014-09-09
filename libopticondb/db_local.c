@@ -44,9 +44,9 @@ uint64_t localdb_read64 (FILE *fix) {
 uint64_t localdb_find_index (FILE *fix, time_t ts) {
     uint64_t first_when;
     uint64_t last_when;
-    fseek (fix, 0, SEEK_START);
+    fseek (fix, 0, SEEK_SET);
     first_when = localdb_read64 (fix);
-    fseek (fix, (2*sizeof(uint_64)), SEEK_END);
+    fseek (fix, (2*sizeof(uint64_t)), SEEK_END);
     uint64_t count = (ftell (fix) / (2*sizeof(uint64_t)))+1;
     if (count < 2) return 0;
     last_when = localdb_read64 (fix);
@@ -55,6 +55,9 @@ uint64_t localdb_find_index (FILE *fix, time_t ts) {
     uint64_t range = last_when - first_when;
     uint64_t diff = ts - first_when;
     uint64_t pos = (count * diff) / range;
+    
+    fseek (fix, pos * (2*sizeof(uint64_t)), SEEK_SET);
+    
     uint64_t tsatpos = localdb_read64 (fix);
     uint64_t lastmatch;
     if (tsatpos <= ts) {
