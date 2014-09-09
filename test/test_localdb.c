@@ -51,6 +51,6 @@ int main (int argc, const char *argv[]) {
     assert (meter_get_uint (m_test, 0) == 24);
     
     system ("rm -rf ./tmpdb");
-    db_close (db);
+    db_close (d);
     return 0;
 }
