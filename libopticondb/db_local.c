@@ -13,7 +13,7 @@ datestamp time2date (time_t in) {
 	struct tm tmin;
 	gmtime_r (&in, &tmin);
 	res = 10000 * (1900+tmin.tm_year) +
-		  100 * tmin.tm_min + tmin.tm_sec;
+		  100 * (1+tmin.tm_mon) + tmin.tm_mday;
 	return res;
 }
 
@@ -22,7 +22,7 @@ FILE *localdb_open_dbfile (localdb *ctx, datestamp dt) {
 	char *dbpath = (char *) malloc (strlen (ctx->path) + 16);
 	if (! dbpath) return NULL;
 	sprintf (dbpath, "%s/%u.db", ctx->path, dt);
-	return fopen (dbpath, "rw+");
+	return fopen (dbpath, "a+");
 }
 
 /** Open the index file for a specified datestamp */
@@ -30,7 +30,7 @@ FILE *localdb_open_indexfile (localdb *ctx, datestamp dt) {
 	char *dbpath = (char *) malloc (strlen (ctx->path) + 16);
 	if (! dbpath) return NULL;
 	sprintf (dbpath, "%s/%u.idx", ctx->path, dt);
-	return fopen (dbpath, "rw+");
+	return fopen (dbpath, "a+");
 }
 
 uint64_t localdb_read64 (FILE *fix) {
@@ -60,16 +60,21 @@ uint64_t localdb_find_index (FILE *fix, time_t ts) {
     
     uint64_t tsatpos = localdb_read64 (fix);
     uint64_t lastmatch;
+    uint64_t tmp;
     if (tsatpos <= ts) {
         while (tsatpos <= ts) {
-            lastmatch = localdb_read64 (fix);
+            tmp = localdb_read64 (fix);
             tsatpos = localdb_read64 (fix);
+            if (tsatpos) lastmatch = tmp;
+            else return lastmatch;
         }
         return lastmatch;
     }
     lastmatch = localdb_read64 (fix);
     while (tsatpos > ts) {
-        fseek (fix, -(4*sizeof(uint64_t)), SEEK_CUR);
+        if (fseek (fix, -(4*sizeof(uint64_t)), SEEK_CUR) != 0) {
+            return lastmatch;
+        }
         tsatpos = localdb_read64 (fix);
         lastmatch = localdb_read64 (fix);
     }
@@ -88,7 +93,11 @@ int localdb_get_record (db *d, time_t when, host *into) {
         fclose (ixf);
         return 0;
     }
-    fseek (ixf, offs, SEEK_SET);
+    if (fseek (ixf, offs, SEEK_SET) != 0) {
+        fclose (dbf);
+        fclose (ixf);
+        return 0;
+    }
     ioport *dbport = ioport_create_filereader (dbf);
     codec *cod = codec_create_pkt();
     uint64_t pad = ioport_read_u64 (dbport);

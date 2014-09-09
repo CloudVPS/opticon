@@ -4,4 +4,7 @@ doc/
 test/test_roundtrip_encoding
 test/test_ioport
 test/test_aes
+test/test_localdb
+test/*.db
+test/*.idx
 lib/*.a
