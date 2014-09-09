@@ -11,38 +11,38 @@
   * the filename of underlying database files.
   */
 datestamp time2date (time_t in) {
-	datestamp res = 0;
-	struct tm tmin;
-	gmtime_r (&in, &tmin);
-	res = 10000 * (1900+tmin.tm_year) +
-		  100 * (1+tmin.tm_mon) + tmin.tm_mday;
-	return res;
+    datestamp res = 0;
+    struct tm tmin;
+    gmtime_r (&in, &tmin);
+    res = 10000 * (1900+tmin.tm_year) +
+          100 * (1+tmin.tm_mon) + tmin.tm_mday;
+    return res;
 }
 
 /** Open the database file for a specified datestamp */
 FILE *localdb_open_dbfile (localdb *ctx, uuid hostid, datestamp dt) {
     char uuidstr[40];
-	char *dbpath = (char *) malloc (strlen (ctx->path) + 64);
-	if (! dbpath) return NULL;
+    char *dbpath = (char *) malloc (strlen (ctx->path) + 64);
+    if (! dbpath) return NULL;
 
-	uuid2str (hostid, uuidstr);
-	sprintf (dbpath, "%s/%s-%u.db", ctx->path, uuidstr, dt);
-	FILE *res = fopen (dbpath, "a+");
-	free (dbpath);
-	return res;
+    uuid2str (hostid, uuidstr);
+    sprintf (dbpath, "%s/%s-%u.db", ctx->path, uuidstr, dt);
+    FILE *res = fopen (dbpath, "a+");
+    free (dbpath);
+    return res;
 }
 
 /** Open the index file for a specified datestamp */
 FILE *localdb_open_indexfile (localdb *ctx, uuid hostid, datestamp dt) {
     char uuidstr[40];
-	char *dbpath = (char *) malloc (strlen (ctx->path) + 64);
-	if (! dbpath) return NULL;
+    char *dbpath = (char *) malloc (strlen (ctx->path) + 64);
+    if (! dbpath) return NULL;
 
-	uuid2str (hostid, uuidstr);
-	sprintf (dbpath, "%s/%s-%u.idx", ctx->path, uuidstr, dt);
-	FILE *res = fopen (dbpath, "a+");
-	free (dbpath);
-	return res;
+    uuid2str (hostid, uuidstr);
+    sprintf (dbpath, "%s/%s-%u.idx", ctx->path, uuidstr, dt);
+    FILE *res = fopen (dbpath, "a+");
+    free (dbpath);
+    return res;
 }
 
 uint64_t localdb_read64 (FILE *fix) {
@@ -162,30 +162,30 @@ double *localdb_get_value_range_frac (db *d, time_t start, time_t end,
 
 /** Append a record to the database */
 int localdb_save_record (db *dbctx, time_t when, host *h) {
-	localdb *self = (localdb *) dbctx;
-	datestamp dt = time2date (when);
-	off_t dbpos = 0;
-	
-	FILE *dbf = localdb_open_dbfile (self, h->uuid, dt);
-	FILE *ixf = localdb_open_indexfile (self, h->uuid, dt);
-	ioport *dbport = ioport_create_filewriter (dbf);
-	ioport *ixport = ioport_create_filewriter (ixf);
-	
-	fseek (dbf, 0, SEEK_END);
-	fseek (ixf, 0, SEEK_END);
-	dbpos = ftell (dbf);
-	
-	ioport_write_u64 (dbport, 0);
-	ioport_write_u64 (dbport, when);
-	codec_encode_host (self->codec, dbport, h);
-	
-	ioport_write_u64 (ixport, when);
-	ioport_write_u64 (ixport, dbpos);
-	ioport_close (dbport);
-	ioport_close (ixport);
-	fclose (dbf);
-	fclose (ixf);
-	return 1;
+    localdb *self = (localdb *) dbctx;
+    datestamp dt = time2date (when);
+    off_t dbpos = 0;
+    
+    FILE *dbf = localdb_open_dbfile (self, h->uuid, dt);
+    FILE *ixf = localdb_open_indexfile (self, h->uuid, dt);
+    ioport *dbport = ioport_create_filewriter (dbf);
+    ioport *ixport = ioport_create_filewriter (ixf);
+    
+    fseek (dbf, 0, SEEK_END);
+    fseek (ixf, 0, SEEK_END);
+    dbpos = ftell (dbf);
+    
+    ioport_write_u64 (dbport, 0);
+    ioport_write_u64 (dbport, when);
+    codec_encode_host (self->codec, dbport, h);
+    
+    ioport_write_u64 (ixport, when);
+    ioport_write_u64 (ixport, dbpos);
+    ioport_close (dbport);
+    ioport_close (ixport);
+    fclose (dbf);
+    fclose (ixf);
+    return 1;
 }
 
 /** Open and initialize a localdb handle */
