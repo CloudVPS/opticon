@@ -111,7 +111,8 @@ int localdb_save_record (db *dbctx, time_t when, host *h) {
 	fseek (ixf, 0, SEEK_END);
 	dbpos = ftell (dbf);
 	
-	ioport_write_encint (dbport, when);
+	ioport_write_u64 (dbport, 0);
+	ioport_write_u64 (dbport, when);
 	codec_encode_host (cod, dbport, h);
 	
 	ioport_write_u64 (ixport, when);
