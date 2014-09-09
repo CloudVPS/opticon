@@ -39,6 +39,8 @@ int main (int argc, const char *argv[]) {
     assert (meter_get_uint (m_test, 0) == 15);
     assert (db_get_record (d, t3 + 15, h));
     assert (meter_get_uint (m_test, 0) == 12);
+    assert (db_get_record (d, tnow, h));
+    assert (meter_get_uint (m_test, 0) == 24);
     
     system ("rm -rf ./tmpdb");
     

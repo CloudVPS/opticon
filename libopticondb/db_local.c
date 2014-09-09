@@ -57,22 +57,36 @@ uint64_t localdb_find_index (FILE *fix, time_t ts) {
     if (count < 2) return 0;
     last_when = localdb_read64 (fix);
     if (first_when > ts) return LOCALDB_OFFS_INVALID;
-    if (last_when < ts) return LOCALDB_OFFS_INVALID;
+    if (last_when < ts) {
+        if (ts-last_when > 90) return LOCALDB_OFFS_INVALID;
+        ts = last_when;
+    }
     uint64_t range = last_when - first_when;
     uint64_t diff = ts - first_when;
     uint64_t pos = (count * diff) / range;
+    if (pos) pos--;
     
     fseek (fix, pos * (2*sizeof(uint64_t)), SEEK_SET);
     
     uint64_t tsatpos = localdb_read64 (fix);
     uint64_t lastmatch;
     uint64_t tmp;
+    uint64_t newts;
+
     if (tsatpos <= ts) {
         while (tsatpos <= ts) {
             tmp = localdb_read64 (fix);
-            tsatpos = localdb_read64 (fix);
-            if (tsatpos) lastmatch = tmp;
-            else return lastmatch;
+            newts = localdb_read64 (fix);
+            if (newts) {
+                lastmatch = tmp;
+                tsatpos = newts;
+            }
+            else {
+                if (tsatpos == ts) {
+                    return tmp;
+                }
+                return lastmatch;
+            }
         }
         return lastmatch;
     }
