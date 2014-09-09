@@ -51,3 +51,10 @@ double *db_get_value_range_frac (db *d, time_t start, time_t end,
 int db_save_record (db *d, time_t when, host *what) {
     return d->save_record (d, when, what);
 }
+
+/** Close a database handle
+  * \param d The handle to close
+  */
+void db_close (db *d) {
+    d->close (d);
+}

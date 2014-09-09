@@ -199,6 +199,14 @@ int localdb_save_record (db *dbctx, time_t when, host *h) {
     return 1;
 }
 
+/** Clean up */
+void localdb_close (db *dbctx) {
+    localdb *self = (localdb *) dbctx;
+    free (self->path);
+    codec_release (self->codec);
+    free (self);
+}
+
 /** Open and initialize a localdb handle */
 db *db_open_local (const char *path, uuid tenant) {
     struct stat st;
@@ -208,6 +216,7 @@ db *db_open_local (const char *path, uuid tenant) {
     res->db.get_value_range_int = localdb_get_value_range_int;
     res->db.get_value_range_frac = localdb_get_value_range_frac;
     res->db.save_record = localdb_save_record;
+    res->db.close = localdb_close;
     res->path = (char *) malloc (strlen(path) + 96);
     uuid2str (tenant, uuidstr);
     sprintf (res->path, "%s/%c%c", path, uuidstr[0], uuidstr[1]);
