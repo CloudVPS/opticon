@@ -4,6 +4,8 @@
 #include <time.h>
 #include <datatypes.h>
 
+/* =============================== TYPES =============================== */
+
 struct db_s;
 
 typedef int (*get_record_f)(struct db_s *, time_t, host *);
@@ -19,6 +21,8 @@ typedef struct db_s {
     get_vrangef_f    get_value_range_frac;
     save_record_f    save_record;
 } db;
+
+/* ============================= FUNCTIONS ============================= */
 
 int          db_get_record (db *d, time_t when, host *into);
 uint64_t    *db_get_value_range_int (db *d, time_t start, time_t end,
