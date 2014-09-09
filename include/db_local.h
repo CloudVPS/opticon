@@ -19,6 +19,6 @@ typedef struct localdb_s {
 
 db          *db_open_local (const char *path, uuid u);
 
-datestamp	 time2date (time_t in);
+datestamp    time2date (time_t in);
 
 #endif
