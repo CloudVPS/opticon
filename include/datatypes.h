@@ -22,12 +22,12 @@ typedef uint32_t        status_t;
 #define MMASK_COUNT     0x000000000000000f
 #define MMASK_NAME      0x3ffffffffffffff0
 
-/* UUIDs are normally passed by value */
+/** UUIDs are normally passed by value */
 typedef struct { uint64_t msb; uint64_t lsb; } uuid;
 
 typedef struct { char str[128]; } fstring;
 
-/* Union for within a meter structure */
+/** Union for within a meter structure */
 typedef union {
     uint64_t         *u64; /**< Integer representation */
     double           *frac; /**< Fractional representation */
@@ -35,7 +35,7 @@ typedef union {
     void             *any; /**< Raw pointer */
 } meterdata;
 
-/* Structure representing a specific meter bound to a host */
+/** Structure representing a specific meter bound to a host */
 typedef struct meter_s {
     struct meter_s  *next; /**< List link */
     struct meter_s  *prev; /**< List link */
@@ -46,17 +46,20 @@ typedef struct meter_s {
     meterdata        d; /**< value */
 } meter;
 
-/* Structure representing a monitored host */
+struct tenant_s; /* forward declaration */
+
+/** Structure representing a monitored host */
 typedef struct host_s {
     struct host_s   *next; /**< List link */
     struct host_s   *prev; /**< List link */
+    struct tenant_s *tenant; /**< Parent link */
     uuid             uuid; /**< uuid of the host */
     status_t         status; /**< current status (if relevant */
     meter           *first; /**< first connected meter */
     meter           *last; /**< last connected meter */
 } host; 
 
-/* Structure representing a keystone tenant */
+/** Structure representing a keystone tenant */
 typedef struct tenant_s {
     struct tenant_s *next; /**< List link */
     struct tenant_s *prev; /**< List link */
@@ -66,7 +69,7 @@ typedef struct tenant_s {
     char            *key; /**< Key used for auth packets */
 } tenant;
 
-/* List of tenants */
+/** List of tenants */
 typedef struct {
     tenant          *first; /**< First tenant in the list */
     tenant          *last; /**< Last tenant in the list */
@@ -88,6 +91,7 @@ tenant      *tenant_create (uuid tenantid, const char *key);
 
 host        *host_alloc (void);
 host        *host_find (uuid tenantid, uuid hostid);
+void         host_delete (host *);
 
 meter       *host_get_meter (host *h, meterid_t id);
 meter       *host_set_meter_uint (host *h, meterid_t id, 

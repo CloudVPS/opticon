@@ -56,5 +56,6 @@ int main (int argc, const char *argv[]) {
 
     system ("rm -rf ./tmpdb");
     db_close (d);
+    host_delete (h);
     return 0;
 }

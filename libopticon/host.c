@@ -11,6 +11,7 @@ host *host_alloc (void) {
     res->next = NULL;
     res->first = NULL;
     res->last = NULL;
+    res->tenant = NULL;
     res->status = 0;
     return res;
 }
@@ -29,6 +30,7 @@ host *host_find (uuid tenantid, uuid hostid) {
     if (! h) {
         h = host_alloc();
         h->uuid = hostid;
+        h->tenant = t;
         t->first = t->last = h;
         return h;
     }
@@ -39,6 +41,7 @@ host *host_find (uuid tenantid, uuid hostid) {
         else {
             nh = host_alloc();
             nh->uuid = hostid;
+            nh->tenant = t;
             h->next = nh;
             nh->prev = h;
             t->last = nh;
@@ -47,6 +50,32 @@ host *host_find (uuid tenantid, uuid hostid) {
     }
     
     return NULL;
+}
+
+/** Deallocate a host and its associated meters. Remove it from the
+  * tenant, if it is associated with one. 
+  * \param h The host to delete
+  */
+void host_delete (host *h) {
+    meter *m, *nm;
+    if (h->tenant) {
+        if (h->prev) {
+            h->prev->next = h->next;
+        }
+        else h->tenant->first = h->next;
+        if (h->next) {
+            h->next->prev = h->prev;
+        }
+        else h->tenant->last = h->prev;
+    }
+    m = h->first;
+    while (m) {
+        nm = m->next;
+        if (m->d.any) free (m->d.any);
+        free (m);
+        m = nm;
+    }
+    free (h);
 }
 
 /** Allocate and initialize a meter structure. */

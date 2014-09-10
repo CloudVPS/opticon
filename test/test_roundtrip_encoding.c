@@ -237,6 +237,7 @@ int main (int argc, const char *argv[]) {
     M = host_get_meter (H, M_NET_IN_PPS);
     M = meter_next_sibling (M);
     assert (M != NULL);
-    
+    host_delete (H);
+    host_delete (HH);
     return 0;
 }

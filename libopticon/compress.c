@@ -29,7 +29,9 @@ int compress_data (ioport *in, ioport *out) {
         st = deflate (&strm, Z_FINISH);
     } while (st == Z_OK);
     
+    deflateEnd (&strm);
     if (st != Z_STREAM_END) return 0;
+
     ioport_write (out, ioport_get_buffer (out), strm.total_out);
     return 1;
 }
@@ -59,7 +61,10 @@ int decompress_data (ioport *in, ioport *out) {
         strm.avail_out = ioport_write_available (out) - strm.total_out;
         st = inflate (&strm, Z_FINISH);
     } while (st == Z_OK);
+
+    inflateEnd (&strm);
     if (st != Z_STREAM_END) return 0;
+
     ioport_write (out, ioport_get_buffer (out), strm.total_out);
     return 1;
 }
