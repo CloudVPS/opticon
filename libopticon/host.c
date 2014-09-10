@@ -1,5 +1,6 @@
 #include <datatypes.h>
 #include <util.h>
+#include <defaults.h>
 
 /** Allocate and initialize a host structure.
   * \return Pointer to the initialized struct. Caller is responsible for
@@ -89,6 +90,22 @@ meter *meter_alloc (void) {
     return res;
 }
 
+/** Figure out if a meter currently exists for a host.
+  * \param host The host object
+  * \param id The id of the meter
+  * \return 1 on success, 0 on failure
+  */
+int host_has_meter (host *h, meterid_t id) {
+    meterid_t rid = (id & (MMASK_TYPE | MMASK_NAME));
+    meter *m = h->first;
+    if (! m) return 0;
+    while (m) {
+        if (m->id == rid) return 1;
+        m = m->next;
+    }
+    return 0;
+}
+
 /** Get (or create) a specific meter for a host.
   * \param host The host structure.
   * \param id The meterid (label and type).
@@ -160,7 +177,7 @@ void host_end_update (host *h) {
     while (m) {
         nm = m->next;
         if (m->lastmodified < last) {
-            if ((m->lastmodified - last) > 300) {
+            if ((m->lastmodified - last) > default_meter_timeout) {
                 if (m->prev) {
                     m->prev->next = m->next;
                 }

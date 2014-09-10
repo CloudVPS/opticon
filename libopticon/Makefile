@@ -21,7 +21,7 @@ OBJS_TEST = test/test_roundtrip_encoding.o
 OBJS_LIBOPTICON = aes.o host.o tenant.o \
 				  util.o auth.o base64.o \
 				  ioport.o codec.o \
-				  compress.o
+				  compress.o defaults.o
 				  
 all: ../lib/libopticon.a
 
