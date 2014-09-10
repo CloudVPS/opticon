@@ -124,7 +124,7 @@ uint64_t localdb_find_index (FILE *fix, time_t ts) {
     return lastmatch;
 }
 
-/** Get record for a specific time stamp. FIXME unimplemented. */
+/** Implementation for db_get_record() */
 int localdb_get_record (db *d, time_t when, host *into) {
     localdb *self = (localdb *) d;
     datestamp dt = time2date (when);
@@ -159,7 +159,7 @@ int localdb_get_record (db *d, time_t when, host *into) {
 
 void __breakme (void) {}
 
-/** Get an integer value range for a specific time spam. FIXME unimplemented. */
+/** Implementation for db_get_value_range_int() */
 uint64_t *localdb_get_value_range_int (db *d, time_t start, time_t end,
                                        int numsamples, meterid_t key,
                                        uint8_t arrayindex, host *h) {
@@ -187,7 +187,7 @@ uint64_t *localdb_get_value_range_int (db *d, time_t start, time_t end,
     return res;
 }
 
-/** Get a fractional value range for a specific time spam. FIXME unimplemented.*/
+/** Implementation for db_get_value_range_frac() */
 double *localdb_get_value_range_frac (db *d, time_t start, time_t end,
                                       int numsamples, meterid_t key,
                                       uint8_t arrayindex, host *h) {
@@ -215,7 +215,7 @@ double *localdb_get_value_range_frac (db *d, time_t start, time_t end,
     return res;
 }
 
-/** Append a record to the database */
+/** Implementation for db_save_record() */
 int localdb_save_record (db *dbctx, time_t when, host *h) {
     localdb *self = (localdb *) dbctx;
     datestamp dt = time2date (when);
@@ -243,7 +243,7 @@ int localdb_save_record (db *dbctx, time_t when, host *h) {
     return 1;
 }
 
-/** Clean up */
+/** Implementation for db_close() */
 void localdb_close (db *dbctx) {
     localdb *self = (localdb *) dbctx;
     free (self->path);
