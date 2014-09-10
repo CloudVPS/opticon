@@ -21,9 +21,9 @@ int db_get_record (db *d, time_t when, host *into) {
   * \return A pointer to an array of <numsamples> uint64_t values.
   */
 uint64_t *db_get_value_range_int (db *d, time_t start, time_t end,
-                                  int numsamples, const char *key,
-                                  uint8_t index) {
-    return d->get_value_range_int (d, start, end, numsamples, key, index);
+                                  int numsamples, meterid_t key,
+                                  uint8_t index, host *h) {
+    return d->get_value_range_int (d, start, end, numsamples, key, index, h);
 }
 
 /** Retrieve a timeline for a specific integer value within a set of
@@ -37,9 +37,9 @@ uint64_t *db_get_value_range_int (db *d, time_t start, time_t end,
   * \return A pointer to an array of <numsamples> double values.
   */
 double *db_get_value_range_frac (db *d, time_t start, time_t end,
-                                 int numsamples, const char *key,
-                                 uint8_t index) {
-    return d->get_value_range_frac (d, start, end, numsamples, key, index);
+                                 int numsamples, meterid_t key,
+                                 uint8_t index, host *h) {
+    return d->get_value_range_frac (d, start, end, numsamples, key, index, h);
 }
 
 /** Append a host's sample data as a record to the database.

@@ -159,16 +159,48 @@ int localdb_get_record (db *d, time_t when, host *into) {
 
 /** Get an integer value range for a specific time spam. FIXME unimplemented. */
 uint64_t *localdb_get_value_range_int (db *d, time_t start, time_t end,
-                                       int numsamples, const char *key,
-                                       uint8_t arrayindex) {
-    return NULL;
+                                       int numsamples, meterid_t key,
+                                       uint8_t arrayindex, host *h) {
+    if (end <= start) return NULL;
+    if (numsamples <2) return NULL;
+    if (numsamples > 1024) return NULL;
+    uint64_t *res = (uint64_t *) malloc (numsamples * sizeof (uint64_t));
+    uint64_t interval = end-start;
+    meter *m = host_get_meter (h, key);
+    meter_setcount (m, 0);
+    int respos = 0;
+    time_t pos = start;
+    int skip = interval / (numsamples-1);
+    while (pos < end) {
+        localdb_get_record (d, pos, h);
+        res[respos++] = meter_get_uint (m, arrayindex);
+    }
+    localdb_get_record (d, end, h);
+    res[respos++] = meter_get_uint (m, arrayindex);
+    return res;
 }
 
 /** Get a fractional value range for a specific time spam. FIXME unimplemented.*/
 double *localdb_get_value_range_frac (db *d, time_t start, time_t end,
-                                      int numsamples, const char *key,
-                                      uint8_t arrayindex) {
-    return NULL;
+                                      int numsamples, meterid_t key,
+                                      uint8_t arrayindex, host *h) {
+    if (end <= start) return NULL;
+    if (numsamples <2) return NULL;
+    if (numsamples > 1024) return NULL;
+    double *res = (double *) malloc (numsamples * sizeof (double));
+    uint64_t interval = end-start;
+    meter *m = host_get_meter (h, key);
+    meter_setcount (m, 0);
+    int respos = 0;
+    time_t pos = start;
+    int skip = interval / (numsamples-1);
+    while (pos < end) {
+        localdb_get_record (d, pos, h);
+        res[respos++] = meter_get_frac (m, arrayindex);
+    }
+    localdb_get_record (d, end, h);
+    res[respos++] = meter_get_frac (m, arrayindex);
+    return res;
 }
 
 /** Append a record to the database */
