@@ -35,10 +35,13 @@ typedef union {
     void             *any; /**< Raw pointer */
 } meterdata;
 
+struct host_s; /* forward declaration */
+
 /** Structure representing a specific meter bound to a host */
 typedef struct meter_s {
     struct meter_s  *next; /**< List link */
     struct meter_s  *prev; /**< List link */
+    struct host_s   *host; /**< Parent link */
 
     meterid_t        id; /**< id and type of the data */
     time_t           lastmodified; /**< timeout information */
@@ -53,6 +56,7 @@ typedef struct host_s {
     struct host_s   *next; /**< List link */
     struct host_s   *prev; /**< List link */
     struct tenant_s *tenant; /**< Parent link */
+    time_t           lastmodified; /**< timeout information */
     uuid             uuid; /**< uuid of the host */
     status_t         status; /**< current status (if relevant */
     meter           *first; /**< first connected meter */
@@ -93,6 +97,7 @@ host        *host_alloc (void);
 host        *host_find (uuid tenantid, uuid hostid);
 void         host_delete (host *);
 
+void         host_begin_update (host *h);
 meter       *host_get_meter (host *h, meterid_t id);
 meter       *host_set_meter_uint (host *h, meterid_t id, 
                                   unsigned int count,

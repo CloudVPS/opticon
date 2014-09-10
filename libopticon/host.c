@@ -85,6 +85,7 @@ meter *meter_alloc (void) {
     res->prev = NULL;
     res->count = -1;
     res->d.u64 = NULL;
+    res->host = NULL;
     return res;
 }
 
@@ -102,6 +103,7 @@ meter *host_get_meter (host *h, meterid_t id) {
         nm = meter_alloc();
         h->first = h->last = nm;
         nm->id = rid;
+        nm->host = h;
         return nm;
     }
     while (m) {
@@ -113,6 +115,7 @@ meter *host_get_meter (host *h, meterid_t id) {
             nm->prev = m;
             h->last = nm;
             nm->id = rid;
+            nm->host = h;
             return nm;
         }
     }
@@ -141,6 +144,13 @@ const char *meter_get_str (meter *m, unsigned int pos) {
     return (const char *) m->d.str[pos].str;
 }
 
+/** Mark the beginning of a new update cycle. Saves the meters
+  * from constantly asking the kernel for the current time.
+  */
+void host_begin_update (host *h) {
+    h->lastmodified = time (NULL);
+}
+
 /** Fill up a meter with integer values */
 meter *host_set_meter_uint (host *h, meterid_t id,
                             unsigned int cnt,
@@ -149,6 +159,7 @@ meter *host_set_meter_uint (host *h, meterid_t id,
     unsigned int count = cnt ? cnt : 1;
     meter *m = host_get_meter (h, id);
     m->count = cnt;
+    m->lastmodified = h->lastmodified;
     
     if (m->d.any != NULL) {
         free (m->d.any);
@@ -167,6 +178,7 @@ meter *host_set_meter_str (host *h, meterid_t id,
     unsigned int count = cnt ? cnt : 1;
     meter *m = host_get_meter (h, id);
     m->count = cnt;
+    m->lastmodified = h->lastmodified;
     if (m->d.any != NULL) {
         free (m->d.any);
         m->d.any = NULL;
@@ -180,6 +192,7 @@ meter *host_set_meter_str (host *h, meterid_t id,
 void meter_setcount (meter *m, unsigned int count) {
     int cnt = count ? count : 1;
     m->count = count;
+    m->lastmodified = m->host->lastmodified;
     if (m->d.any) {
         free (m->d.any);
         m->d.any = NULL;
@@ -209,6 +222,7 @@ void meter_setcount (meter *m, unsigned int count) {
 void meter_set_uint (meter *m, unsigned int pos, uint64_t val) {
     if ((m->id & MMASK_TYPE) != MTYPE_INT) return;
     if (pos >= (m->count ? m->count : 1)) return; 
+    m->lastmodified = m->host->lastmodified;
     m->d.u64[pos] = val;
 }
 
@@ -216,6 +230,7 @@ void meter_set_uint (meter *m, unsigned int pos, uint64_t val) {
 void meter_set_frac (meter *m, unsigned int pos, double val) {
     if ((m->id & MMASK_TYPE) != MTYPE_FRAC) return;
     if (pos >= (m->count ? m->count : 1)) return;
+    m->lastmodified = m->host->lastmodified;
     m->d.frac[pos] = val;
 }
 
@@ -224,6 +239,7 @@ void meter_set_str (meter *m, unsigned int pos, const char *val) {
     if ((m->id & MMASK_TYPE) != MTYPE_STR) return;
     if (pos >= (m->count ? m->count : 1)) return;
     strncpy (m->d.str[pos].str, val, 127);
+    m->lastmodified = m->host->lastmodified;
     m->d.str[pos].str[127] = '\0';
 }
 

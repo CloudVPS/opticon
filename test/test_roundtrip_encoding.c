@@ -103,6 +103,8 @@ int main (int argc, const char *argv[]) {
     assert (T->uuid.lsb == 0x001b71534f4b4f1c);
     assert (T->uuid.msb == 0xb281cc06b134f98f);
     host *H = host_find (tenantid, hostid);
+    host_begin_update (H);
+
     id2str (M_NET_IN_KBS, tstr);
     meter *M = host_get_meter (H, M_HOSTNAME);
     meter_setcount (M, 0);
@@ -216,6 +218,7 @@ int main (int argc, const char *argv[]) {
     assert (bounce_size == orig_size);
 
     host *HH = host_alloc();
+    host_begin_update (HH);
     if (! codec_decode_host (C, DcmpIO, HH)) {
         fprintf (stderr, "Decode failed\n");
         return 1;
