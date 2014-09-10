@@ -50,6 +50,10 @@ int main (int argc, const char *argv[]) {
     assert (db_get_record (d, tnow, h));
     assert (meter_get_uint (m_test, 0) == 24);
     
+    uint64_t *arr = db_get_value_range_int (d, t1, tnow, 4, M_TEST, 0, h);
+    assert (arr[0] == 10 && arr[1] == 15 && arr[2] == 12 && arr[3] == 24);
+    free (arr);
+
     system ("rm -rf ./tmpdb");
     db_close (d);
     return 0;

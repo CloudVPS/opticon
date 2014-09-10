@@ -157,6 +157,8 @@ int localdb_get_record (db *d, time_t when, host *into) {
     return res;
 }
 
+void __breakme (void) {}
+
 /** Get an integer value range for a specific time spam. FIXME unimplemented. */
 uint64_t *localdb_get_value_range_int (db *d, time_t start, time_t end,
                                        int numsamples, meterid_t key,
@@ -164,7 +166,7 @@ uint64_t *localdb_get_value_range_int (db *d, time_t start, time_t end,
     if (end <= start) return NULL;
     if (numsamples <2) return NULL;
     if (numsamples > 1024) return NULL;
-    uint64_t *res = (uint64_t *) malloc (numsamples * sizeof (uint64_t));
+    uint64_t *res = (uint64_t *) malloc ((numsamples+1) * sizeof (uint64_t));
     uint64_t interval = end-start;
     meter *m = host_get_meter (h, key);
     meter_setcount (m, 0);
@@ -172,8 +174,13 @@ uint64_t *localdb_get_value_range_int (db *d, time_t start, time_t end,
     time_t pos = start;
     int skip = interval / (numsamples-1);
     while (pos < end) {
-        localdb_get_record (d, pos, h);
-        res[respos++] = meter_get_uint (m, arrayindex);
+        if (! localdb_get_record (d, pos, h)) {
+            res[respos++] = 0;
+        }
+        else {
+            res[respos++] = meter_get_uint (m, arrayindex);
+        }
+        pos += skip;
     }
     localdb_get_record (d, end, h);
     res[respos++] = meter_get_uint (m, arrayindex);
@@ -187,7 +194,7 @@ double *localdb_get_value_range_frac (db *d, time_t start, time_t end,
     if (end <= start) return NULL;
     if (numsamples <2) return NULL;
     if (numsamples > 1024) return NULL;
-    double *res = (double *) malloc (numsamples * sizeof (double));
+    double *res = (double *) malloc ((numsamples+1) * sizeof (double));
     uint64_t interval = end-start;
     meter *m = host_get_meter (h, key);
     meter_setcount (m, 0);
@@ -195,8 +202,13 @@ double *localdb_get_value_range_frac (db *d, time_t start, time_t end,
     time_t pos = start;
     int skip = interval / (numsamples-1);
     while (pos < end) {
-        localdb_get_record (d, pos, h);
-        res[respos++] = meter_get_frac (m, arrayindex);
+        if (! localdb_get_record (d, pos, h)) {
+            res[respos++] = 0.0;
+        }
+        else {
+            res[respos++] = meter_get_frac (m, arrayindex);
+        }
+        pos += skip;
     }
     localdb_get_record (d, end, h);
     res[respos++] = meter_get_frac (m, arrayindex);
