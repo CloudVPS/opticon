@@ -25,7 +25,7 @@ int main (int argc, const char *argv[]) {
     
     host *h = host_alloc();
     h->uuid = hostid;
-    host_begin_update (h);
+    host_begin_update (h, time (NULL));
     
     meterid_t M_TEST = makeid ("test",MTYPE_INT,0);
     meter *m_test = host_get_meter (h, M_TEST);

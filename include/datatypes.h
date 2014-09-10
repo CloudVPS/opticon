@@ -97,7 +97,8 @@ host        *host_alloc (void);
 host        *host_find (uuid tenantid, uuid hostid);
 void         host_delete (host *);
 
-void         host_begin_update (host *h);
+void         host_begin_update (host *h, time_t when);
+void         host_end_update (host *h);
 meter       *host_get_meter (host *h, meterid_t id);
 meter       *host_set_meter_uint (host *h, meterid_t id, 
                                   unsigned int count,

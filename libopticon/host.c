@@ -147,8 +147,36 @@ const char *meter_get_str (meter *m, unsigned int pos) {
 /** Mark the beginning of a new update cycle. Saves the meters
   * from constantly asking the kernel for the current time.
   */
-void host_begin_update (host *h) {
-    h->lastmodified = time (NULL);
+void host_begin_update (host *h, time_t t) {
+    h->lastmodified = t;
+}
+
+/** End an update round. Reaps any dangling meters that have been
+    inactive for more than five minutes. */
+void host_end_update (host *h) {
+    time_t last = h->lastmodified;
+    meter *m = h->first;
+    meter *nm;
+    while (m) {
+        nm = m->next;
+        if (m->lastmodified < last) {
+            if ((m->lastmodified - last) > 300) {
+                if (m->prev) {
+                    m->prev->next = m->next;
+                }
+                else {
+                    h->first = m->next;
+                }
+                if (m->next) {
+                    m->next->prev = m->prev;
+                }
+                else {
+                    h->last = m->prev;
+                }
+            }
+        }
+        m = nm;
+    }
 }
 
 /** Fill up a meter with integer values */
