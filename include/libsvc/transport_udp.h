@@ -18,7 +18,7 @@ typedef struct udp_intransport_s {
     struct addrinfo *listenaddr;
 } udp_intransport;
 
-outtransport *outtransport_udp_create (void);
-intransport *intransport_udp_create (void);
+outtransport *outtransport_create_udp (void);
+intransport *intransport_create_udp (void);
 
 #endif

@@ -14,7 +14,7 @@ int udp_outtransport_send (outtransport *t, void *data, size_t sz) {
 }
 
 /** Create a UDP outtransport */
-outtransport *outtransport_udp_create (void) {
+outtransport *outtransport_create_udp (void) {
     udp_outtransport *self = 
         (udp_outtransport *) malloc (sizeof (udp_outtransport));
     self->peeraddr = NULL;
@@ -37,7 +37,7 @@ size_t udp_intransport_recv (intransport *t, void *into, size_t sz) {
 }
 
 /** Create a UDP intransport */
-intransport *intransport_udp_create (void) {
+intransport *intransport_create_udp (void) {
     udp_intransport *self =
         (udp_intransport *) malloc (sizeof (udp_intransport));
     self->listenaddr = NULL;
