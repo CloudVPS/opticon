@@ -25,6 +25,7 @@ void watchdog_main (int argc, const char *argv[], main_f call) {
     WATCHDOG_EXIT = 0;
     SERVICE_PID = 0;
     pid_t pid;
+    int retval;
     
     signal (SIGTERM, watchdog_sighandler);
     signal (SIGHUP, watchdog_sighandler);
@@ -65,6 +66,7 @@ void watchdog_main (int argc, const char *argv[], main_f call) {
 int daemonize (const char *pidfilepath, int argc,
                const char *argv[], main_f call) {
     pid_t pwatchdog;
+    pid_t pwrapper;
     uid_t svcuid;
     gid_t svcgid;
     struct passwd *pwd = NULL;
@@ -111,22 +113,39 @@ int daemonize (const char *pidfilepath, int argc,
         setreuid (svcuid, svcuid);
     }
     
-    switch (pwatchdog = fork()) {
+    /* Create an outer fork that allows us to detach from the group */
+    switch (pwrapper = fork()) {
         case -1:
             fprintf (stderr, "%%ERR%% Fork failed\n");
-            return 0;
+            break;
         
         case 0:
-            pidfile = fopen (pidfilepath, "w");
-            fprintf (pidfile, "%i", pwatchdog);
-            fclose (pidfilepath);
-            watchdog_main (argc, argv, call);
-            exit (0);
+            /* Sever ties to active terminals */
+            close (0);
+            close (1);
+            close (2);
+            
+            /* Fork off the watchdog process */
+            switch (pwatchdog = fork()) {
+                case -1:
+                    fprintf (stderr, "%%ERR%% Fork failed\n");
+                    return 0;
+        
+                case 0:
+                    pidfile = fopen (pidfilepath, "w");
+                    fprintf (pidfile, "%i", pwatchdog);
+                    fclose (pidfilepath);
+                    watchdog_main (argc, argv, call);
+                    exit (0);
+                    break;
+        
+                default:
+                    break;
+            }
             break;
         
         default:
-            break;
+            exit (0);
     }
-    
-    return 1;
+    return 0;
 }
