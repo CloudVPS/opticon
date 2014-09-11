@@ -8,6 +8,8 @@
 #include <netdb.h>
 #include <stdio.h>
 
+/* =============================== TYPES =============================== */
+
 typedef struct udp_outtransport_s {
     outtransport     super;
     struct addrinfo *peeraddr;
@@ -18,7 +20,9 @@ typedef struct udp_intransport_s {
     struct addrinfo *listenaddr;
 } udp_intransport;
 
-outtransport *outtransport_create_udp (void);
-intransport *intransport_create_udp (void);
+/* ============================= FUNCTIONS ============================= */
+
+outtransport    *outtransport_create_udp (void);
+intransport     *intransport_create_udp (void);
 
 #endif
