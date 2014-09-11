@@ -1,15 +1,15 @@
 all:
 	@echo "=== Building libopticon ============================================="
-	@cd libopticon && make && cd ..
+	@cd src/libopticon && make && cd ../..
 	@echo "=== Building libopticondb ==========================================="
-	@cd libopticondb && make && cd ..
+	@cd src/libopticondb && make && cd ../..
 	@echo "=== Building libsvc ================================================="
-	@cd libsvc && make && cd ..
+	@cd src/libsvc && make && cd ../..
 	@echo "=== Building tests =================================================="
 	@cd test && make && cd ..
 
 clean:
-	@cd libopticon && make clean && cd ..
-	@cd libopticondb && make clean && cd ..
-	@cd libsvc && make clean && cd ..
+	@cd src/libopticon && make clean && cd ../..
+	@cd src/libopticondb && make clean && cd ../..
+	@cd src/libsvc && make clean && cd ../..
 	@cd test && make clean && cd ..

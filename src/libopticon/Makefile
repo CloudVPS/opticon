@@ -17,18 +17,22 @@ endif
 
 CFLAGS+=-DOSNAME=$(OSNAME) -DOSREL=$(OSREL) -DOSRELMAJOR=$(OSRELMAJOR)
 
-OBJS_LIBOPTICONDB = db.o db_local.o
+OBJS_TEST = test/test_roundtrip_encoding.o
+OBJS_LIBOPTICON = aes.o host.o tenant.o \
+				  util.o auth.o base64.o \
+				  ioport.o codec.o \
+				  compress.o defaults.o
 				  
-all: ../lib/libopticondb.a
+all: ../../lib/libopticon.a
 
-../lib/libopticondb.a: $(OBJS_LIBOPTICONDB)
-	@echo "* LINK libopticondb.a"
-	@ar cr ../lib/libopticondb.a $(OBJS_LIBOPTICONDB)
+../../lib/libopticon.a: $(OBJS_LIBOPTICON)
+	@echo "* LINK libopticon.a"
+	@ar cr ../../lib/libopticon.a $(OBJS_LIBOPTICON)
 
 clean:
-	rm -f *.o ../lib/libopticondb.a
+	rm -f *.o ../../lib/libopticon.a
 
 .SUFFIXES: .c .o
 .c.o:
 	@echo "* COMPILE $<"
-	@$(CC) $(CFLAGS) -I../include -c $<
+	@$(CC) $(CFLAGS) -I../../include -c $<
