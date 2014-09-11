@@ -16,7 +16,7 @@ int outtransport_setremote (outtransport *t, const char *addr, int port) {
   * \param sz The amount of data.
   * \return 1 on success, 0 on failure.
   */
-int outtransport_sendpkt (outtransport *t, void *d, size_t sz) {
+int outtransport_send (outtransport *t, void *d, size_t sz) {
     return t->send (t, d, sz);
 }
 
@@ -36,6 +36,6 @@ int intransport_setlistenport (intransport *t, const char *addr, int port) {
   * \param sz The size of the buffer.
   * \return The amount of data read (0 on failure).
   */
-size_t intransport_recvpkt (intransport *t, void *into, size_t sz) {
+size_t intransport_recv (intransport *t, void *into, size_t sz) {
     return t->recv (t, into, sz);
 }
