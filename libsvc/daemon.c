@@ -1,7 +1,16 @@
 #include <daemon.h>
+#include <sys/types.h>
+#include <pwd.h>
+#include <uuid/uuid.h>
+#include <stdio.h>
+#include <defaults.h>
+#include <signal.h>
+#include <sys/wait.h>
+#include <string.h>
+#include <stdlib.h>
 
-static int WATCHDOG_EXIT;
-static pid_t SERVICE_PID;
+static int WATCHDOG_EXIT; /**< Flag for exiting the respawn-loop */
+static pid_t SERVICE_PID; /**< Currently active pid for the service */
 
 /** Signal handler for the watchdog. Forwards bound signals. If a SIGTERM
   * is passed, the WATCHDOG_EXIT flag is flipped so that we stop
@@ -47,7 +56,7 @@ void watchdog_main (int argc, const char *argv[], main_f call) {
         }
         
         sleep (1); /* Prevent a respawn bomb */
-        while ((wait &retval) != SERVICE_PID) {}
+        while (wait (&retval) != SERVICE_PID) {}
     } while (! WATCHDOG_EXIT);
 }
 
@@ -74,7 +83,7 @@ int daemonize (const char *pidfilepath, int argc,
     char pidbuf[128];
     
     if ((argc>1) && (strcmp (argv[1], "--foreground") == 0)) {
-        (void) main_f (argc, argv);
+        (void) call (argc, argv);
         return 1;
     }
     
@@ -84,7 +93,7 @@ int daemonize (const char *pidfilepath, int argc,
         fread (pidbuf, 128, 1, pidfile);
         fclose (pidfile);
         pidbuf[127] = 0;
-        pwatchdog = aoti (pidbuf);
+        pwatchdog = atoi (pidbuf);
         if (pwatchdog && (kill (pwatchdog, 0) == 0)) {
             fprintf (stderr, "%%ERR%% Already running\n");
             return 0;
@@ -128,13 +137,12 @@ int daemonize (const char *pidfilepath, int argc,
             /* Fork off the watchdog process */
             switch (pwatchdog = fork()) {
                 case -1:
-                    fprintf (stderr, "%%ERR%% Fork failed\n");
-                    return 0;
+                    exit (1);
         
                 case 0:
                     pidfile = fopen (pidfilepath, "w");
                     fprintf (pidfile, "%i", pwatchdog);
-                    fclose (pidfilepath);
+                    fclose (pidfile);
                     watchdog_main (argc, argv, call);
                     exit (0);
                     break;

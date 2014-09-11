@@ -5,7 +5,7 @@
 
 /* =============================== TYPES =============================== */
 
-typedef int (*main_f)(int, const char *[], pid_t);
+typedef int (*main_f)(int, const char *[]);
 
 /* ============================= FUNCTIONS ============================= */
 
