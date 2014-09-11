@@ -3,10 +3,10 @@
 #include <unistd.h>
 #include <stdio.h>
 
-#include <util.h>
-#include <datatypes.h>
-#include <auth.h>
-#include <base64.h>
+#include <libopticon/util.h>
+#include <libopticon/datatypes.h>
+#include <libopticon/auth.h>
+#include <libopticon/base64.h>
 
 sessionlist SESSIONS[256];
 

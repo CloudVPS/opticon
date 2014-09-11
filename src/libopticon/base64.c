@@ -1,5 +1,5 @@
 /* Adapted from Jouni Malinen <jkmaline@cc.hut.fi> */
-#include "base64.h"
+#include <libopticon/base64.h>
 
 static const unsigned char base64_table[64] =
     "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";

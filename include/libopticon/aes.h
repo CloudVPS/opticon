@@ -2,9 +2,9 @@
 #define _AES_H 1
 
 #include <stdlib.h>
-#include <datatypes.h>
-#include <ioport.h>
-#include <auth.h>
+#include <libopticon/datatypes.h>
+#include <libopticon/ioport.h>
+#include <libopticon/auth.h>
 
 /* =============================== TYPES =============================== */
 

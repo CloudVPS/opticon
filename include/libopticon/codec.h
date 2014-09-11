@@ -1,8 +1,8 @@
 #ifndef _CODEC_H
 #define _CODEC_H 1
 
-#include <datatypes.h>
-#include <ioport.h>
+#include <libopticon/datatypes.h>
+#include <libopticon/ioport.h>
 
 /* =============================== TYPES =============================== */
 

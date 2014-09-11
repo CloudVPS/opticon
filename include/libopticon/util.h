@@ -1,8 +1,8 @@
 #ifndef _UTIL_H
 #define _UTIL_H 1
 
-#include <datatypes.h>
-#include <ioport.h>
+#include <libopticon/datatypes.h>
+#include <libopticon/ioport.h>
 
 /* ============================= FUNCTIONS ============================= */
 

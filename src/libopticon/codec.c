@@ -1,6 +1,6 @@
-#include <codec.h>
+#include <libopticon/codec.h>
+#include <libopticon/util.h>
 #include <stdlib.h>
-#include <util.h>
 
 /** Instantiate a JSON codec */
 codec *codec_create_json (void) {

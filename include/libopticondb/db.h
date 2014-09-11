@@ -2,7 +2,7 @@
 #define _DB_H 1
 
 #include <time.h>
-#include <datatypes.h>
+#include <libopticon/datatypes.h>
 
 /* =============================== TYPES =============================== */
 

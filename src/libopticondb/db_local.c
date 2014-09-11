@@ -1,7 +1,7 @@
-#include <db_local.h>
-#include <ioport.h>
-#include <codec.h>
-#include <util.h>
+#include <libopticondb/db_local.h>
+#include <libopticon/ioport.h>
+#include <libopticon/codec.h>
+#include <libopticon/util.h>
 #include <stdio.h>
 #include <sys/stat.h>
 

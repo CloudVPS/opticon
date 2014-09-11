@@ -1,11 +1,11 @@
-#include <datatypes.h>
-#include <util.h>
+#include <libopticon/datatypes.h>
+#include <libopticon/util.h>
+#include <libopticon/auth.h>
+#include <libopticon/codec.h>
+#include <libopticon/compress.h>
+#include <libopticon/aes.h>
 #include <assert.h>
 #include <stdio.h>
-#include <auth.h>
-#include <codec.h>
-#include <compress.h>
-#include <aes.h>
 
 int main (int argc, const char *argv[]) {
     uint8_t testbuf[4096];

@@ -1,14 +1,14 @@
-#include <datatypes.h>
-#include <util.h>
+#include <libopticon/datatypes.h>
+#include <libopticon/util.h>
+#include <libopticon/auth.h>
+#include <libopticon/codec.h>
+#include <libopticon/compress.h>
+#include <libopticon/aes.h>
+#include <libopticondb/db.h>
+#include <libopticondb/db_local.h>
+#include <libopticon/util.h>
 #include <assert.h>
 #include <stdio.h>
-#include <auth.h>
-#include <codec.h>
-#include <compress.h>
-#include <aes.h>
-#include <db.h>
-#include <db_local.h>
-#include <util.h>
 #include <sys/stat.h>
 
 int main (int argc, const char *argv[]) {

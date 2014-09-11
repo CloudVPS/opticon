@@ -1,9 +1,8 @@
-#include <daemon.h>
+#include <libopticon/defaults.h>
+#include <libsvc/daemon.h>
 #include <sys/types.h>
 #include <pwd.h>
-#include <uuid/uuid.h>
 #include <stdio.h>
-#include <defaults.h>
 #include <signal.h>
 #include <sys/wait.h>
 #include <string.h>

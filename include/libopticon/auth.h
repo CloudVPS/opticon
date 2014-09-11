@@ -1,8 +1,8 @@
 #ifndef _AUTH_H
 #define _AUTH_H 1
 
-#include <datatypes.h>
-#include <ioport.h>
+#include <libopticon/datatypes.h>
+#include <libopticon/ioport.h>
 #include <time.h>
 
 /* =============================== TYPES =============================== */

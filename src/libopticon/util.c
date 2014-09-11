@@ -1,5 +1,5 @@
-#include <datatypes.h>
-#include <util.h>
+#include <libopticon/datatypes.h>
+#include <libopticon/util.h>
 #include <stdio.h>
 #include <unistd.h>
 

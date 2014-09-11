@@ -4,7 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <datatypes.h>
+#include <libopticon/datatypes.h>
 
 /* =============================== TYPES =============================== */
 struct ioport_s; /* forward declaration */

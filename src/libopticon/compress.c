@@ -1,4 +1,4 @@
-#include <compress.h>
+#include <libopticon/compress.h>
 
 /** Compress data from a buffered ioport into another using
   * libz gzip compression.

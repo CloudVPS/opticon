@@ -1,6 +1,6 @@
-#include <datatypes.h>
-#include <util.h>
-#include <defaults.h>
+#include <libopticon/datatypes.h>
+#include <libopticon/util.h>
+#include <libopticon/defaults.h>
 
 /** Allocate and initialize a host structure.
   * \return Pointer to the initialized struct. Caller is responsible for

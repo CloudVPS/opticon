@@ -1,8 +1,8 @@
 #ifndef _COMPRESS_H
 #define _COMPRESS_H 1
 
-#include <datatypes.h>
-#include <ioport.h>
+#include <libopticon/datatypes.h>
+#include <libopticon/ioport.h>
 #include <zlib.h>
 
 /* ============================= FUNCTIONS ============================= */

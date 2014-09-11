@@ -1,4 +1,4 @@
-#include <db.h>
+#include <libopticondb/db.h>
 
 /** Get a specific record out of the database.
   * \param d The database handle

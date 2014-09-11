@@ -1,9 +1,9 @@
 #ifndef _DB_LOCAL_H
 #define _DB_LOCAL_H 1
 
-#include <db.h>
-#include <codec.h>
-#include <datatypes.h>
+#include <libopticondb/db.h>
+#include <libopticon/codec.h>
+#include <libopticon/datatypes.h>
 
 /* =============================== TYPES =============================== */
 
