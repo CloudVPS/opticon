@@ -17,7 +17,7 @@ endif
 
 CFLAGS+=-DOSNAME=$(OSNAME) -DOSREL=$(OSREL) -DOSRELMAJOR=$(OSRELMAJOR)
 
-OBJS_LIBSVC = daemon.o
+OBJS_LIBSVC = daemon.o transport.o
 				  
 all: ../../lib/libsvc.a
 
