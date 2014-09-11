@@ -2,7 +2,7 @@
 #define _COMPRESS_H 1
 
 #include <libopticon/datatypes.h>
-#include <libopticon/ioport.h>
+#include <libopticon/ioport_buffer.h>
 #include <zlib.h>
 
 /* ============================= FUNCTIONS ============================= */

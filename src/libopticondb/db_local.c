@@ -1,5 +1,5 @@
 #include <libopticondb/db_local.h>
-#include <libopticon/ioport.h>
+#include <libopticon/ioport_file.h>
 #include <libopticon/codec.h>
 #include <libopticon/util.h>
 #include <stdio.h>

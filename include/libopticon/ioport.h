@@ -30,19 +30,8 @@ typedef struct ioport_s {
     uint8_t      bitbuffer; /** Accumulator for partial bytes in a bitstream*/
 } ioport;
 
-/** Storage for buffer-type ioports */
-typedef struct bufferstorage_s {
-    char        *buf; /** The buffer, not ours. */
-    size_t       bufsz; /** Size of the buffer */
-    unsigned int pos; /** Write cursor */
-    unsigned int rpos; /** Read cursor */
-} bufferstorage;
-
 /* ============================= FUNCTIONS ============================= */
 
-ioport      *ioport_create_filewriter (FILE *);
-ioport      *ioport_create_filereader (FILE *);
-ioport      *ioport_create_buffer (char *buf, size_t sz);
 void         ioport_close (ioport *io);
 char        *ioport_get_buffer (ioport *io);
 void         ioport_reset_read (ioport *io);

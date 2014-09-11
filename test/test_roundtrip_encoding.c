@@ -4,6 +4,7 @@
 #include <libopticon/codec_pkt.h>
 #include <libopticon/codec_json.h>
 #include <libopticon/compress.h>
+#include <libopticon/ioport_file.h>
 #include <libopticon/aes.h>
 #include <assert.h>
 #include <stdio.h>
