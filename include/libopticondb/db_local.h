@@ -2,7 +2,7 @@
 #define _DB_LOCAL_H 1
 
 #include <libopticondb/db.h>
-#include <libopticon/codec.h>
+#include <libopticon/codec_pkt.h>
 #include <libopticon/datatypes.h>
 
 /* =============================== TYPES =============================== */

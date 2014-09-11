@@ -17,16 +17,8 @@ typedef struct codec_s {
 
 /* ============================= FUNCTIONS ============================= */
 
-codec       *codec_create_json (void);
-codec       *codec_create_pkt (void);
 void         codec_release (codec *);
 int          codec_encode_host (codec *, ioport *, host *);
 int          codec_decode_host (codec *, ioport *, host *);
-
-int          jsoncodec_encode_host (ioport *, host *);
-int          jsoncodec_decode_host (ioport *, host *);
-
-int          pktcodec_encode_host (ioport *, host *);
-int          pktcodec_decode_host (ioport *, host *);
 
 #endif
