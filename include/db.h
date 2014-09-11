@@ -6,7 +6,7 @@
 
 /* =============================== TYPES =============================== */
 
-struct db_s;
+struct db_s; /* forward declaration */
 
 typedef int (*get_record_f)(struct db_s *, time_t, host *);
 typedef uint64_t *(*get_vrangei_f)(struct db_s *, time_t, time_t, int,
@@ -16,12 +16,13 @@ typedef double *(*get_vrangef_f)(struct db_s *, time_t, time_t, int,
 typedef int (*save_record_f)(struct db_s *, time_t, host *);
 typedef void (*close_db_f)(struct db_s *);
 
+/** Database handle virtual class */
 typedef struct db_s {
-    get_record_f     get_record;
-    get_vrangei_f    get_value_range_int;
-    get_vrangef_f    get_value_range_frac;
-    save_record_f    save_record;
-    close_db_f       close;
+    get_record_f     get_record; /** Method */
+    get_vrangei_f    get_value_range_int; /** Method */
+    get_vrangef_f    get_value_range_frac; /** Method */
+    save_record_f    save_record; /** Method */
+    close_db_f       close; /** Method */
 } db;
 
 /* ============================= FUNCTIONS ============================= */

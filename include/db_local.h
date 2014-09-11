@@ -7,12 +7,14 @@
 
 /* =============================== TYPES =============================== */
 
+/** Representation of a date as a YYYYMMDD integer */
 typedef uint32_t datestamp;
 
+/** Class structure for localdb */
 typedef struct localdb_s {
-    db               db;
-    char            *path;
-    codec           *codec;
+    db               db; /** Super */
+    char            *path; /** Base path for this handle */
+    codec           *codec; /** Codec reference (for reuse) */
 } localdb;
 
 /* ============================= FUNCTIONS ============================= */

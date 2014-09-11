@@ -7,10 +7,12 @@
 
 /* =============================== TYPES =============================== */
 
+/** Storage for an AES256 key */
 typedef struct aeskey_s {
     uint8_t data[32];
 } aeskey;
 
+/** Representation of an active session */
 typedef struct session_s {
     struct session_s    *next; /**< List link */
     struct session_s    *prev; /**< List link */
@@ -23,6 +25,7 @@ typedef struct session_s {
     host                *host; /**< Connected host */
 } session;
 
+/** Linked list head for sessions */
 typedef struct sessionlist_s {
     session             *first; /**< This bucket's first session */
     session             *last; /**< This bucket's last session */
