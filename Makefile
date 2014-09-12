@@ -6,7 +6,7 @@ all:
 	@echo "=== Building libsvc ================================================="
 	@cd src/libsvc && make && cd ../..
 	@echo "=== Building tests =================================================="
-	@cd test && make && cd ..
+	@cd test && make test && cd ..
 
 clean:
 	@cd src/libopticon && make clean && cd ../..
