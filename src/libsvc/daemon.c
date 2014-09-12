@@ -145,6 +145,7 @@ int daemonize (const char *pidfilepath, int argc,
                     fprintf (pidfile, "%i", pwatchdog);
                     fclose (pidfile);
                     watchdog_main (argc, argv, call);
+                    unlink (pidfile);
                     exit (0);
                     break;
         
