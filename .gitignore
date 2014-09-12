@@ -6,6 +6,7 @@ test/test_ioport
 test/test_aes
 test/test_localdb
 test/test_daemon
+test/test_udp
 test/tmpdb
 test/*.db
 test/*.idx

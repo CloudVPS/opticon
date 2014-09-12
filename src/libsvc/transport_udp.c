@@ -1,5 +1,6 @@
 #include <libsvc/transport_udp.h>
 #include <string.h>
+#include <sys/socket.h>
 
 /** Implementation of outtransport_setremote() */
 int udp_outtransport_setremote (outtransport *t, const char *addr,
@@ -93,8 +94,12 @@ int udp_intransport_setlistenport (intransport *t, const char *addr,
 }
 
 /** Implementation of intranspot_recv() */
-size_t udp_intransport_recv (intransport *t, void *into, size_t sz) {
+size_t udp_intransport_recv (intransport *t, void *into, size_t sz,
+                             struct sockaddr_storage *client) {
     udp_intransport *self = (udp_intransport *) t;
+    socklen_t rsize = sizeof (struct sockaddr_storage);
+    return recvfrom (self->sock, into, sz, 0,
+                     (struct sockaddr *) client, &rsize);
     return 0;
 }
 

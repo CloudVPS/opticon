@@ -42,8 +42,9 @@ int intransport_setlistenport (intransport *t, const char *addr, int port) {
   * \param sz The size of the buffer.
   * \return The amount of data read (0 on failure).
   */
-size_t intransport_recv (intransport *t, void *into, size_t sz) {
-    return t->recv (t, into, sz);
+size_t intransport_recv (intransport *t, void *into, size_t sz,
+                         struct sockaddr_storage *client) {
+    return t->recv (t, into, sz, client);
 }
 
 /** Close the intransport and release its resources */
