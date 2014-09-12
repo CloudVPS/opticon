@@ -1,0 +1,50 @@
+#include <libsvc/log.h>
+#include <syslog.h>
+#include <stdio.h>
+#include <string.h>
+#include <stdarg.h>
+#include <stdlib.h>
+
+loghandle *LOG = NULL;
+
+void syslog_write (int prio, const char *dt) {
+    syslog (prio, "%s", dt);
+}
+
+void log_open_syslog (const char *name) {
+    LOG = (loghandle *) malloc (sizeof (loghandle));
+    LOG->write = syslog_write;
+    openlog (name, LOG_PID, LOG_DAEMON);
+}
+
+void log_string (int prio, const char *str) {
+    if (LOG) LOG->write (prio, str);
+    else {
+        if (prio == LOG_ERR) {
+            fprintf (stderr, "[ERROR] ");
+        }
+        else if (prio == LOG_DEBUG) {
+            fprintf (stderr, "[DEBUG] ");
+        }
+        else fprintf (stderr, "[INFO ] ");
+        fprintf (stderr, "%s\n", str);
+    }
+}
+
+void log_info (const char *fmt, ...) {
+    char buffer[4096];
+    va_list ap;
+    va_start (ap, fmt);
+    vsnprintf (buffer, 4096, fmt, ap);
+    va_end (ap);
+    log_string (LOG_INFO, buffer);
+}
+
+void log_error (const char *fmt, ...) {
+    char buffer[4096];
+    va_list ap;
+    va_start (ap, fmt);
+    vsnprintf (buffer, 4096, fmt, ap);
+    va_end (ap);
+    log_string (LOG_ERR, buffer);
+}

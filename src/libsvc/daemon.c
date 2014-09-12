@@ -1,5 +1,6 @@
 #include <libopticon/defaults.h>
 #include <libsvc/daemon.h>
+#include <libsvc/log.h>
 #include <sys/types.h>
 #include <pwd.h>
 #include <stdio.h>
@@ -101,7 +102,7 @@ int daemonize (const char *pidfilepath, int argc,
         pidbuf[127] = 0;
         pwatchdog = atoi (pidbuf);
         if (pwatchdog && (kill (pwatchdog, 0) == 0)) {
-            fprintf (stderr, "%%ERR%% Already running\n");
+            log_error ("Already running");
             return 0;
         }
     }
@@ -110,8 +111,7 @@ int daemonize (const char *pidfilepath, int argc,
     if (geteuid() == 0) {
         pwd = getpwnam (default_service_user);
         if (! pwd) {
-            fprintf (stderr, "%%ERR%% User %s not found\n",
-                     default_service_user);
+            log_error ("User %s not found", default_service_user);
             return 0;
         }
     
@@ -131,7 +131,7 @@ int daemonize (const char *pidfilepath, int argc,
     /* Create an outer fork that allows us to detach from the group */
     switch (pwrapper = fork()) {
         case -1:
-            fprintf (stderr, "%%ERR%% Fork failed\n");
+            log_error ("Fork failed");
             break;
         
         case 0:
