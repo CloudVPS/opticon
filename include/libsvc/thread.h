@@ -18,6 +18,7 @@ typedef struct thread_s {
 
 /* ============================= FUNCTIONS ============================= */
 
+void        *thread_spawn (void *);
 thread      *thread_create (run_f);
 
 #endif
