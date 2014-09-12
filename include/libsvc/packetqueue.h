@@ -12,6 +12,7 @@
 typedef struct pktbuf_s {
     uint8_t                  pkt[4096];
     struct sockaddr_storage  addr;
+    size_t                   sz;
 } pktbuf;
 
 typedef struct packetqueue_s {
