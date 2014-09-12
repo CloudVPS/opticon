@@ -19,9 +19,7 @@ static pid_t SERVICE_PID; /**< Currently active pid for the service */
 void watchdog_sighandler (int sig) {
     if (sig == SIGTERM) WATCHDOG_EXIT=1;
     kill (SERVICE_PID, sig);
-    signal (SIGTERM, watchdog_sighandler);
-    signal (SIGHUP, watchdog_sighandler);
-    signal (SIGUSR1, watchdog_sighandler);
+    signal (sig, watchdog_sighandler);
 }
 
 /** Implementation of the watchdog process, responsible for spawning,
