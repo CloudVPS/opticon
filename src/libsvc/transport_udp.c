@@ -92,7 +92,6 @@ int udp_intransport_setlistenport (intransport *t, const char *addr,
     
     if (self->sock < 0) return 0;
     return 1;
-    return 0;
 }
 
 /** Implementation of intranspot_recv() */
