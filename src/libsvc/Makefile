@@ -22,7 +22,7 @@ OBJS_LIBSVC = daemon.o log.o thread.o transport.o transport_udp.o packetqueue.o
 all: ../../lib/libsvc.a
 
 ../../lib/libsvc.a: $(OBJS_LIBSVC)
-	@echo "* LINK libsvc.a"
+	@echo "[LINK ] libsvc.a"
 	@ar cr ../../lib/libsvc.a $(OBJS_LIBSVC)
 
 clean:
@@ -30,5 +30,5 @@ clean:
 
 .SUFFIXES: .c .o
 .c.o:
-	@echo "* COMPILE $<"
+	@echo "[BUILD] $<"
 	@$(CC) $(CFLAGS) -I../../include -c $<

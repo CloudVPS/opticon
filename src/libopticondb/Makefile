@@ -22,7 +22,7 @@ OBJS_LIBOPTICONDB = db.o db_local.o
 all: ../../lib/libopticondb.a
 
 ../../lib/libopticondb.a: $(OBJS_LIBOPTICONDB)
-	@echo "* LINK libopticondb.a"
+	@echo "[LINK ] libopticondb.a"
 	@ar cr ../../lib/libopticondb.a $(OBJS_LIBOPTICONDB)
 
 clean:
@@ -30,5 +30,5 @@ clean:
 
 .SUFFIXES: .c .o
 .c.o:
-	@echo "* COMPILE $<"
+	@echo "[BUILD] $<"
 	@$(CC) $(CFLAGS) -I../../include -c $<
