@@ -3,6 +3,7 @@
 #include <unistd.h>
 #include <signal.h>
 #include <stdlib.h>
+#include <assert.h>
 
 int daemonfunc (int argc, const char *argv[]) {
     char buf[128];
