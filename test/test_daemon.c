@@ -1,4 +1,5 @@
 #include <libsvc/daemon.h>
+#include <libsvc/log.h>
 #include <stdio.h>
 #include <unistd.h>
 #include <signal.h>
@@ -32,15 +33,18 @@ int main (int argc, const char *argv[]) {
     FILE *f;
     
     assert (daemonize ("./.tmp.pid", argc, argv, daemonfunc));
+    log_info ("Giving the daemon some time");
     sleep (2);
     
     assert (f = fopen ("./.tmp.pid", "r"));
     fgets (buf, 128, f);
     fclose (f);
     
+    log_info ("Terminating daemon");
     p = atoi (buf);
     assert (kill (p, SIGTERM) == 0);
     sleep (3);
+    log_info ("Checking on leftovers");
     assert (fopen ("./.tmp.pid","r") == NULL);
     assert (f = fopen ("./.tmp-file","r"));
     fgets (buf, 128, f);

@@ -42,7 +42,7 @@ test_ioport: test_ioport.o
 test_roundtrip_encoding: test_roundtrip_encoding.o
 	@echo "* LINK test_roundtrip_encoding"
 	@$(CC) -o test_roundtrip_encoding test_roundtrip_encoding.o \
-		  ../lib/libopticon.a -lz
+		  ../lib/libopticon.a ../lib/libsvc.a -lz
 
 test_udp: test_udp.o
 	@echo "* LINK test_udp"

@@ -6,6 +6,7 @@
 #include <libopticon/compress.h>
 #include <libopticon/ioport_file.h>
 #include <libopticon/aes.h>
+#include <libsvc/log.h>
 #include <assert.h>
 #include <stdio.h>
 
@@ -190,41 +191,41 @@ int main (int argc, const char *argv[]) {
     ioport *IO = ioport_create_buffer (bouncebuf, 4096);
     
     if (! codec_encode_host (C, IO, H)) {
-        fprintf (stderr, "Encode failed\n");
+        log_error ("Encode failed\n");
         return 1;
     }
     
     bufferstorage *stor = (bufferstorage*) IO->storage;
-    printf ("\n--> Encoded in %i bytes\n", stor->pos);
+    log_info ("Encoded: %i bytes", stor->pos);
     size_t orig_size = stor->pos;
     
     char compressed[4096];
     ioport *CmpIO = ioport_create_buffer (compressed, 4096);
     compress_data (IO, CmpIO);
-    printf ("--> Compressed %lu bytes\n", ioport_read_available (CmpIO));
+    log_info ("Compressed: %lu bytes", ioport_read_available (CmpIO));
     
     char encrypted[4096];
     ioport *CryptIO = ioport_create_buffer (encrypted, 4096);
     ioport_encrypt (&key, CmpIO, CryptIO, tnow);
-    printf ("--> Encrypted %lu bytes\n", ioport_read_available (CryptIO));
+    log_info ("Encrypted: %lu bytes", ioport_read_available (CryptIO));
     
     char decrypted[4096];
     ioport *DecrIO = ioport_create_buffer (decrypted, 4096);
     ioport_decrypt (&key, CryptIO, DecrIO, tnow);
-    printf ("--> Decrypted %lu bytes\n", ioport_read_available (DecrIO));
+    log_info ("Decrypted: %lu bytes", ioport_read_available (DecrIO));
     
     char decompressed[4096];
     ioport *DcmpIO = ioport_create_buffer (decompressed, 4096);
     decompress_data (DecrIO, DcmpIO);
     size_t bounce_size = ioport_read_available (DcmpIO);
-    printf ("--> Decompressed %lu bytes\n\n", bounce_size);
+    log_info ("Decompressed: %lu bytes", bounce_size);
 
     assert (bounce_size == orig_size);
 
     host *HH = host_alloc();
     host_begin_update (HH, time (NULL));
     if (! codec_decode_host (C, DcmpIO, HH)) {
-        fprintf (stderr, "Decode failed\n");
+        log_error ("Decode failed");
         return 1;
     }
     
