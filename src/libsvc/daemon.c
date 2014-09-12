@@ -19,6 +19,9 @@ static pid_t SERVICE_PID; /**< Currently active pid for the service */
 void watchdog_sighandler (int sig) {
     if (sig == SIGTERM) WATCHDOG_EXIT=1;
     kill (SERVICE_PID, sig);
+    signal (SIGTERM, watchdog_sighandler);
+    signal (SIGHUP, watchdog_sighandler);
+    signal (SIGUSR1, watchdog_sighandler);
 }
 
 /** Implementation of the watchdog process, responsible for spawning,
@@ -35,10 +38,6 @@ void watchdog_main (int argc, const char *argv[], main_f call) {
     pid_t pid;
     int retval;
     
-    signal (SIGTERM, watchdog_sighandler);
-    signal (SIGHUP, watchdog_sighandler);
-    signal (SIGUSR1, watchdog_sighandler);
-    
     do {
         switch (pid = fork()) {
             case -1:
@@ -46,15 +45,23 @@ void watchdog_main (int argc, const char *argv[], main_f call) {
                 continue;
             
             case 0:
-                call (argc, argv);
+                signal (SIGTERM, SIG_DFL);
+                signal (SIGHUP, SIG_DFL);
+                signal (SIGUSR1, SIG_DFL);
+                exit (call (argc, argv));
                 return;
             
             default:
+                signal (SIGTERM, watchdog_sighandler);
+                signal (SIGHUP, watchdog_sighandler);
+                signal (SIGUSR1, watchdog_sighandler);
                 SERVICE_PID = pid;
                 break;
         }
         
         sleep (1); /* Prevent a respawn bomb */
+        pid_t w;
+        
         while (wait (&retval) != SERVICE_PID) {
             if (WATCHDOG_EXIT) break;
         }
@@ -141,21 +148,21 @@ int daemonize (const char *pidfilepath, int argc,
                     exit (1);
         
                 case 0:
-                    pidfile = fopen (pidfilepath, "w");
-                    fprintf (pidfile, "%i", pwatchdog);
-                    fclose (pidfile);
                     watchdog_main (argc, argv, call);
-                    unlink (pidfile);
+                    unlink (pidfilepath);
                     exit (0);
                     break;
         
                 default:
+                    pidfile = fopen (pidfilepath, "w");
+                    fprintf (pidfile, "%i", pwatchdog);
+                    fclose (pidfile);
                     break;
             }
             break;
         
         default:
-            exit (0);
+            return 1;
     }
     return 0;
 }

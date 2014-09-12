@@ -17,12 +17,17 @@ endif
 
 CFLAGS+=-DOSNAME=$(OSNAME) -DOSREL=$(OSREL) -DOSRELMAJOR=$(OSRELMAJOR)
 
-all: test_aes test_localdb test_roundtrip_encoding test_ioport
+all: test_aes test_daemon test_localdb test_roundtrip_encoding test_ioport
 
 test_aes: test_aes.o
 	@echo "* LINK test_aes"
 	@$(CC) -o test_aes test_aes.o \
 		  ../lib/libopticon.a -lz
+
+test_daemon: test_daemon.o
+	@echo "* LINK test_daemon"
+	@$(CC) -o test_daemon test_daemon.o \
+		  ../lib/libsvc.a ../lib/libopticon.a -lz
 
 test_localdb: test_localdb.o
 	@echo "* LINK test_localdb"

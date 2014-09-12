@@ -5,6 +5,7 @@ test/test_roundtrip_encoding
 test/test_ioport
 test/test_aes
 test/test_localdb
+test/test_daemon
 test/tmpdb
 test/*.db
 test/*.idx
