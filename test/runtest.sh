@@ -10,6 +10,7 @@ fi
 
 CC="$*"
 for test in test_*.c; do
+  echo "====================================================================="
   ofile=$(echo "$test" | sed -e 's/\.c$//')
   $ECHON "* COMPILE ${ofile}...$NNL"
   make ${ofile}.o >out/${ofile}.build 2>&1

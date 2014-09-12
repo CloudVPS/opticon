@@ -5,7 +5,8 @@ all:
 	@cd src/libopticondb && make && cd ../..
 	@echo "=== Building libsvc ================================================="
 	@cd src/libsvc && make && cd ../..
-	@echo "=== Building tests =================================================="
+
+test: all
 	@cd test && make test && cd ..
 
 clean:
