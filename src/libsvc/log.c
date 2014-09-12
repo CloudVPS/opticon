@@ -7,16 +7,21 @@
 
 loghandle *LOG = NULL;
 
+/** Implementation of log_write */
 void syslog_write (int prio, const char *dt) {
     syslog (prio, "%s", dt);
 }
 
+/** Connect to syslog
+  * \param name Name of our program.
+  */
 void log_open_syslog (const char *name) {
     LOG = (loghandle *) malloc (sizeof (loghandle));
     LOG->write = syslog_write;
     openlog (name, LOG_PID, LOG_DAEMON);
 }
 
+/** Dispatcer of a message to either stderr, or the log handle. */
 void log_string (int prio, const char *str) {
     if (LOG) LOG->write (prio, str);
     else {
