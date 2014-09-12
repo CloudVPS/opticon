@@ -21,25 +21,18 @@ respectively.
 The source code is organized into smaller modules, some of which are
 shared between multiple programs:
 
-+-----------------------+-----------------------+
-| libopticon            | Data structures for   |
-|                       | keeping track of      |
-|                       | hosts and meters, as  |
-|                       | well as encoding and  |
-|                       | decoding them for     |
-|                       | transport or storage. |
-+-----------------------+-----------------------+
-| libopticondb          | Access to the         |
-|                       | timestamp-indexed     |
-|                       | opticon database that |
-|                       | tracks meter samples. |
-+-----------------------+-----------------------+
-| libsvc                | Infrastructure for    |
-|                       | building a system     |
-|                       | service: Process      |
-|                       | control, data         |
-|                       | transport, threading, |
-|                       | and logging.          |
-+-----------------------+-----------------------+
+**libopticon**
 
+Data structures for keeping track of hosts and meters, as well as
+encoding and decoding them for transport or storage.
+
+**libopticondb**
+
+Access to the timestamp-indexed opticon disk database that tracks
+metering samples.
+
+**libsvc**
+
+Infrastructure for building a system service: Process control, data
+transport, threading, and logging.
 
