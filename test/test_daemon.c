@@ -39,7 +39,7 @@ int main (int argc, const char *argv[]) {
     fclose (f);
     
     p = atoi (buf);
-    assert (kill (p, SIGTERM));
+    assert (kill (p, SIGTERM) == 0);
     sleep (3);
     assert (fopen ("./.tmp.pid","r") == NULL);
     assert (f = fopen ("./.tmp-file","r"));
