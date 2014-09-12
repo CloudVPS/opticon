@@ -28,8 +28,28 @@ void packetqueue_run (thread *t) {
                     log_error ("UDP backlog: %i", backlog);
                 }
             }
+            pthread_mutex_lock (&self->mutex);
+            pthread_cond_signal (&self->cond);
+            pthread_mutex_unlock (&self->mutex);
         }
     }
+}
+
+/** Wait for a new packet, or pick one out of the queue.
+  * \param t The packetqueue thread
+  * \return The packetbuffer with received data.
+  */
+pktbuf *packetqueue_waitpkt (thread *t) {
+    packetqueue *self = (packetqueue *) t;
+    while (self->rpos == self->wpos) {
+        pthread_mutex_lock (&self->mutex);
+        pthread_cond_wait (&self->cond, &self->mutex);
+        pthread_mutex_unlock (&self->mutex);
+    }
+    pktbuf *res = self->buffer + self->rpos;
+    self->rpos++;
+    if (self->rpos >= self->sz) self->rpos -= self->sz;
+    return res;
 }
 
 /** Create a packetqueue thread.
