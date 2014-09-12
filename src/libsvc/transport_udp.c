@@ -21,7 +21,8 @@ int udp_outtransport_setremote (outtransport *t, const char *addr,
         return 0;
     }
     
-    self->sock = socket (self->peeraddr->ai_family, self->peeraddr->ai_socktype,
+    self->sock = socket (self->peeraddr->ai_family, 
+                         self->peeraddr->ai_socktype,
                          self->peeraddr->ai_protocol);
     
     if (self->sock < 0) return 0;
@@ -79,7 +80,8 @@ int udp_intransport_setlistenport (intransport *t, const char *addr,
         return 0;
     }
     
-    self->sock = socket (self->listenaddr->ai_family, self->listenaddr->ai_socktype,
+    self->sock = socket (self->listenaddr->ai_family, 
+                         self->listenaddr->ai_socktype,
                          self->listenaddr->ai_protocol);
     
     if (bind (self->sock, (struct sockaddr *) self->listenaddr->ai_addr,
