@@ -1,12 +1,30 @@
 #include <libsvc/packetqueue.h>
 #include <libsvc/thread.h>
 #include <libsvc/transport.h>
+#include <libsvc/log.h>
 #include <string.h>
 #include <stdio.h>
 #include <unistd.h>
 
 void packetqueue_run (thread *t) {
     packetqueue *self = (packetqueue *) t;
+    int errcnt = 0;
+    while (1) {
+        void *daddr = self->buffer[self->wpos].pkt;
+        struct sockaddr_storage *saddr = &self->buffer[self->wpos].addr;
+        if (intransport_recv (self->trans, daddr, 4096, saddr)) {
+            self->wpos++;
+            if (self->wpos > self->sz) self->wpos -= self->sz;
+            int backlog = (self->wpos - self->rpos);
+            if (backlog<0) backlog += self->sz;
+            if (backlog > 255) {
+                errcnt++;
+                if (! (errcnt & 63)) {
+                    log_error ("UDP backlog: %i", backlog);
+                }
+            }
+        }
+    }
 }
 
 thread *packetqueue_create (size_t qcount, intransport *producer) {
