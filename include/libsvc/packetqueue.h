@@ -8,7 +8,8 @@
 #include <stdint.h>
 
 typedef struct pktbuf_s {
-    uint8_t pkt[4096];
+    uint8_t                  pkt[4096];
+    struct sockaddr_storage  addr;
 } pktbuf;
 
 typedef struct packetqueue_s {
