@@ -13,6 +13,7 @@ typedef struct thread_s {
     run_f            run;
     pthread_attr_t   tattr;
     pthread_t        thread;
+    int              isrunning;
 } thread;
 
 /* ============================= FUNCTIONS ============================= */
