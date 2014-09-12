@@ -13,9 +13,33 @@ pollers tend to fail.
 
 ## Components
 
-Opticon consists of three components. Monitored servers run
+Opticon consists of three main program components. Monitored servers run
 *opticon-agent*. On the other side, *opticon-collector* and
 *opticon-api* handle the collection of data and interaction with users
 respectively.
+
+The source code is organized into smaller modules, some of which are
+shared between multiple programs:
+
++-----------------------+-----------------------+
+| libopticon            | Data structures for   |
+|                       | keeping track of      |
+|                       | hosts and meters, as  |
+|                       | well as encoding and  |
+|                       | decoding them for     |
+|                       | transport or storage. |
++-----------------------+-----------------------+
+| libopticondb          | Access to the         |
+|                       | timestamp-indexed     |
+|                       | opticon database that |
+|                       | tracks meter samples. |
++-----------------------+-----------------------+
+| libsvc                | Infrastructure for    |
+|                       | building a system     |
+|                       | service: Process      |
+|                       | control, data         |
+|                       | transport, threading, |
+|                       | and logging.          |
++-----------------------+-----------------------+
 
 
