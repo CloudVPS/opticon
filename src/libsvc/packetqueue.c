@@ -6,6 +6,9 @@
 #include <stdio.h>
 #include <unistd.h>
 
+/** Producer thread for a packetqueue. Receives packets from the intransport
+  * and puts them on the ringbuffer.
+  */
 void packetqueue_run (thread *t) {
     packetqueue *self = (packetqueue *) t;
     int errcnt = 0;
@@ -27,6 +30,11 @@ void packetqueue_run (thread *t) {
     }
 }
 
+/** Create a packetqueue thread.
+  * \param qcount Size of the queue (in packets).
+  * \param producer An intransport to receive packets on.
+  * \return Thread object.
+  */
 thread *packetqueue_create (size_t qcount, intransport *producer) {
     packetqueue *self = (packetqueue *) malloc (sizeof (packetqueue));
     self->super.run = packetqueue_run;

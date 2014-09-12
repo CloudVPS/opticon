@@ -7,6 +7,8 @@
 #include <stdlib.h>
 #include <stdint.h>
 
+/* =============================== TYPES =============================== */
+
 typedef struct pktbuf_s {
     uint8_t                  pkt[4096];
     struct sockaddr_storage  addr;
@@ -23,6 +25,8 @@ typedef struct packetqueue_s {
     volatile size_t      rpos;
     volatile size_t      wpos;
 } packetqueue;
+
+/* ============================= FUNCTIONS ============================= */
 
 thread *packetqueue_create (size_t qcount, intransport *producer);
 
