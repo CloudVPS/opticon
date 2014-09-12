@@ -13,7 +13,7 @@ for test in test_*.c; do
   echo "====================================================================="
   ofile=$(echo "$test" | sed -e 's/\.c$//')
          
-  $ECHON "[BUILD] ${ofile}...$NNL"
+  $ECHON "[BUILD] Compiling ${ofile}...$NNL"
   make ${ofile}.o >out/${ofile}.build 2>&1
   if [ ! $? = 0 ]; then
     echo " FAIL"
@@ -30,7 +30,7 @@ for test in test_*.c; do
   fi
   rm -f out/${ofile}.build
   echo " OK"
-  echo "[CHECK] ${ofile}:"  
+  echo "[CHECK] Running ${ofile}:"  
   bin/${ofile} > out/${ofile}.out
   if [ ! $? = 0 ]; then
     echo "[FAIL ] Process terminated with error status"
@@ -45,6 +45,11 @@ for test in test_*.c; do
       exit 1
     fi
   fi
-  echo "[DONE ] ${ofile}"
+  echo "[DONE ] Test succeeded"
   rm -f out/${ofile}.out
 done
+echo "====================================================================="
+echo "All tests succeeded. This software is now guaranteed defect free,"
+echo "provided it is not connected to a network (or power)."
+echo ""
+echo "Have a nice day."
