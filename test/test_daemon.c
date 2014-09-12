@@ -30,38 +30,21 @@ int main (int argc, const char *argv[]) {
     pid_t p;
     FILE *f;
     
-    if (! daemonize ("./.tmp.pid", argc, argv, daemonfunc)) return 1;
+    assert (daemonize ("./.tmp.pid", argc, argv, daemonfunc));
     sleep (2);
     
-    f = fopen ("./.tmp.pid", "r");
-    if (! f) {
-        fprintf (stderr, "Could not open pidfile\n");
-        return 1;
-    }
+    assert (f = fopen ("./.tmp.pid", "r"));
     fgets (buf, 128, f);
     fclose (f);
     
     p = atoi (buf);
-    printf ("Killing %i\n", p);
-    kill (p, SIGTERM);
+    assert (kill (p, SIGTERM));
     sleep (3);
-    f = fopen ("./.tmp.pid","r");
-    if (f) {
-        unlink ("./.tmp-file");
-        fprintf (stderr, "Pidfile not cleaned\n");
-        return 1;
-    }
-    f = fopen ("./.tmp-file","r");
-    if (! f) {
-        fprintf (stderr, "Tempfile not found\n");
-        return 1;
-    }
+    assert (fopen ("./.tmp.pid","r") == NULL);
+    assert (f = fopen ("./.tmp-file","r"));
     fgets (buf, 128, f);
     fclose (f);
     unlink ("./.tmp-file");
-    if (atoi (buf) != 2) {
-        fprintf (stderr, "Tempfile not rewritten: %i\n", atoi(buf));
-    }
-    
+    assert (atoi (buf) == 2);
     return 0;
 }
