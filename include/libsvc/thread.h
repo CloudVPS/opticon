@@ -3,6 +3,8 @@
 
 #include <pthread.h>
 
+/* =============================== TYPES =============================== */
+
 struct thread_s; /* forward declaration */
 
 typedef void (*run_f)(struct thread_s *);
@@ -13,6 +15,8 @@ typedef struct thread_s {
     pthread_t        thread;
 } thread;
 
-thread *thread_create (run_f);
+/* ============================= FUNCTIONS ============================= */
+
+thread      *thread_create (run_f);
 
 #endif
