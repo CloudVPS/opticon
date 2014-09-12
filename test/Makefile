@@ -17,7 +17,8 @@ endif
 
 CFLAGS+=-DOSNAME=$(OSNAME) -DOSREL=$(OSREL) -DOSRELMAJOR=$(OSRELMAJOR)
 
-all: test_aes test_daemon test_localdb test_roundtrip_encoding test_ioport test_udp
+all: test_aes test_daemon test_localdb test_roundtrip_encoding test_ioport \
+	 test_thread test_udp
 
 test_aes: test_aes.o
 	@echo "* LINK test_aes"
@@ -42,6 +43,11 @@ test_ioport: test_ioport.o
 test_roundtrip_encoding: test_roundtrip_encoding.o
 	@echo "* LINK test_roundtrip_encoding"
 	@$(CC) -o test_roundtrip_encoding test_roundtrip_encoding.o \
+		  ../lib/libopticon.a ../lib/libsvc.a -lz
+
+test_thread: test_thread.o
+	@echo "* LINK test_thread"
+	@$(CC) -o test_thread test_thread.o \
 		  ../lib/libopticon.a ../lib/libsvc.a -lz
 
 test_udp: test_udp.o

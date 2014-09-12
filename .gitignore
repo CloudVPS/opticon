@@ -7,6 +7,7 @@ test/test_aes
 test/test_localdb
 test/test_daemon
 test/test_udp
+test/test_thread
 test/tmpdb
 test/*.db
 test/*.idx
