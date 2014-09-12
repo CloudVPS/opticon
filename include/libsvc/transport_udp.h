@@ -13,11 +13,13 @@
 typedef struct udp_outtransport_s {
     outtransport     super;
     struct addrinfo *peeraddr;
+    int              sock;
 } udp_outtransport;
 
 typedef struct udp_intransport_s {
     intransport      super;
     struct addrinfo *listenaddr;
+    int              sock;
 } udp_intransport;
 
 /* ============================= FUNCTIONS ============================= */
