@@ -95,11 +95,15 @@ void thread_init (thread *self, run_f run, cancel_f cancel) {
     pthread_create (&self->thread, &self->tattr, thread_spawn, self);
 }
 
+/** Free up a thread's resources. Thread should already be
+  * canceled or shut down at this point.
+  */
 void thread_free (thread *self) {
     conditional_free (self->cshutdown);
     free (self); /* and your mind will follow */
 }
 
+/** Cancel a thread and wait for it to exit */
 void thread_cancel (thread *self) {
     pthread_cancel (self->thread);
     conditional_wait (self->cshutdown);

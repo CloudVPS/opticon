@@ -24,9 +24,7 @@ typedef struct pktbuf_s {
   */
 typedef struct packetqueue_s {
     thread               super; /**< Thread infrastructure */
-    pthread_mutexattr_t  mattr; /**< Pthread overhead for the conditional */
-    pthread_mutex_t      mutex; /**< Pthread overhead for the conditional */
-    pthread_cond_t       cond; /**< 'Packet received' conditional */
+    conditional         *cond;
     intransport         *trans; /**< Transport used by the receive thread */
     pktbuf              *buffer; /**< Array of packet buffers */
     size_t               sz; /**< Number of elements in the array */

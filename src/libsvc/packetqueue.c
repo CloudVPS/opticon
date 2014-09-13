@@ -22,15 +22,13 @@ void packetqueue_run (thread *t) {
             if (self->wpos > self->sz) self->wpos -= self->sz;
             int backlog = (self->wpos - self->rpos);
             if (backlog<0) backlog += self->sz;
-            if (backlog > (self->sz/4)) {
+            if (backlog > ((self->sz)/4)) {
                 if (! (errcnt & 63)) {
-                    log_error ("UDP backlog: %i", backlog);
+                    log_error ("Packet backlog: %i", backlog);
                 }
                 errcnt++;
             }
-            pthread_mutex_lock (&self->mutex);
-            pthread_cond_signal (&self->cond);
-            pthread_mutex_unlock (&self->mutex);
+            conditional_signal (self->cond);
         }
     }
 }
@@ -41,9 +39,7 @@ void packetqueue_run (thread *t) {
   */
 pktbuf *packetqueue_waitpkt (packetqueue *self) {
     while (self->rpos == self->wpos) {
-        pthread_mutex_lock (&self->mutex);
-        pthread_cond_wait (&self->cond, &self->mutex);
-        pthread_mutex_unlock (&self->mutex);
+        conditional_wait_fresh (self->cond);
     }
     pktbuf *res = self->buffer + self->rpos;
     self->rpos++;
@@ -60,13 +56,17 @@ packetqueue *packetqueue_create (size_t qcount, intransport *producer) {
     packetqueue *self = (packetqueue *) malloc (sizeof (packetqueue));
     self->trans = producer;
     self->buffer = (pktbuf *) malloc (qcount * sizeof (pktbuf));
+    self->cond = conditional_create();
     self->sz = qcount;
     self->rpos = self->wpos = 0;
     thread_init ((thread *) self, packetqueue_run, NULL);
     return self;
 }
 
+/** Shut down a queue and free up its resources */
 void packetqueue_shutdown (packetqueue *self) {
+    conditional_free (self->cond);
+    free (self->buffer);
     thread_cancel ((thread *) self);
     thread_free ((thread *) self);
 }
