@@ -50,6 +50,6 @@ for test in test_*.c; do
 done
 echo "====================================================================="
 echo "All tests succeeded. This software is now guaranteed defect free,"
-echo "provided it is not connected to a network (or power)."
+echo "provided it is not connected to a network (or power source)."
 echo ""
 echo "Have a nice day."

@@ -13,19 +13,19 @@ int main (int argc, const char *argv[]) {
     pktbuf *b;
     int i;
     
-    strcpy (sendbuf, "Hello, world.\n");
-    
     assert (intransport_setlistenport (in, "0.0.0.0", 1874));
     assert (outtransport_setremote (out, "127.0.0.1", 1874));
     assert (q = packetqueue_create (256, in));
     
     for (i=0; i<96; ++i) {
+        sprintf (sendbuf, "%i bottles of beer on the wall", i);
         assert (outtransport_send (out, sendbuf, 1024));
     }
     
     sleep (1);
     
     for (i=0; i<96; ++i) {
+        sprintf (sendbuf, "%i bottles of beer on the wall", i);
         assert (b = packetqueue_waitpkt (q));
         assert (strcmp (sendbuf, (char *) b->pkt) == 0);
     }
