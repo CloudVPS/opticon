@@ -22,11 +22,11 @@ void packetqueue_run (thread *t) {
             if (self->wpos > self->sz) self->wpos -= self->sz;
             int backlog = (self->wpos - self->rpos);
             if (backlog<0) backlog += self->sz;
-            if (backlog > 255) {
-                errcnt++;
+            if (backlog > (self->sz/4)) {
                 if (! (errcnt & 63)) {
                     log_error ("UDP backlog: %i", backlog);
                 }
+                errcnt++;
             }
             pthread_mutex_lock (&self->mutex);
             pthread_cond_signal (&self->cond);
@@ -39,8 +39,7 @@ void packetqueue_run (thread *t) {
   * \param t The packetqueue thread
   * \return The packetbuffer with received data.
   */
-pktbuf *packetqueue_waitpkt (thread *t) {
-    packetqueue *self = (packetqueue *) t;
+pktbuf *packetqueue_waitpkt (packetqueue *self) {
     while (self->rpos == self->wpos) {
         pthread_mutex_lock (&self->mutex);
         pthread_cond_wait (&self->cond, &self->mutex);
@@ -57,12 +56,17 @@ pktbuf *packetqueue_waitpkt (thread *t) {
   * \param producer An intransport to receive packets on.
   * \return Thread object.
   */
-thread *packetqueue_create (size_t qcount, intransport *producer) {
+packetqueue *packetqueue_create (size_t qcount, intransport *producer) {
     packetqueue *self = (packetqueue *) malloc (sizeof (packetqueue));
     self->trans = producer;
     self->buffer = (pktbuf *) malloc (qcount * sizeof (pktbuf));
     self->sz = qcount;
     self->rpos = self->wpos = 0;
-    thread_init ((thread *) self, packetqueue_run);
-    return (thread *) self;
+    thread_init ((thread *) self, packetqueue_run, NULL);
+    return self;
+}
+
+void packetqueue_shutdown (packetqueue *self) {
+    thread_cancel ((thread *) self);
+    thread_free ((thread *) self);
 }

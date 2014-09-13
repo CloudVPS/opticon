@@ -1,4 +1,5 @@
 #include <libsvc/transport_udp.h>
+#include <libsvc/packetqueue.h>
 #include <stdio.h>
 #include <string.h>
 #include <assert.h>

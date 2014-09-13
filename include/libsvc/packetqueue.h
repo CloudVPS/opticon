@@ -36,7 +36,8 @@ typedef struct packetqueue_s {
 
 /* ============================= FUNCTIONS ============================= */
 
-thread *packetqueue_create (size_t qcount, intransport *producer);
-pktbuf *packetqueue_waitpkt (thread *t);
+packetqueue *packetqueue_create (size_t qcount, intransport *producer);
+pktbuf *packetqueue_waitpkt (packetqueue *t);
+void packetqueue_shutdown (packetqueue *t);
 
 #endif
