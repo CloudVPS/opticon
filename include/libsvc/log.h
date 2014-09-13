@@ -7,13 +7,14 @@ struct loghandle_s; /* forward declaration */
 
 typedef void (*logwrite_f)(int,const char *);
 
+/** Implementation handle for the logging system. */
 typedef struct loghandle_s {
-    logwrite_f       write;
+    logwrite_f       write; /**< Method */
 } loghandle;
 
 /* ============================== GLOBALS ============================== */
 
-extern loghandle *LOG;
+extern loghandle *LOG; /**< Log system to use, NULL for stderr */
 
 /* ============================= FUNCTIONS ============================= */
 

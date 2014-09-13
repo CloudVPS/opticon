@@ -10,16 +10,18 @@
 
 /* =============================== TYPES =============================== */
 
+/** UDP implementation of outtransport */
 typedef struct udp_outtransport_s {
-    outtransport     super;
-    struct addrinfo *peeraddr;
-    int              sock;
+    outtransport     super; /**< The transport */
+    struct addrinfo *peeraddr; /**< Configured peer address */
+    int              sock; /**< Socket to use */
 } udp_outtransport;
 
+/** UDP implementation of intransport */
 typedef struct udp_intransport_s {
-    intransport      super;
-    struct addrinfo *listenaddr;
-    int              sock;
+    intransport      super; /**< The transport */
+    struct addrinfo *listenaddr; /**< IPvAny listen address */
+    int              sock; /**< The bound socket */
 } udp_intransport;
 
 /* ============================= FUNCTIONS ============================= */

@@ -9,11 +9,12 @@ struct thread_s; /* forward declaration */
 
 typedef void (*run_f)(struct thread_s *);
 
+/** Base representation of a thread */
 typedef struct thread_s {
-    run_f            run;
-    pthread_attr_t   tattr;
-    pthread_t        thread;
-    int              isrunning;
+    run_f            run; /**< The run function */
+    pthread_attr_t   tattr; /**< Pthread storage */
+    pthread_t        thread; /**< Pthread storage */
+    int              isrunning; /**< 1 if thread is spawned */
 } thread;
 
 /* ============================= FUNCTIONS ============================= */
