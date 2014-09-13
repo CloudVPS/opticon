@@ -9,7 +9,7 @@ void run (thread *t) {
 }
 
 int main (int argc, const char *argv[]) {
-    thread *t = thread_create (run);
+    thread *t = thread_create (run, NULL);
     while (! COUNTER) sleep(1);
     return 0;
 }
