@@ -10,12 +10,17 @@ void *thread_spawn (void *dt) {
     return NULL;
 }
 
-/** Create and spawn a thread */
+/** Allocate and spawn a thread */
 thread *thread_create (run_f run) {
     thread *self = (thread *) malloc (sizeof (thread));
+    thread_init (self, run);
+    return self;
+}
+
+/** Initialize a thread structure and spawn it */
+void thread_init (thread *self, run_f run) {
     self->run = run;
     self->isrunning = 0;
     pthread_attr_init (&self->tattr);
     pthread_create (&self->thread, &self->tattr, thread_spawn, self);
-    return self;
 }

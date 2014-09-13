@@ -16,7 +16,7 @@ void packetqueue_run (thread *t) {
         void *daddr = self->buffer[self->wpos].pkt;
         struct sockaddr_storage *saddr = &self->buffer[self->wpos].addr;
         size_t sz;
-        if ((sz = intransport_recv (self->trans, daddr, 4096, saddr))) {
+        if ((sz = intransport_recv (self->trans, daddr, 2048, saddr))) {
             self->buffer[self->wpos].sz = sz;
             self->wpos++;
             if (self->wpos > self->sz) self->wpos -= self->sz;
@@ -59,16 +59,10 @@ pktbuf *packetqueue_waitpkt (thread *t) {
   */
 thread *packetqueue_create (size_t qcount, intransport *producer) {
     packetqueue *self = (packetqueue *) malloc (sizeof (packetqueue));
-    self->super.run = packetqueue_run;
-    self->super.isrunning = 0;
     self->trans = producer;
     self->buffer = (pktbuf *) malloc (qcount * sizeof (pktbuf));
     self->sz = qcount;
     self->rpos = self->wpos = 0;
-    pthread_attr_init (&self->super.tattr);
-    pthread_mutexattr_init (&self->mattr);
-    pthread_mutex_init (&self->mutex, &self->mattr);
-    pthread_cond_init (&self->cond, NULL);
-    pthread_create (&self->super.thread, &self->super.tattr, thread_spawn, self);
+    thread_init ((thread *) self, packetqueue_run);
     return (thread *) self;
 }

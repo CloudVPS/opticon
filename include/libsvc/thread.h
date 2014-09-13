@@ -21,5 +21,6 @@ typedef struct thread_s {
 
 void        *thread_spawn (void *);
 thread      *thread_create (run_f);
+void         thread_init (thread *, run_f);
 
 #endif
