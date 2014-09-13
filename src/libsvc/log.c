@@ -31,6 +31,9 @@ void log_string (int prio, const char *str) {
         else if (prio == LOG_DEBUG) {
             fprintf (stderr, "[DEBUG] ");
         }
+        else if (prio == LOG_WARNING) {
+            fprintf (stderr, "[WARN ] ");
+        }
         else fprintf (stderr, "[INFO ] ");
         fprintf (stderr, "%s\n", str);
     }
@@ -43,6 +46,15 @@ void log_info (const char *fmt, ...) {
     vsnprintf (buffer, 4096, fmt, ap);
     va_end (ap);
     log_string (LOG_INFO, buffer);
+}
+
+void log_warn (const char *fmt, ...) {
+    char buffer[4096];
+    va_list ap;
+    va_start (ap, fmt);
+    vsnprintf (buffer, 4096, fmt, ap);
+    va_end (ap);
+    log_string (LOG_WARNING, buffer);
 }
 
 void log_error (const char *fmt, ...) {

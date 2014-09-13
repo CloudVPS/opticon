@@ -24,7 +24,7 @@ void packetqueue_run (thread *t) {
             if (backlog<0) backlog += self->sz;
             if (backlog > ((self->sz)/4)) {
                 if (! (errcnt & 63)) {
-                    log_error ("Packet backlog: %i", backlog);
+                    log_warn ("Packet backlog: %i", backlog);
                 }
                 errcnt++;
             }
