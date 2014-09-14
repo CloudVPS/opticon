@@ -65,8 +65,8 @@ packetqueue *packetqueue_create (size_t qcount, intransport *producer) {
 
 /** Shut down a queue and free up its resources */
 void packetqueue_shutdown (packetqueue *self) {
+    thread_cancel ((thread *) self);
     conditional_free (self->cond);
     free (self->buffer);
-    thread_cancel ((thread *) self);
     thread_free ((thread *) self);
 }
