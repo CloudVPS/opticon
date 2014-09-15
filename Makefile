@@ -15,4 +15,5 @@ clean:
 	@cd src/libopticon && make clean && cd ../..
 	@cd src/libopticondb && make clean && cd ../..
 	@cd src/libsvc && make clean && cd ../..
+	@cd src/libopticonf && make clean && cd ../..
 	@cd test && make clean && cd ..

@@ -35,7 +35,7 @@ void var_link (var *self, var *parent) {
     }
     
     /* numbered array nodes have no id */
-    if (self->id[0]) {
+    if (self->id[0] == 0) {
         if (parent->type == VAR_NULL) {
             parent->type = VAR_ARRAY;
             parent->value.arr.first = NULL;
@@ -58,6 +58,7 @@ void var_link (var *self, var *parent) {
     
     if (parent->value.arr.last) {
         self->prev = parent->value.arr.last;
+        parent->value.arr.last->next = self;
         parent->value.arr.last = self;
     }
     else {
@@ -212,7 +213,7 @@ const char *var_get_str (var *self, const char *key) {
   * \param key The subkey
   * \return Number of members, or -1 for inappropriate type.
   */
-int var_get_count (var *self, const char *key) {
+int var_get_count (var *self) {
     if (self->type != VAR_ARRAY && self->type != VAR_DICT) return -1;
     return self->value.arr.count;    
 }

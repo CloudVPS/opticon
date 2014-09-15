@@ -22,7 +22,8 @@ test:
 	@./runtest.sh $(CC)
 
 clean:
-	rm -f *.o bin/* out/*
+	rm -f *.o out/*
+	rm -rf bin/*
 
 .SUFFIXES: .c .o
 .c.o:

@@ -57,7 +57,7 @@ var         *var_get_dict (var *, const char *);
 var         *var_get_array (var *, const char *);
 int          var_get_int (var *, const char *);
 const char  *var_get_str (var *, const char *);
-int          var_get_count (var *, const char *);
+int          var_get_count (var *);
 var         *var_get_dict_atindex (var *, int);
 var         *var_get_array_atindex (var *, int);
 int          var_get_int_atindex (var *, int);
