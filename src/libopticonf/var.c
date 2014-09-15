@@ -173,3 +173,19 @@ var *var_get_array (var *self, const char *key) {
     if (res->type == VAR_ARRAY) return res;
     return NULL;
 }
+
+/** Get an integer value out of a dict var.
+  * \param self The dict
+  * \param key The key inside the dict
+  * \return The integer value, or 0 if it couldn't be resolved. Strings
+  *         will be autoconverted. PHP all the things.
+  */
+int var_get_int (var *self, const char *key) {
+    var *res = var_find_key (self, key);
+    if (! res) return 0;
+    if (res->type == VAR_STR) {
+        return atoi (res->value.sval);
+    }
+    if (res->type == VAR_INT) return res->value.ival;
+    return 0;
+}
