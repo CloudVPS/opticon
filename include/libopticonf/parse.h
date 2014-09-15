@@ -13,6 +13,7 @@ typedef enum parse_state_e {
     PSTATE_ARRAY_WAITVALUE,
     PSTATE_ARRAY_VALUE,
     PSTATE_ARRAY_VALUE_QUOTED,
+    PSTATE_COMMENT
 } parse_state;
 
 int parse_config_level (var *, const char **, parse_state);

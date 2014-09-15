@@ -17,10 +17,16 @@ int parse_config_level (var *v, const char **buf, parse_state st) {
     char valuebuf[4096];
     int valuebuf_pos = 0;
     int value_nondigits = 0;
+    parse_state precomment;
 
     while (*c) {    
         switch (st) {
             case PSTATE_DICT_WAITKEY:
+                if (*c == '#') {
+                    precomment = st;
+                    st = PSTATE_COMMENT;
+                    break;
+                }
                 if (isspace (*c)) break;
                 if (*c == ',') break;
                 if (*c == '}') {
@@ -44,6 +50,11 @@ int parse_config_level (var *v, const char **buf, parse_state st) {
                 break;
         
             case PSTATE_DICT_KEY:
+                if (*c == '#') {
+                    precomment = PSTATE_DICT_WAITVALUE;
+                    st = PSTATE_COMMENT;
+                    break;
+                }
                 if (isspace (*c)) {
                     st = PSTATE_DICT_WAITVALUE;
                     break;
@@ -79,6 +90,10 @@ int parse_config_level (var *v, const char **buf, parse_state st) {
                     st = PSTATE_DICT_WAITKEY;
                     break;
                 }
+                if (*c == ':') {
+                    st = PSTATE_DICT_WAITVALUE;
+                    break;
+                }
                 if (! strchr (VALIDUNQUOTED, *c)) {
                     sprintf (LAST_PARSE_ERROR, "invalid character in "
                              "value '%c'\n", *c);
@@ -101,6 +116,11 @@ int parse_config_level (var *v, const char **buf, parse_state st) {
                 break;
             
             case PSTATE_DICT_WAITVALUE:
+                if (*c == '#') {
+                    precomment = st;
+                    st = PSTATE_COMMENT;
+                    break;
+                }
                 if (isspace (*c)) break;
                 if (*c == ':') break;
                 if (*c == '=') break;
@@ -153,11 +173,17 @@ int parse_config_level (var *v, const char **buf, parse_state st) {
                 break; 
             
             case PSTATE_DICT_VALUE:
-                if (isspace (*c) || (*c == ',') || (*c == '}')) {
+                if (isspace (*c) || (*c == ',') || (*c == '}') ||
+                    (*c == '#')) {
                     if (! value_nondigits) {
                         var_set_int_forkey (v, keybuf, atoi(valuebuf));
                     }
                     else var_set_str_forkey (v, keybuf, valuebuf);
+                    if (*c == '#') {
+                        precomment = PSTATE_DICT_WAITKEY;
+                        st = PSTATE_COMMENT;
+                        break;
+                    }
                     if (*c == '}') {
                         *buf = c;
                         return 1;
@@ -194,6 +220,11 @@ int parse_config_level (var *v, const char **buf, parse_state st) {
                 break;
                 
             case PSTATE_ARRAY_WAITVALUE:
+                if (*c == '#') {
+                    precomment = st;
+                    st = PSTATE_COMMENT;
+                    break;
+                }
                 if (isspace (*c)) break;
                 if (*c == ',') break;
                 if (*c == ']') {
@@ -215,11 +246,17 @@ int parse_config_level (var *v, const char **buf, parse_state st) {
                 break;
             
             case PSTATE_ARRAY_VALUE:
-                if (isspace (*c) || (*c == ']') || (*c == ',')) {
+                if (isspace (*c) || (*c == ']') || 
+                    (*c == ',') || (*c == '#')) {
                     if (! value_nondigits) {
                         var_add_int (v, atoi (valuebuf));
                     }
                     else var_add_str (v, valuebuf);
+                    if (*c == '#') {
+                        precomment = PSTATE_ARRAY_WAITVALUE;
+                        st = PSTATE_COMMENT;
+                        break;
+                    }
                     if (*c == '}') {
                         *buf = c;
                         return 1;
@@ -246,6 +283,12 @@ int parse_config_level (var *v, const char **buf, parse_state st) {
                 if (valuebuf_pos >= 4095) return 0;
                 valuebuf[valuebuf_pos++] = *c;
                 valuebuf[valuebuf_pos] = 0;
+                break;
+            
+            case PSTATE_COMMENT:
+                if (*c == '\n') {
+                    st = precomment;
+                }
                 break;
         }
         ++c;
