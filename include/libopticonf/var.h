@@ -41,6 +41,7 @@ typedef struct var_s {
     varvalue         value; /**< Value */
     uint32_t         generation; /**< Last generation var was seen */
     uint32_t         lastmodified; /**< Last generation var was modified */
+    uint32_t         firstseen; /**< First generation var was seen */
 } var;
 
 /* ============================= FUNCTIONS ============================= */

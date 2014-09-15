@@ -10,6 +10,7 @@ var *var_alloc (void) {
     self->type = VAR_NULL;
     self->generation = 0;
     self->lastmodified = 0;
+    self->firstseen = 0;
     return self;
 }
 
@@ -27,7 +28,8 @@ void var_link (var *self, var *parent) {
 
     /* copy generation data */    
     if (self->root) {
-        self->lastmodified = self->generation = self->root->generation;
+        self->firstseen = self->lastmodified = \
+        self->generation = self->root->generation;
     }
     
     /* numbered array nodes have no id */
@@ -364,6 +366,23 @@ var *var_get_or_make (var *self, const char *key, vartype tp) {
     return res;
 }
 
+/** Update the generational data for a var. Will traverse up the tree in order
+  * to get the generation and modified data set.
+  * \param v The loaded object.
+  * \param is_updated 1 if lastmodified should be changed.
+  */
+void var_update_gendata (var *v, int is_updated) {
+    while (v) {
+        if (is_updated) {
+            if (v->lastmodified == v->root->generation) break;
+            v->lastmodified = v->root->generation;
+        }
+        if (v->generation == v->root->generation) break;
+        v->generation = v->root->generation;
+        v = v->parent;
+    }
+}
+
 /** Set the integer value of a dict-var sub-var.
   * \param self The dict.
   * \param key The key within the dict.
@@ -371,9 +390,22 @@ var *var_get_or_make (var *self, const char *key, vartype tp) {
   */
 void var_set_int (var *self, const char *key, int val) {
     var *v = var_get_or_make (self, key, VAR_INT);
-    if (v->type == VAR_NULL) v->type = VAR_INT;
+    if (! v) return;
+    int is_orig = 0;
+    
+    v->generation = v->root->generation;
+    if (v->type == VAR_NULL) {
+        v->type = VAR_INT;
+        v->lastmodified = v->generation;
+        is_orig = 1;
+    }
+    
     if (v->type != VAR_INT) return;
+    if (!v_is_orig && (v->value.ival != val)) {
+        v_is_orig = 1;
+    }
     v->value.ival = val;
+    var_update_gendata (v);
 }
 
 /** Set the string value of a dict-var sub-var.
@@ -383,13 +415,64 @@ void var_set_int (var *self, const char *key, int val) {
   */
 void var_set_str (var *self, const char *key, const char *val) {
     var *v = var_get_or_make (self, key, VAR_STR);
+    int is_orig = 0;
+    
     if (v->type == VAR_NULL) {
         v->type = VAR_STR;
         v->value.sval = strdup (val);
+        var_update_gendata (v, 1);
     }
     else if (v->type == VAR_STR) {
-        free (v->value.sval);
-        v->value.sval = strdup (val);
+        if (strcmp (v->value.sval, val) == 0) {
+            var_update_gendata (v, 0);
+        }
+        else {
+            free (v->value.sval);
+            v->value.sval = strdup (val);
+            var_update_gendata (v, 1);
+        }
     }
 }
 
+/** Clear an array. Arrays are always reloaded in bulk (with all children
+  * showing up with the last generation as the firstseen and lastmodified).
+  * \param v The array to clear.
+  */
+void var_clear_array (var *v) {
+    if (v->type != VAR_ARRAY) return;
+    var *c, *nc;
+    c = v->value.arr.first;
+    while (c) {
+        nc = c->next;
+        var_free (c);
+        c = nc;
+    }
+    
+    var_update_gendata (v, 1);
+}
+
+/** Add an integer value to an array var.
+  * \param self The array
+  * \param nval The integer to add.
+  */
+void var_add_int (var *self, int nval) {
+    if (self->type != VAR_ARRAY) return;
+    var *nvar = var_alloc();
+    nvar->type = VAR_INT;
+    nvar->id[0] = 0;
+    nvar->value.ival = nval;
+    var_link (nvar, self);
+}
+
+/** Add a string value to an array var.
+  * \param self The array
+  * \param nval The string to add (will be copied).
+  */
+void var_add_str (var *self, const char *nval) {
+    if (self->type != VAR_ARRAY) return;
+    var *nvar = var_alloc();
+    nvar->type = VAR_STR;
+    nvar->id[0] = 0;
+    nvar->value.sval = strdup (nval);
+    var_link (nvar, self);
+}
