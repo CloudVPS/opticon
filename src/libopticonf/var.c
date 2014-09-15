@@ -376,6 +376,7 @@ var *var_get_or_make (var *self, const char *key, vartype tp) {
   */
 void var_update_gendata (var *v, int is_updated) {
     while (v) {
+        if (! v->root) break;
         if (is_updated) {
             if (v->lastmodified == v->root->generation) break;
             v->lastmodified = v->root->generation;

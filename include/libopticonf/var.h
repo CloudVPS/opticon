@@ -53,6 +53,7 @@ var         *var_alloc (void);
 void         var_link (var *, var *parent);
 void         var_free (var *);
 
+var         *var_find_key (var *, const char *);
 var         *var_get_dict (var *, const char *);
 var         *var_get_array (var *, const char *);
 int          var_get_int (var *, const char *);
