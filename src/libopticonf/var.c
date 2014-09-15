@@ -142,7 +142,7 @@ var *var_find_key (var *self, const char *key) {
   * \param key The key of the alleged/desired dict node.
   * \return var The dict node, or NULL if we ran into a conflict.
   */
-var *var_get_dict (var *self, const char *key) {
+var *var_get_dict_forkey (var *self, const char *key) {
     var *res = var_find_key (self, key);
     if (! res) {
         res = var_alloc();
@@ -163,7 +163,7 @@ var *var_get_dict (var *self, const char *key) {
   * \param key The key of the alleged/desired dict node.
   * \return var The dict node, or NULL if we ran into a conflict.
   */
-var *var_get_array (var *self, const char *key) {
+var *var_get_array_forkey (var *self, const char *key) {
     var *res = var_find_key (self, key);
     if (! res) {
         res = var_alloc();
@@ -185,7 +185,7 @@ var *var_get_array (var *self, const char *key) {
   * \return The integer value, or 0 if it couldn't be resolved. Strings
   *         will be autoconverted. PHP all the things.
   */
-int var_get_int (var *self, const char *key) {
+int var_get_int_forkey (var *self, const char *key) {
     var *res = var_find_key (self, key);
     if (! res) return 0;
     if (res->type == VAR_STR) {
@@ -200,7 +200,7 @@ int var_get_int (var *self, const char *key) {
   * \param key The key of the string inside the dict.
   * \return The string, or NULL if found incompatible/nonexistant. No ducktyping.
   */
-const char *var_get_str (var *self, const char *key) {
+const char *var_get_str_forkey (var *self, const char *key) {
     var *res = var_find_key (self, key);
     if (! res) return NULL;
     if (res->type != VAR_STR) return NULL;
@@ -216,6 +216,19 @@ const char *var_get_str (var *self, const char *key) {
 int var_get_count (var *self) {
     if (self->type != VAR_ARRAY && self->type != VAR_DICT) return -1;
     return self->value.arr.count;    
+}
+
+/** Get the direct int value of a var object. */
+int var_get_int (var *self) {
+    if (self->type == VAR_STR) return atoi (self->value.sval);
+    if (self->type == VAR_INT) return self->value.ival;
+    return 0;
+}
+
+/** Get the direct string value of a var object. */
+const char *var_get_str (var *self) {
+    if (self->type == VAR_STR) return self->value.sval;
+    return NULL;
 }
 
 /** Lookup a var inside a parent by its array index. Uses smart caching
@@ -392,9 +405,14 @@ void var_update_gendata (var *v, int is_updated) {
   * \param key The key within the dict.
   * \param val The value to set.
   */
-void var_set_int (var *self, const char *key, int val) {
+void var_set_int_forkey (var *self, const char *key, int val) {
     var *v = var_get_or_make (self, key, VAR_INT);
     if (! v) return;
+    var_set_int (v, val);
+}
+
+/** Set the direct integer value of a var */
+void var_set_int (var *v, int val) {
     int is_orig = 0;
     
     v->generation = v->root->generation;
@@ -417,8 +435,14 @@ void var_set_int (var *self, const char *key, int val) {
   * \param key The key within the dict.
   * \param val The value to set.
   */
-void var_set_str (var *self, const char *key, const char *val) {
+void var_set_str_forkey (var *self, const char *key, const char *val) {
     var *v = var_get_or_make (self, key, VAR_STR);
+    if (! v) return;
+    var_set_str (v, val);
+}
+
+/** Set the direct string value of a var */
+void var_set_str (var *v, const char *val) {
     int is_orig = 0;
     
     if (v->type == VAR_NULL) {
