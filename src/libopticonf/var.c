@@ -513,12 +513,12 @@ void var_add_str (var *self, const char *nval) {
   */
 var *var_add_array (var *self) {
     if (self->type != VAR_ARRAY) return NULL;
-    var *nvar = var_alloc;
-    nvar->type = VAR_ARRAY:
+    var *nvar = var_alloc();
+    nvar->type = VAR_ARRAY;
     nvar->id[0] = 0;
     nvar->value.arr.first = nvar->value.arr.last = NULL;
     nvar->value.arr.count = 0;
-    nvar->value.cachepos = -1;
+    nvar->value.arr.cachepos = -1;
     var_link (nvar, self);
     return nvar;
 }
@@ -528,13 +528,13 @@ var *var_add_array (var *self) {
   * \return The new empty dictionary (or NULL).
   */
 var *var_add_dict (var *self) {
-    if (self->type != VAR_ARRAY) return;
-    var *nvar = var_alloc;
-    nvar->type = VAR_DICT:
+    if (self->type != VAR_ARRAY) return NULL;
+    var *nvar = var_alloc();
+    nvar->type = VAR_DICT;
     nvar->id[0] = 0;
     nvar->value.arr.first = nvar->value.arr.last = NULL;
     nvar->value.arr.count = 0;
-    nvar->value.cachepos = -1;
+    nvar->value.arr.cachepos = -1;
     var_link (nvar, self);
     return nvar;
 }
