@@ -12,6 +12,7 @@ void test_input (const char *txt) {
     assert (var_get_int_forkey (env_collector, "listenport") == 3333);
     assert (addr = var_get_str_forkey (env_collector, "address"));
     assert (strcmp (addr, "192.168.1.1") == 0);
+    var_free (env);
 }
 
 int main (int argc, const char *argv[]) {
