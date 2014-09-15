@@ -7,6 +7,10 @@ static const char *VALIDUNQUOTED = "abcdefghijklmnopqrstuvwxyz"
                                    "ABCDEFGHIJKLMNOPQRSTUVWXUZ"
                                    "0123456789-_.";
 
+static const char *VALIDUNQUOTEDV = "abcdefghijklmnopqrstuvwxyz"
+                                    "ABCDEFGHIJKLMNOPQRSTUVWXUZ"
+                                    "0123456789-_./:";
+
 static char LAST_PARSE_ERROR[4096];
 
 int parse_config_level (var *v, const char **buf, parse_state st) {
@@ -191,7 +195,7 @@ int parse_config_level (var *v, const char **buf, parse_state st) {
                     st = PSTATE_DICT_WAITKEY;
                     break;
                 }
-                if (! strchr (VALIDUNQUOTED, *c)) {
+                if (! strchr (VALIDUNQUOTEDV, *c)) {
                     sprintf (LAST_PARSE_ERROR, "invalid character in "
                              "value: '%c'\n", *c);
                     return 0;
@@ -264,7 +268,7 @@ int parse_config_level (var *v, const char **buf, parse_state st) {
                     st = PSTATE_ARRAY_WAITVALUE;
                     break;
                 }
-                if (! strchr (VALIDUNQUOTED, *c)) return 0;
+                if (! strchr (VALIDUNQUOTEDV, *c)) return 0;
                 if ((!value_nondigits) && (*c<'0' || *c>'9')) {
                     value_nondigits = 1;
                 }
