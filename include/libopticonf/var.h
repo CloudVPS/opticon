@@ -25,7 +25,7 @@ enum vartype {
 
 /** Value union for var */
 typedef union varvalue_s {
-    char            *sval; /**< String value */
+    char            *sval; /**< String value (var owns memory) */
     int              ival; /**< Integer value */
     varlink          arr; /**< Dictionary or array value */
 } varvalue;

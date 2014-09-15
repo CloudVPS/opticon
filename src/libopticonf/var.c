@@ -150,5 +150,26 @@ var *var_get_dict (var *self, const char *key) {
         var_link (res, self);
     }
     if (res->type == VAR_DICT) return res;
+    return NULL;
 }
 
+/** Find, or create, an array node inside a dictionary var.
+  * \param self The var to look into
+  * \param key The key of the alleged/desired dict node.
+  * \return var The dict node, or NULL if we ran into a conflict.
+  */
+var *var_get_array (var *self, const char *key) {
+    var *res = var_find_key (self, key);
+    if (! res) {
+        res = var_alloc();
+        res->type = VAR_ARRAY;
+        res->value.arr.first = res->value.arr.last = NULL;
+        res->value.arr.count = 0;
+        res->value.arr.cachepos = -1;
+        strncpy (res->id, key, 127);
+        res->id[127] = 0;
+        var_link (res, self);
+    }
+    if (res->type == VAR_ARRAY) return res;
+    return NULL;
+}
