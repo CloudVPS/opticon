@@ -54,6 +54,7 @@ void         var_link (var *, var *parent);
 void         var_free (var *);
 
 var         *var_find_key (var *, const char *);
+var         *var_find_index (var *, int);
 int          var_get_count (var *);
 int          var_get_int (var *);
 const char  *var_get_str (var *);

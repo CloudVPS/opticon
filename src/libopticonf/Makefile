@@ -17,7 +17,7 @@ endif
 
 CFLAGS+=-DOSNAME=$(OSNAME) -DOSREL=$(OSREL) -DOSRELMAJOR=$(OSRELMAJOR)
 
-OBJS_LIBOPTICONF = var.o
+OBJS_LIBOPTICONF = var.o react.o
 				  
 all: ../../lib/libopticonf.a
 
