@@ -342,7 +342,54 @@ void var_clean_generation (var *node) {
         if (crsr->generation < needgen) {
             var_free (crsr);
         }
-        else var_cleanup_generation (crsr);
+        else var_clean_generation (crsr);
         crsr = ncrsr;
     }
 }
+
+/** Get a hold of a keyed sub-var of a dictionary var, whether it exists
+  * or not. Newly created nodes will initialize to type VAR_NULL.
+  * \param self The parent dict.
+  * \param key The key to look up.
+  * \return The var found or created.
+  */
+var *var_get_or_make (var *self, const char *key, vartype tp) {
+    var *res = var_find_key (self, key);
+    if (! res) {
+        res = var_alloc();
+        strncpy (res->id, key, 127);
+        res->id[127] = 0;
+        var_link (res, self);
+    }
+    return res;
+}
+
+/** Set the integer value of a dict-var sub-var.
+  * \param self The dict.
+  * \param key The key within the dict.
+  * \param val The value to set.
+  */
+void var_set_int (var *self, const char *key, int val) {
+    var *v = var_get_or_make (self, key, VAR_INT);
+    if (v->type == VAR_NULL) v->type = VAR_INT;
+    if (v->type != VAR_INT) return;
+    v->value.ival = val;
+}
+
+/** Set the string value of a dict-var sub-var.
+  * \param self The dict.
+  * \param key The key within the dict.
+  * \param val The value to set.
+  */
+void var_set_str (var *self, const char *key, const char *val) {
+    var *v = var_get_or_make (self, key, VAR_STR);
+    if (v->type == VAR_NULL) {
+        v->type = VAR_STR;
+        v->value.sval = strdup (val);
+    }
+    else if (v->type == VAR_STR) {
+        free (v->value.sval);
+        v->value.sval = strdup (val);
+    }
+}
+
