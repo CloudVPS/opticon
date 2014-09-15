@@ -506,3 +506,35 @@ void var_add_str (var *self, const char *nval) {
     nvar->value.sval = strdup (nval);
     var_link (nvar, self);
 }
+
+/** Add an empty array to an array var.
+  * \param self The parent array.
+  * \return The new empty array (or NULL).
+  */
+var *var_add_array (var *self) {
+    if (self->type != VAR_ARRAY) return NULL;
+    var *nvar = var_alloc;
+    nvar->type = VAR_ARRAY:
+    nvar->id[0] = 0;
+    nvar->value.arr.first = nvar->value.arr.last = NULL;
+    nvar->value.arr.count = 0;
+    nvar->value.cachepos = -1;
+    var_link (nvar, self);
+    return nvar;
+}
+
+/** Add an empty dictionary to an array var.
+  * \param self The parent array.
+  * \return The new empty dictionary (or NULL).
+  */
+var *var_add_dict (var *self) {
+    if (self->type != VAR_ARRAY) return;
+    var *nvar = var_alloc;
+    nvar->type = VAR_DICT:
+    nvar->id[0] = 0;
+    nvar->value.arr.first = nvar->value.arr.last = NULL;
+    nvar->value.arr.count = 0;
+    nvar->value.cachepos = -1;
+    var_link (nvar, self);
+    return nvar;
+}

@@ -75,5 +75,7 @@ void         var_set_str_forkey (var *, const char *, const char *);
 void         var_clear_array (var *);
 void         var_add_int (var *, int);
 void         var_add_str (var *, const char *);
+var         *var_add_array (var *);
+var         *var_add_dict (var *);
 
 #endif
