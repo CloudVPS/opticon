@@ -189,3 +189,160 @@ int var_get_int (var *self, const char *key) {
     if (res->type == VAR_INT) return res->value.ival;
     return 0;
 }
+
+/** Get a string value out of a dict var.
+  * \param self The dict
+  * \param key The key of the string inside the dict.
+  * \return The string, or NULL if found incompatible/nonexistant. No ducktyping.
+  */
+const char *var_get_str (var *self, const char *key) {
+    var *res = var_find_key (self, key);
+    if (! res) return NULL;
+    if (res->type != VAR_STR) return NULL;
+    return res->value.sval;
+}
+
+/** Return the number of children of a keyed child-array or child-dict of
+  * a dict variable.
+  * \param self The parent dict
+  * \param key The subkey
+  * \return Number of members, or -1 for inappropriate type.
+  */
+int var_get_count (var *self, const char *key) {
+    if (self->type != VAR_ARRAY && self->type != VAR_DICT) return -1;
+    return self->value.arr.count;    
+}
+
+/** Lookup a var inside a parent by its array index. Uses smart caching
+  * to make sequential lookups lightweight.
+  * \param self The array-object
+  * \param index The index within the array, -1 and down for accessing
+                 from the last item down.
+  * \return The variable, or NULL if it couldn't be found.
+  */
+var *var_find_index (var *self, int index) {
+    if (self->type != VAR_ARRAY && self->Type != VAR_DICT) return NULL;
+    var *res = NULL;
+    int cindex = (index < 0) ? self->value.arr.count - index : index;
+    if (cindex < 0) return NULL;
+    if (cindex >= self->value.arr.count) return NULL;
+    
+    int cpos = self->value.arr.cachepos;
+    if (cpos == cindex) return self->value.arr.cachenode;
+
+    if (index == -1) res = self->value.arr.last;    
+    if (cpos == cindex+1) res = self->value.arr.cachenode->prev;
+    if (cpos == cindex-1) res = self->value.arr.cachenode->next;
+    
+    if (! res) {
+        res = first;
+        for (int i=0; res && (i<cpos); ++i) {
+            res = res->next;
+        }
+    }
+    
+    if (! res) return NULL;
+    self->value.arr.cachepos = index;
+    self->value.arr.cachenode = res;
+    return res;
+}
+
+/** Lookup a dict var inside an array var.
+  * \param self The array to look inside
+  * \param idx The index (negative for measuring from the end).
+  * 'return The dict node, or NULL if it could not be arranged.
+  */
+var *var_get_dict_atindex (var *self, int idx) {
+    var *res = var_find_index (self, idx);
+    if (! res) return NULL;
+    
+    if (res->type == VAR_NULL) {
+        res->type = VAR_DICT;
+        res->value.arr.first = res->value.arr.last = NULL;
+        res->value.arr.count = 0;
+        res->value.arr.cachepos = -1;
+        res->id[0] = 0;
+        var_link (res, self);
+    }
+    if (res->type != VAR_DICT) return NULL;
+    return res;
+}
+
+/** Lookup an array var inside an array var.
+  * \param self The array to look inside
+  * \param idx The index (negative for measuring from the end).
+  * 'return The dict node, or NULL if it could not be arranged.
+  */
+var *var_get_array_atindex (var *self, int idx) {
+    var *res = var_find_index (self, idx);
+    if (! res) return NULL;
+    
+    if (res->type == VAR_NULL) {
+        res->type = VAR_ARRAY;
+        res->value.arr.first = res->value.arr.last = NULL;
+        res->value.arr.count = 0;
+        res->value.arr.cachepos = -1;
+        res->id[0] = 0;
+        var_link (res, self);
+    }
+    if (res->type != VAR_ARRAY) return NULL;
+    return res;
+}
+
+/** Get the int value of a var inside an array var.
+  * \param self The array
+  * \param idx The array index (negative for measuring from the end).
+  * \return The integer value, failed lookups will yield 0.
+  */
+int var_get_int_atindex (var *self, int idx) {
+    var *res = var_find_index (self, idx);
+    if (! res) return 0;
+    if (res->type == VAR_INT) return res->value.ival;
+    if (res->type == VAR_STR) return atoi (res->value.sval);
+    return 0;
+}
+
+/** Get the string value of a var inside an array var.
+  * \param self The array
+  * \param idx The array index (negative for measuring from the end).
+  * \return The string value, or NULL.
+  */
+const char *var_get_str_atindex (var *self, int idx) {
+    var *res = var_find_index (self, idx);
+    if (! res) return 0;
+    if (res->type != VAR_STR) return NULL;
+    return res->value.sval;
+}
+
+/** Increase the generation counter of a variable space. When a new versin
+  * of the same structured document is loaded again, values that are set
+  * will have their generation updated to the latest number. Values that
+  * actually -change- in the process will also see their lastmodified
+  * updated. Reflective code can use this information later to figure out
+  * what changed about a particular configuration.
+  */
+void var_new_generation (var *rootnode) {
+    assert (rootnode->root == NULL);
+    rootnode->generation++;
+}
+
+/** When everything interesting that can be done with the generational
+  * informational after a new round of loading has been done, we are potentially
+  * left with zombie var-nodes that didn't get refreshed. This function will
+  * reap those stale nodes out of a variable space recursively.
+  */
+void var_clean_generation (var *node) {
+    uint32_t needgen = (node->root) ? node->root->generation : node->generation;
+    if (node->type != VAR_DICT && node->type != VAR_ARRAY) return;
+    var *crsr = node->value.arr.first;
+    var *ncrsr;
+    while (crsr) {
+        ncrsr = crsr->next;
+        /* time for a-reapin'? */
+        if (crsr->generation < needgen) {
+            var_free (crsr);
+        }
+        else var_cleanup_generation (crsr);
+        crsr = ncrsr;
+    }
+}

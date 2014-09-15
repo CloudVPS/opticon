@@ -63,8 +63,8 @@ void         var_new_generation (var *);
 void         var_clean_generation (var *);
 void         var_set_int (var *, const char *, int);
 void         var_set_str (var *, const char *, const char *);
-void         var_set_int_atindex (var *, int, int);
-void         var_set_str_atindex (var *, int, const char *);
 void         var_clear_array (var *);
+void         var_add_int (var *, int);
+void         var_add_str (var *, const char *);
 
 #endif
