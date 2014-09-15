@@ -4,6 +4,9 @@
 typedef struct varlink_s {
     struct var_s    *first;
     struct var_s    *last;
+    uint32_t         count;
+    int              cachepos;
+    struct var_s    *cachenode;
 } varlink;
 
 enum vartype {
@@ -11,7 +14,7 @@ enum vartype {
     VAR_INT,
     VAR_STR,
     VAR_DICT,
-    VA_ARRAY
+    VAR_ARRAY
 }
 
 typedef union varvalue_s {
@@ -33,7 +36,7 @@ typedef struct var_s {
 } var;
 
 var         *var_alloc (void);
-void         var_link (var *parent);
+void         var_link (var *, var *parent);
 void         var_free (var *);
 
 var         *var_get_dict (var *, const char *);
