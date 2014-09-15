@@ -3,6 +3,8 @@
 
 #include <libopticonf/var.h>
 
+/* =============================== TYPES =============================== */
+
 typedef enum updatetype_s {
     UPDATE_NONE,
     UPDATE_ADD,
@@ -23,7 +25,11 @@ typedef struct pathnode_s {
     reaction_f          *reactions;
 } pathnode;
 
+/* ============================== GLOBALS ============================== */
+
 extern pathnode OPTICONF_ROOT;
+
+/* ============================= FUNCTIONS ============================= */
 
 void opticonf_add_reaction (const char *, reaction_f);
 void opticonf_handle_config (var *);
