@@ -1,9 +1,11 @@
 #include <libopticonf/var.h>
+#include <string.h>
+#include <assert.h>
 
 /** Allocate a var object */
 var *var_alloc (void) {
     var *self = (var *) malloc (sizeof (var));
-    if (! self) return res;
+    if (! self) return NULL;
     
     self->next = self->prev = self->parent = self->root = NULL;
     self->id[0] = '\0';
@@ -36,7 +38,7 @@ void var_link (var *self, var *parent) {
     if (self->id[0]) {
         if (parent->type == VAR_NULL) {
             parent->type = VAR_ARRAY;
-            parent->value.arr.first = NULL
+            parent->value.arr.first = NULL;
             parent->value.arr.last = NULL;
             parent->value.arr.count = 0;
             parent->value.arr.cachepos = -1;
@@ -47,8 +49,8 @@ void var_link (var *self, var *parent) {
     else {
         if (parent->type == VAR_NULL) {
             parent->type = VAR_DICT;
-            parent->value.arr_first = NULL;
-            parent->value.arr_last = NULL;
+            parent->value.arr.first = NULL;
+            parent->value.arr.last = NULL;
             parent->value.arr.count = 0;
         }
         if (parent->type != VAR_DICT) return;
@@ -100,7 +102,7 @@ void var_free (var *self) {
     }
     
     if (self->type == VAR_ARRAY || self->type == VAR_DICT) {
-        var *c = self->varlue.arr.first;
+        var *c = self->value.arr.first;
         var *nc;
         
         while (c) {
@@ -223,7 +225,7 @@ int var_get_count (var *self, const char *key) {
   * \return The variable, or NULL if it couldn't be found.
   */
 var *var_find_index (var *self, int index) {
-    if (self->type != VAR_ARRAY && self->Type != VAR_DICT) return NULL;
+    if (self->type != VAR_ARRAY && self->type != VAR_DICT) return NULL;
     var *res = NULL;
     int cindex = (index < 0) ? self->value.arr.count - index : index;
     if (cindex < 0) return NULL;
@@ -237,7 +239,7 @@ var *var_find_index (var *self, int index) {
     if (cpos == cindex-1) res = self->value.arr.cachenode->next;
     
     if (! res) {
-        res = first;
+        res = self->value.arr.first;
         for (int i=0; res && (i<cpos); ++i) {
             res = res->next;
         }
@@ -401,11 +403,11 @@ void var_set_int (var *self, const char *key, int val) {
     }
     
     if (v->type != VAR_INT) return;
-    if (!v_is_orig && (v->value.ival != val)) {
-        v_is_orig = 1;
+    if (!is_orig && (v->value.ival != val)) {
+        is_orig = 1;
     }
     v->value.ival = val;
-    var_update_gendata (v);
+    var_update_gendata (v, is_orig);
 }
 
 /** Set the string value of a dict-var sub-var.

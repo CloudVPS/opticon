@@ -1,6 +1,9 @@
 #ifndef _VAR_H
 #define _VAR_H 1
 
+#include <sys/types.h>
+#include <stdlib.h>
+
 /* =============================== TYPES =============================== */
 
 struct var_s; /* forward declaration */
@@ -15,13 +18,13 @@ typedef struct varlink_s {
 } varlink;
 
 /** Supported variable types for var */
-enum vartype {
+typedef enum vartype_e {
     VAR_NULL, /**< Unset value */
     VAR_INT, /**< Integer */
     VAR_STR, /**< Allocated string */
     VAR_DICT, /**< Dictionary */
     VAR_ARRAY /**< Awkward numbered array */
-};
+} vartype;
 
 /** Value union for var */
 typedef union varvalue_s {
@@ -54,7 +57,7 @@ var         *var_get_dict (var *, const char *);
 var         *var_get_array (var *, const char *);
 int          var_get_int (var *, const char *);
 const char  *var_get_str (var *, const char *);
-int          var_get_count (var *);
+int          var_get_count (var *, const char *);
 var         *var_get_dict_atindex (var *, int);
 var         *var_get_array_atindex (var *, int);
 int          var_get_int_atindex (var *, int);
