@@ -250,7 +250,7 @@ var *var_find_index (var *self, int index) {
 
     if (index == -1) res = self->value.arr.last;    
     if (cpos == cindex+1) res = self->value.arr.cachenode->prev;
-    if (cpos == cindex-1) res = self->value.arr.cachenode->next;
+    if (cindex && cpos == cindex-1) res = self->value.arr.cachenode->next;
     
     if (! res) {
         res = self->value.arr.first;
