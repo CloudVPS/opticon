@@ -12,7 +12,27 @@ static const char *VALIDUNQUOTEDV = "abcdefghijklmnopqrstuvwxyz"
                                     "0123456789-_./:";
 
 static char LAST_PARSE_ERROR[4096];
+static int LAST_PARSE_LINE = 0;
 
+typedef enum parse_state_e {
+    PSTATE_DICT_WAITKEY,
+    PSTATE_DICT_KEY,
+    PSTATE_DICT_KEY_QUOTED,
+    PSTATE_DICT_WAITVALUE,
+    PSTATE_DICT_VALUE,
+    PSTATE_DICT_VALUE_QUOTED,
+    PSTATE_ARRAY_WAITVALUE,
+    PSTATE_ARRAY_VALUE,
+    PSTATE_ARRAY_VALUE_QUOTED,
+    PSTATE_COMMENT
+} parse_state;
+
+/** Internal state machine for parsing a JSON-like configuration
+  * text. Recurses on itself for new levels of hierarchy.
+  * \param v The var at this cursor level.
+  * \param buf The cursor (inout)
+  * \param st The state to start out with.
+  */
 int parse_config_level (var *v, const char **buf, parse_state st) {
     const char *c = *buf;
     var *vv = NULL;
@@ -302,7 +322,31 @@ int parse_config_level (var *v, const char **buf, parse_state st) {
     return 1;
 }
 
+/** Parse a configuration text into a variable space.
+  * \param into The root of the variable space.
+  * \param buf The configuration text.
+  * \return 1 on success, 0 on failure.
+  */
 int parse_config (var *into, const char *buf) {
     const char *crsr = buf;
-    return parse_config_level (into, &crsr, PSTATE_DICT_WAITKEY);
+    int res = parse_config_level (into, &crsr, PSTATE_DICT_WAITKEY);
+    if (! res) {
+        char errbuf[64];
+        LAST_PARSE_LINE=0;
+        const char *c = buf;
+        while (c < crsr) {
+            if (*c == '\n') LAST_PARSE_LINE++;
+            c++;
+        }
+        snprintf (errbuf, 63, " (line %i)", LAST_PARSE_LINE);
+        errbuf[63] = 0;
+        strncat (LAST_PARSE_ERROR, errbuf, 4095);
+        LAST_PARSE_ERROR[4095] = 0;
+    }
+    return res;
+}
+
+/** Return a text string detailing the last parse error encountered. */
+const char *parse_error (void) {
+    return LAST_PARSE_ERROR;
 }
