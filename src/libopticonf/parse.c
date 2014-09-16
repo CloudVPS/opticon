@@ -86,6 +86,7 @@ int parse_config_level (var *v, const char **buf, parse_state st) {
                                  "for key '%s'\n", keybuf);
                         return 0;
                     }
+                    var_clear_array (vv);
                     if (!parse_config_level (vv, buf, 
                                              PSTATE_ARRAY_WAITVALUE)) {
                         return 0;
@@ -151,6 +152,7 @@ int parse_config_level (var *v, const char **buf, parse_state st) {
                                  "for key '%s'\n", keybuf);
                         return 0;
                     }
+                    var_clear_array (vv);
                     if (!parse_config_level (vv, buf, 
                                              PSTATE_ARRAY_WAITVALUE)) {
                         return 0;
@@ -244,7 +246,6 @@ int parse_config_level (var *v, const char **buf, parse_state st) {
                     value_nondigits = 0;
                     st = PSTATE_ARRAY_VALUE;
                 }
-                var_clear_array (v);
                 valuebuf_pos = 0;
                 valuebuf[0] = 0;
                 break;

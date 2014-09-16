@@ -246,23 +246,27 @@ var *var_find_index (var *self, int index) {
     if (cindex >= self->value.arr.count) return NULL;
     
     int cpos = self->value.arr.cachepos;
-    if (cpos == cindex) return self->value.arr.cachenode;
+    if (cpos == cindex) {
+        return self->value.arr.cachenode;
+    }
 
     if (index == -1) res = self->value.arr.last;    
-    else if (cpos == cindex+1) res = self->value.arr.cachenode->prev;
+    else if (cpos == cindex+1) {
+        res = self->value.arr.cachenode->prev;
+    }
     else if (cindex && cpos == cindex-1) { 
         res = self->value.arr.cachenode->next;
     }
     
     if (! res) {
         res = self->value.arr.first;
-        for (int i=0; res && (i<cpos); ++i) {
+        for (int i=0; res && (i<cindex); ++i) {
             res = res->next;
         }
     }
     
     if (! res) return NULL;
-    self->value.arr.cachepos = index;
+    self->value.arr.cachepos = cindex;
     self->value.arr.cachenode = res;
     return res;
 }
@@ -478,6 +482,7 @@ void var_clear_array (var *v) {
         c = nc;
     }
     
+    v->value.arr.cachepos = -1;
     var_update_gendata (v, 1);
 }
 

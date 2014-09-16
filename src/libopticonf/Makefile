@@ -22,7 +22,7 @@ OBJS_LIBOPTICONF = var.o react.o parse.o
 all: ../../lib/libopticonf.a
 
 ../../lib/libopticonf.a: $(OBJS_LIBOPTICONF)
-	@echo "[LINK ] libopticondb.a"
+	@echo "[LINK ] libopticonf.a"
 	@ar cr ../../lib/libopticonf.a $(OBJS_LIBOPTICONF)
 
 clean:

@@ -6,12 +6,21 @@
 void test_input (const char *txt) {
     var *env = var_alloc();
     var *env_collector = NULL;
-    const char *addr;
+    var *env_colors = NULL;
+    const char *tstr;
     assert (parse_config (env, txt));
     assert (env_collector = var_get_dict_forkey (env, "collector"));
     assert (var_get_int_forkey (env_collector, "listenport") == 3333);
-    assert (addr = var_get_str_forkey (env_collector, "address"));
-    assert (strcmp (addr, "192.168.1.1") == 0);
+    assert (tstr = var_get_str_forkey (env_collector, "address"));
+    assert (strcmp (tstr, "192.168.1.1") == 0);
+    assert (tstr = var_get_str_forkey (env_collector, "key"));
+    assert (strcmp (tstr, "johnWithTheLongShanks") == 0);
+    assert (env_colors = var_get_array_forkey (env, "colors"));
+    assert (var_get_count (env_colors) == 3);
+    assert (tstr = var_get_str_atindex (env_colors, 0));
+    assert (strcmp (tstr, "red") == 0);
+    assert (tstr = var_get_str_atindex (env_colors, 2));
+    assert (strcmp (tstr, "blue") == 0);
     var_free (env);
 }
 
