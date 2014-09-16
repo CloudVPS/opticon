@@ -57,6 +57,7 @@ uuid        *db_list_hosts (db *d, int *outsz);
 var         *db_get_metadata (db *d);
 int          db_set_metadata (db *d, var *v);
 void         db_close (db *d);
+void         db_free (db *d);
 int          db_create_tenant (db *d, uuid tuuid, var *meta);
 int          db_remove_tenant (db *d, uuid u);
 

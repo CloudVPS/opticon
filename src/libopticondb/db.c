@@ -81,11 +81,20 @@ uuid *db_list_hosts (db *d, int *outsz) {
     return d->list_hosts (d, outsz);
 }
 
+/** Retrieve the metadata for the bound tenant of a database.
+  * \param d The database (should be bound with db_open()).
+  * \return The metadata, or NULL if none could be loaded.
+  */
 var *db_get_metadata (db *d) {
     if (! d->opened) return NULL;
     return d->get_metadata (d);
 }
 
+/** Update the metadata for the bound tenant of a database.
+  * \param d The database (should be bound with db_open()).
+  * \param v The new metadata.
+  * \return 1 on success, 0 on failure.
+  */
 int db_set_metadata (db *d, var *v) {
     if (! d->opened) return 0;
     return d->set_metadata (d, v);
@@ -96,12 +105,31 @@ int db_set_metadata (db *d, var *v) {
   */
 void db_close (db *d) {
     d->close (d);
+    d->opened = 0;
 }
 
+/** Free up all resources associated with a db handle */
+void db_free (db *d) {
+    if (d->opened) d->close (d);
+    d->free (d);
+    free (d);
+}
+
+/** Create a new tenant.
+  * \param d The database handle.
+  * \param u The tenant's uuid.
+  * \param meta Initial tenant metadata (NULL for none).
+  * \return 1 on success, 0 on failure.
+  */
 int db_create_tenant (db *d, uuid u, var *meta) {
     return d->create_tenant (d, u, meta);
 }
 
+/** Remove a tenant and all its hosts.
+  * \param d The database handle.
+  * \param u The tenant uuid.
+  * \return 1 on success, 0 on failure.
+  */
 int db_remove_tenant (db *d, uuid u) {
     return d->remove_tenant (d, u);
 }
