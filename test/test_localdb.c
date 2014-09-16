@@ -7,6 +7,7 @@
 #include <libopticondb/db.h>
 #include <libopticondb/db_local.h>
 #include <libopticon/util.h>
+#include <libopticonf/var.h>
 #include <assert.h>
 #include <stdio.h>
 #include <sys/stat.h>
@@ -16,6 +17,8 @@ int main (int argc, const char *argv[]) {
     const char *shostid = "6f943a0d-bcd9-42fa-b0c9-6ede92f9a46a";
     uuid tenantid = mkuuid (stenantid);
     uuid hostid = mkuuid (shostid);
+    var *meta = var_alloc();
+    var_set_str_forkey (meta, "key", "dVLihKIvQG1hw6lqYUl4Cg==");
 
     time_t tnow = time (NULL);
     time_t t1 = tnow - 180;
@@ -33,6 +36,13 @@ int main (int argc, const char *argv[]) {
     db *d = localdb_create ("./tmpdb");
     assert (db_create_tenant (d, tenantid, NULL));
     assert (db_open (d, tenantid, NULL));
+    assert (db_set_metadata (d, meta));
+    var_free (meta);
+    
+    assert (meta = db_get_metadata (d));
+    const char *kstr = var_get_str_forkey (meta, "key");
+    assert (strcmp (kstr, "dVLihKIvQG1hw6lqYUl4Cg==") == 0);
+    var_free (meta);
 
     meter_setcount (m_test, 0);
     meter_set_uint (m_test, 0, 10);
@@ -64,6 +74,9 @@ int main (int argc, const char *argv[]) {
     assert (uuidcmp (hosts[0], hostid));
     free (hosts);
     
+    db_close (d);
+    assert (db_remove_tenant (d, tenantid));
+    assert (! db_open (d, tenantid, NULL));
     system ("rm -rf ./tmpdb");
     db_close (d);
     host_delete (h);

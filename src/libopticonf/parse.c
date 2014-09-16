@@ -57,7 +57,7 @@ int parse_config_level (var *v, const char **buf, parse_state st) {
                     *buf = c;
                     return 1;
                 }
-                if (*c == '\"') st = PSTATE_DICT_VALUE_QUOTED;
+                if (*c == '\"') st = PSTATE_DICT_KEY_QUOTED;
                 else {
                     if (! strchr (VALIDUNQUOTED, *c)) {
                         sprintf (LAST_PARSE_ERROR, "Invalid char for "

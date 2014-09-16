@@ -354,11 +354,15 @@ int localdb_remove_dir (const char *path) {
     char *newpath;
     struct dirent *dir;
     struct stat st;
+    
     DIR *D = opendir (path);
     if (! D) return 1;
     
     while ((dir = readdir (D))) {
+        if (strcmp (dir->d_name, ".") == 0) continue;
+        if (strcmp (dir->d_name, "..") == 0) continue;
         newpath = (char *) malloc (strlen(path) + strlen(dir->d_name)+4);
+        sprintf (newpath, "%s/%s", path, dir->d_name);
         if (stat (newpath, &st) == 0) {
             if ((st.st_mode & S_IFMT) == S_IFDIR) {
                 if (! localdb_remove_dir (newpath)) {
@@ -379,7 +383,9 @@ int localdb_remove_dir (const char *path) {
     }
     
     closedir (D);
-    if (rmdir (path) != 0) return 0;
+    if (rmdir (path) != 0) {
+        return 0;
+    }
     return 1;
 }
 
@@ -462,11 +468,13 @@ var *localdb_get_metadata (db *d) {
     strcpy (metapath, self->path);
     strcat (metapath, "tenant.metadata");
     if (stat (metapath, &st) != 0) {
+        printf ("Could not stat: %s\n", metapath);
         free (metapath);
         return NULL;
     }
     F = fopen (metapath, "r");
     if (! F) {
+        printf ("Could open stat: %s\n", metapath);
         free (metapath);
         return NULL;
     }
@@ -476,6 +484,7 @@ var *localdb_get_metadata (db *d) {
     fclose (F);
     var *res = var_alloc();
     if (! parse_config (res, data)) {
+        printf ("Parse error: %s\n", parse_error());
         var_free (res);
         res = NULL;
     }
