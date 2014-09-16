@@ -498,7 +498,7 @@ int localdb_set_metadata (db *d, var *v) {
     localdb *self = (localdb *) d;
     int res = 0;
     FILE *F;
-    char *metapath = (char *) malloc (strlen (self->path) + 16);
+    char *metapath = (char *) malloc (strlen (self->path) + 17);
     char *tmppath = (char *) malloc (strlen (self->path) + 24);
     strcpy (metapath, self->path);
     strcpy (tmppath, self->path);
