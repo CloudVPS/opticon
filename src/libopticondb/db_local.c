@@ -2,6 +2,8 @@
 #include <libopticon/ioport_file.h>
 #include <libopticon/codec.h>
 #include <libopticon/util.h>
+#include <libopticonf/parse.h>
+#include <libopticonf/dump.h>
 #include <stdio.h>
 #include <sys/stat.h>
 #include <dirent.h>
@@ -452,12 +454,59 @@ uuid *localdb_list_hosts (db *d, int *outsz) {
 
 /** Implementation for db_get_metadata() */
 var *localdb_get_metadata (db *d) {
-    return NULL;
+    localdb *self = (localdb *) d;
+    struct stat st;
+    FILE *F;
+    
+    char *metapath = (char *) malloc (strlen (self->path) + 16);
+    strcpy (metapath, self->path);
+    strcat (metapath, "tenant.metadata");
+    if (stat (metapath, &st) != 0) {
+        free (metapath);
+        return NULL;
+    }
+    F = fopen (metapath, "r");
+    if (! F) {
+        free (metapath);
+        return NULL;
+    }
+    char *data = (char *) malloc (st.st_size + 16);
+    fread (data, st.st_size, 1, F);
+    data[st.st_size] = 0;
+    fclose (F);
+    var *res = var_alloc();
+    if (! parse_config (res, data)) {
+        var_free (res);
+        res = NULL;
+    }
+    free (metapath);
+    free (data);
+    return res;
 }
 
 /** Implementation for db_set_metadata */
 int localdb_set_metadata (db *d, var *v) {
-    return 1;
+    localdb *self = (localdb *) d;
+    int res = 0;
+    FILE *F;
+    char *metapath = (char *) malloc (strlen (self->path) + 16);
+    char *tmppath = (char *) malloc (strlen (self->path) + 24);
+    strcpy (metapath, self->path);
+    strcpy (tmppath, self->path);
+    strcat (metapath, "tenant.metadata");
+    strcat (tmppath, ".tenant.metadata.new");
+    F = fopen (tmppath, "w");
+    if (F) {
+        res = dump_var (v, F);
+        fclose (F);
+        if (res) {
+            if (rename (tmppath, metapath) != 0) res = 0;
+        }
+        if (! res) unlink (tmppath);
+    }
+    free (metapath);
+    free (tmppath);
+    return res;
 }
 
 /** Allocate an unbound localdb object.
