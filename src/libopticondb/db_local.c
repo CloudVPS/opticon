@@ -537,6 +537,7 @@ db *localdb_create (const char *prefix) {
     self->db.close = localdb_close;
     self->db.create_tenant = localdb_create_tenant;
     self->db.remove_tenant = localdb_remove_tenant;
+    self->db.free = localdb_free;
     self->db.opened = 0;
     self->db.tenant.lsb = 0;
     self->db.tenant.msb = 0;
