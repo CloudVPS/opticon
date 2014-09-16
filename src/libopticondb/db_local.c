@@ -4,6 +4,8 @@
 #include <libopticon/util.h>
 #include <stdio.h>
 #include <sys/stat.h>
+#include <dirent.h>
+#include <unistd.h>
 
 #define LOCALDB_OFFS_INVALID 0xffffffffffffffffULL
 
@@ -17,6 +19,33 @@ datestamp time2date (time_t in) {
     res = 10000 * (1900+tmin.tm_year) +
           100 * (1+tmin.tm_mon) + tmin.tm_mday;
     return res;
+}
+
+int localdb_open (db *d, uuid tenant, var *options) {
+    localdb *self = (localdb *) d;
+    char *insertpos = NULL;
+    struct stat st;
+    char uuidstr[40];
+    int prefixlen = strlen (self->pathprefix);
+    uuid2str (tenant, uuidstr);
+    if (self->path) free (self->path);
+    self->path = (char *) malloc (prefixlen + 64);
+    strcpy (self->path, self->pathprefix);
+    insertpos = self->path + prefixlen;
+    if (*(insertpos-1) != '/') {
+        insertpos[0] = '/';
+        insertpos++;
+    }
+    sprintf (insertpos, "%c%c", uuidstr[0], uuidstr[1]);
+    insertpos += 2;
+    if (stat (self->path, &st) != 0) return 0;
+    sprintf (insertpos, "/%c%c", uuidstr[2], uuidstr[3]);
+    insertpos += 3;
+    if (stat (self->path, &st) != 0) return 0;
+    sprintf (insertpos, "/%s", uuidstr);
+    if (stat (self->path, &st) != 0) return 0;
+    strcat (self->path, "/");
+    return 1;
 }
 
 /** Open the database file for a specified datestamp */
@@ -247,35 +276,174 @@ int localdb_save_record (db *dbctx, time_t when, host *h) {
 void localdb_close (db *dbctx) {
     localdb *self = (localdb *) dbctx;
     free (self->path);
-    codec_release (self->codec);
-    free (self);
+    self->path = NULL;
 }
 
-/** Open and initialize a localdb handle */
-db *db_open_local (const char *path, uuid tenant) {
+/** Implementation for db_free() */
+void localdb_free (db *dbctx) {
+    localdb *self = (localdb *) dbctx;
+    codec_release (self->codec);
+}
+
+int localdb_create_tenant (db *d, uuid tenant, var *meta) {
+    localdb *self = (localdb *) d;
+    char *insertpos = NULL;
     struct stat st;
     char uuidstr[40];
-    localdb *res = (localdb *) malloc (sizeof (localdb));
-    res->db.get_record = localdb_get_record;
-    res->db.get_value_range_int = localdb_get_value_range_int;
-    res->db.get_value_range_frac = localdb_get_value_range_frac;
-    res->db.save_record = localdb_save_record;
-    res->db.close = localdb_close;
-    res->tenant = tenant;
-    res->path = (char *) malloc (strlen(path) + 96);
+    int prefixlen = strlen (self->pathprefix);
     uuid2str (tenant, uuidstr);
-    sprintf (res->path, "%s/%c%c", path, uuidstr[0], uuidstr[1]);
-    if (stat (res->path, &st) != 0) {
-        mkdir (res->path, 0750);
+    char *tmppath = (char *) malloc (prefixlen + 64);
+    strcpy (tmppath, self->pathprefix);
+    insertpos = tmppath + prefixlen;
+    if (*(insertpos-1) != '/') {
+        insertpos[0] = '/';
+        insertpos++;
     }
-    sprintf (res->path + strlen(res->path), "/%c%c", uuidstr[2], uuidstr[3]);
-    if (stat (res->path, &st) != 0) {
-        mkdir (res->path, 0750);
+    sprintf (insertpos, "%c%c", uuidstr[0], uuidstr[1]);
+    insertpos += 2;
+    if (stat (tmppath, &st) != 0) {
+        if (mkdir (tmppath, 0750) != 0) return 0;
     }
-    sprintf (res->path + strlen(res->path), "/%s", uuidstr);
-    if (stat (res->path, &st) != 0) {
-        mkdir (res->path, 0750);
+    sprintf (insertpos, "/%c%c", uuidstr[2], uuidstr[3]);
+    insertpos += 3;
+    if (stat (tmppath, &st) != 0) {
+        if (mkdir (tmppath, 0750) != 0) return 0;
     }
-    res->codec = codec_create_pkt();
-    return (db *) res;
+    sprintf (insertpos, "/%s", uuidstr);
+    if (stat (tmppath, &st) != 0) {
+        if (mkdir (tmppath, 0750) != 0) return 0;
+    }
+    strcat (tmppath, "/");
+    return 1;
+}
+
+int localdb_remove_dir (const char *path) {
+    char *newpath;
+    struct dirent *dir;
+    struct stat st;
+    DIR *D = opendir (path);
+    if (! D) return 1;
+    
+    while ((dir = readdir (D))) {
+        newpath = (char *) malloc (strlen(path) + strlen(dir->d_name)+4);
+        if (stat (newpath, &st) == 0) {
+            if ((st.st_mode & S_IFMT) == S_IFDIR) {
+                if (! localdb_remove_dir (newpath)) {
+                    closedir (D);
+                    free (newpath);
+                    return 0;
+                }
+            }
+            else {
+                if (unlink (newpath) != 0) {
+                    closedir (D);
+                    free (newpath);
+                    return 0;
+                }
+            }
+        }
+        free (newpath);
+    }
+    
+    closedir (D);
+    if (rmdir (path) != 0) return 0;
+    return 1;
+}
+
+int localdb_remove_tenant (db *d, uuid tenantid) {
+    localdb *self = (localdb *) d;
+    char *insertpos = NULL;
+    struct stat st;
+    char uuidstr[40];
+    int prefixlen = strlen (self->pathprefix);
+    uuid2str (tenantid, uuidstr);
+    char *tmppath = (char *) malloc (prefixlen + 64);
+    strcpy (tmppath, self->pathprefix);
+    insertpos = tmppath + prefixlen;
+    if (*(insertpos-1) != '/') {
+        insertpos[0] = '/';
+        insertpos++;
+    }
+    sprintf (insertpos, "%c%c", uuidstr[0], uuidstr[1]);
+    insertpos += 2;
+    if (stat (tmppath, &st) != 0) return 1;
+    sprintf (insertpos, "/%c%c", uuidstr[2], uuidstr[3]);
+    insertpos += 3;
+    if (stat (tmppath, &st) != 0) return 1;
+    sprintf (insertpos, "/%s", uuidstr);
+    if (stat (tmppath, &st) != 0)  return 1;
+    if (! localdb_remove_dir (tmppath)) {
+        free (tmppath);
+        return 0;
+    }
+    free (tmppath);
+    return 1;
+}
+
+uuid *localdb_list_hosts (db *d, int *outsz) {
+    localdb *self = (localdb *) d;
+    uuid *res = (uuid *) malloc (4 * sizeof (uuid));
+    int alloc = 4;
+    *outsz = 0;
+    char *tmpstr;
+    uuid u;
+    
+    DIR *D = opendir (self->path);
+    struct dirent *dir;
+    struct stat st;
+    
+    if (! D) return res;
+    while ((dir = readdir (D))) {
+        tmpstr = (char *) malloc (strlen(self->path)+strlen(dir->d_name)+4);
+        strcpy (tmpstr, self->path);
+        strcat (tmpstr, dir->d_name);
+        if (stat (tmpstr, &st) == 0) {
+            if ((st.st_mode & S_IFMT) == S_IFDIR) {
+                u = mkuuid (dir->d_name);
+                if (u.msb || u.lsb) {
+                    res[*outsz] = u;
+                    (*outsz)++;
+                    if (*outsz == alloc) {
+                        alloc *= 2;
+                        res = (uuid *) realloc (res, alloc*sizeof(uuid));
+                    }
+                }
+            }
+        }
+        free (tmpstr);
+    }
+    closedir (D);
+    return res;
+}
+
+var *localdb_get_metadata (db *d) {
+    return NULL;
+}
+
+int localdb_set_metadata (db *d, var *v) {
+    return 1;
+}
+
+db *localdb_create (const char *prefix) {
+    localdb *self = (localdb *) malloc (sizeof (localdb));
+    if (!self) return NULL;
+    
+    self->db.open = localdb_open;
+    self->db.get_record = localdb_get_record;
+    self->db.get_value_range_int = localdb_get_value_range_int;
+    self->db.get_value_range_frac = localdb_get_value_range_frac;
+    self->db.save_record = localdb_save_record;
+    self->db.list_hosts = localdb_list_hosts;
+    self->db.get_metadata = localdb_get_metadata;
+    self->db.set_metadata = localdb_set_metadata;
+    self->db.close = localdb_close;
+    self->db.create_tenant = localdb_create_tenant;
+    self->db.remove_tenant = localdb_remove_tenant;
+    self->db.opened = 0;
+    self->db.tenant.lsb = 0;
+    self->db.tenant.msb = 0;
+    self->pathprefix = strdup (prefix);
+    self->path = NULL;
+    self->codec = codec_create_pkt();
+    return (db *) self;
 }

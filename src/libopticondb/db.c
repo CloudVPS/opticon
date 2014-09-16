@@ -1,5 +1,20 @@
 #include <libopticondb/db.h>
 
+/** Open the database for a specific tenant.
+  * \param d The database handle
+  * \param tenant The tenant to open.
+  * \param extra Optional connection information (or NULL).
+  * \return 1 on success, 0 on failure.
+  */
+int db_open (db *d, uuid tenant, var *extra) {
+    if (d->open (d, tenant, extra)) {
+        d->opened = 1;
+        return 1;
+    }
+    d->opened = 0;
+    return 0;
+}
+
 /** Get a specific record out of the database.
   * \param d The database handle
   * \param when The timestamp (can be up to 90 seconds later than a record's
@@ -7,6 +22,7 @@
   * \param into The host to decode the meter data into.
   */
 int db_get_record (db *d, time_t when, host *into) {
+    if (! d->opened) return 0;
     return d->get_record (d, when, into);
 }
 
@@ -23,6 +39,7 @@ int db_get_record (db *d, time_t when, host *into) {
 uint64_t *db_get_value_range_int (db *d, time_t start, time_t end,
                                   int numsamples, meterid_t key,
                                   uint8_t index, host *h) {
+    if (! d->opened) return NULL;
     return d->get_value_range_int (d, start, end, numsamples, key, index, h);
 }
 
@@ -39,6 +56,7 @@ uint64_t *db_get_value_range_int (db *d, time_t start, time_t end,
 double *db_get_value_range_frac (db *d, time_t start, time_t end,
                                  int numsamples, meterid_t key,
                                  uint8_t index, host *h) {
+    if (! d->opened) return NULL;
     return d->get_value_range_frac (d, start, end, numsamples, key, index, h);
 }
 
@@ -49,7 +67,28 @@ double *db_get_value_range_frac (db *d, time_t start, time_t end,
   * \return 1 on success, 0 on failure
   */
 int db_save_record (db *d, time_t when, host *what) {
+    if (! d->opened) return 0;
     return d->save_record (d, when, what);
+}
+
+/** List all hosts stored for the bound tenant.
+  * \param d The database handle.
+  * \param int Pointer to int that will contain the count.
+  * \return Array of uuids (caller should free() memory).
+  */
+uuid *db_list_hosts (db *d, int *outsz) {
+    if (! d->opened) return 0;
+    return d->list_hosts (d, outsz);
+}
+
+var *db_get_metadata (db *d) {
+    if (! d->opened) return NULL;
+    return d->get_metadata (d);
+}
+
+int db_set_metadata (db *d, var *v) {
+    if (! d->opened) return 0;
+    return d->set_metadata (d, v);
 }
 
 /** Close a database handle
@@ -57,4 +96,12 @@ int db_save_record (db *d, time_t when, host *what) {
   */
 void db_close (db *d) {
     d->close (d);
+}
+
+int db_create_tenant (db *d, uuid u, var *meta) {
+    return d->create_tenant (d, u, meta);
+}
+
+int db_remove_tenant (db *d, uuid u) {
+    return d->remove_tenant (d, u);
 }

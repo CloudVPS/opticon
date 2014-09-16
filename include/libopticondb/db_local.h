@@ -13,14 +13,14 @@ typedef uint32_t datestamp;
 /** Class structure for localdb */
 typedef struct localdb_s {
     db               db; /** Super */
-    char            *path; /** Base path for this handle */
+    char            *path; /** Access path for opened handle */
+    char            *pathprefix; /** Global prefix for databases */
     codec           *codec; /** Codec reference (for reuse) */
 } localdb;
 
 /* ============================= FUNCTIONS ============================= */
 
-db          *db_open_local (const char *path, uuid u);
-
 datestamp    time2date (time_t in);
+db          *localdb_create (const char *prefix);
 
 #endif

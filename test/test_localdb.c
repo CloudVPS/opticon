@@ -30,7 +30,9 @@ int main (int argc, const char *argv[]) {
     meterid_t M_TEST = makeid ("test",MTYPE_INT,0);
     meter *m_test = host_get_meter (h, M_TEST);
     mkdir ("./tmpdb", 0755);
-    db *d = db_open_local ("./tmpdb", tenantid);
+    db *d = localdb_create ("./tmpdb");
+    assert (db_create_tenant (d, tenantid, NULL));
+    assert (db_open (d, tenantid, NULL));
     
     meter_setcount (m_test, 0);
     meter_set_uint (m_test, 0, 10);
