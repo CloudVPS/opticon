@@ -19,7 +19,6 @@
 */
 #include <libopticon/aes.h>
 #include <fcntl.h>
-#include <sys/types.h>
 #include <unistd.h>
 
 #define F(x)   (((x)<<1) ^ ((((x)>>7) & 1) * 0x1b))
@@ -309,7 +308,8 @@ aeskey aeskey_create (void) {
     return res;
 }
 
-int ioport_encrypt (aeskey *k, ioport *in, ioport *out, time_t ts) {
+int ioport_encrypt (aeskey *k, ioport *in, ioport *out, time_t ts,
+                    uint32_t serial) {
     size_t left;
     aes256_context ctx;
     aes256_init (&ctx, (uint8_t *) k);
@@ -317,15 +317,17 @@ int ioport_encrypt (aeskey *k, ioport *in, ioport *out, time_t ts) {
     left = ioport_read_available (in);
     ioport_write_encint (out, left);
     
-    uint64_t tstamp = (uint64_t) ts;
+    uint32_t tstamp = (uint32_t) ts;
     uint8_t buf[16];
-    uint8_t bufpos = 6;
-    buf[0] = (tstamp & 0xff0000000000ULL) >> 40;
-    buf[1] = (tstamp & 0xff00000000ULL) >> 32;
-    buf[2] = (tstamp & 0xff000000ULL) >> 24;
-    buf[3] = (tstamp & 0xff0000ULL) >> 16;
-    buf[4] = (tstamp & 0xff00ULL) >> 8;
-    buf[5] = (tstamp & 0xff);
+    uint8_t bufpos = 8;
+    buf[0] = (tstamp & 0xff000000ULL) >> 24;
+    buf[1] = (tstamp & 0xff0000ULL) >> 16;
+    buf[2] = (tstamp & 0xff00ULL) >> 8;
+    buf[3] = (tstamp & 0xff);
+    buf[4] = (serial & 0xff000000ULL) >> 24;
+    buf[5] = (serial & 0xff0000ULL) >> 16;
+    buf[6] = (serial & 0xff00ULL) >> 8;
+    buf[7] = (serial & 0xff);
     
     do {
         if (! left) break;
@@ -342,7 +344,8 @@ int ioport_encrypt (aeskey *k, ioport *in, ioport *out, time_t ts) {
     return 1;
 }
 
-int ioport_decrypt (aeskey *k, ioport *in, ioport *out, time_t ts) {
+int ioport_decrypt (aeskey *k, ioport *in, ioport *out, time_t ts,
+                    uint32_t serial) {
     size_t left;
     size_t sz;
     size_t done = 0;
@@ -351,8 +354,9 @@ int ioport_decrypt (aeskey *k, ioport *in, ioport *out, time_t ts) {
     
     sz = ioport_read_encint (in);
     left = sz - done;
-    uint64_t pts = 0;
-    uint64_t uts = (uint64_t) ts;
+    uint32_t pts = 0;
+    uint32_t pserial = 0;
+    uint32_t uts = (uint32_t) ts;
     uint64_t diff = 0;
     int absorb_ts = 1;
     
@@ -364,17 +368,21 @@ int ioport_decrypt (aeskey *k, ioport *in, ioport *out, time_t ts) {
         ioport_read (in, (char*) buf, 16);
         aes256_decrypt_ecb (&ctx, buf);
         if (absorb_ts) {
-            pts = ((uint64_t)buf[0]) << 40 |
-                  ((uint64_t)buf[1]) << 32 |
-                  ((uint64_t)buf[2]) << 24 |
-                  ((uint64_t)buf[3]) << 16 |
-                  ((uint64_t)buf[4]) << 8 |
-                  ((uint64_t)buf[5]);
+            pts = ((uint32_t)buf[0]) << 24 |
+                  ((uint32_t)buf[1]) << 16 |
+                  ((uint32_t)buf[2]) << 8 |
+                  ((uint32_t)buf[3]);
          
+            pserial = ((uint32_t)buf[4]) << 24 |
+                      ((uint32_t)buf[5]) << 16 |
+                      ((uint32_t)buf[6]) << 8 |
+                      ((uint32_t)buf[7]);
+         
+            if (pserial != serial) return 0;
             diff = (pts < uts) ? (uts-pts) : (pts - uts);
             if (diff > 180) return 0;
-            ioport_write (out, (char *) buf+6, left-6);
-            done += (left - 6);
+            ioport_write (out, (char *) buf+8, left-8);
+            done += (left - 8);
             absorb_ts = 0;
         }
         else {

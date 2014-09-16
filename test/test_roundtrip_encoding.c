@@ -207,12 +207,12 @@ int main (int argc, const char *argv[]) {
     
     char encrypted[4096];
     ioport *CryptIO = ioport_create_buffer (encrypted, 4096);
-    ioport_encrypt (&key, CmpIO, CryptIO, tnow);
+    ioport_encrypt (&key, CmpIO, CryptIO, tnow, 0);
     log_info ("Encrypted: %lu bytes", ioport_read_available (CryptIO));
     
     char decrypted[4096];
     ioport *DecrIO = ioport_create_buffer (decrypted, 4096);
-    ioport_decrypt (&key, CryptIO, DecrIO, tnow);
+    ioport_decrypt (&key, CryptIO, DecrIO, tnow, 0);
     log_info ("Decrypted: %lu bytes", ioport_read_available (DecrIO));
     
     char decompressed[4096];
