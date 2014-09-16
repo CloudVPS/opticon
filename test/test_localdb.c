@@ -79,6 +79,7 @@ int main (int argc, const char *argv[]) {
     assert (! db_open (d, tenantid, NULL));
     system ("rm -rf ./tmpdb");
     db_close (d);
+    db_free (d);
     host_delete (h);
     return 0;
 }
