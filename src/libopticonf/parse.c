@@ -332,7 +332,7 @@ int parse_config (var *into, const char *buf) {
     int res = parse_config_level (into, &crsr, PSTATE_DICT_WAITKEY);
     if (! res) {
         char errbuf[64];
-        LAST_PARSE_LINE=0;
+        LAST_PARSE_LINE=1;
         const char *c = buf;
         while (c < crsr) {
             if (*c == '\n') LAST_PARSE_LINE++;
