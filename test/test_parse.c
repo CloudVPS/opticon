@@ -1,4 +1,5 @@
 #include <libopticonf/parse.h>
+#include <libopticonf/dump.h>
 #include <libsvc/log.h>
 #include <stdio.h>
 #include <string.h>
@@ -32,6 +33,13 @@ void test_faulty_input (const char *txt) {
     var_free (env);
 }
 
+void dump_input (const char *txt) {
+    var *env = var_alloc();
+    assert (parse_config (env, txt));
+    dump_var (env, stdout);
+    var_free (env);
+}
+
 int main (int argc, const char *argv[]) {
     test_input (
         "collector {"
@@ -52,6 +60,16 @@ int main (int argc, const char *argv[]) {
         "colors: [\"red\",\"green\",\"blue\"]\n"
     );
     
+    dump_input (
+        "collector: {\n"
+        "    # Network settings\n"
+        "    listenport:3333\n"
+        "    address: 192.168.1.1# Primary\n"
+        "    key:\"johnWithTheLongShanks\"\n"
+        "}\n"
+        "colors: [\"red\",\"green\",\"blue\"]\n"
+    );
+    
     test_faulty_input (
         "collector: {\n"
         "    # Network settings\n"
@@ -61,5 +79,8 @@ int main (int argc, const char *argv[]) {
         "}\n"
         "colors: <\"red\",\"green\",\"blue\"]\n"
     );
+    
+    
+    
     return 0;
 }

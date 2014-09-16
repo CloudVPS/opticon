@@ -21,6 +21,12 @@ datestamp time2date (time_t in) {
     return res;
 }
 
+/** Bind a localdb to a specific, existing, tenant.
+  * \param d The db handle
+  * \param tenant The tenant uuid
+  * \param options Driver-specific options (unused).
+  * \return 1 on success, 0 on failure.
+  */
 int localdb_open (db *d, uuid tenant, var *options) {
     localdb *self = (localdb *) d;
     char *insertpos = NULL;
@@ -303,6 +309,9 @@ void localdb_free (db *dbctx) {
     codec_release (self->codec);
 }
 
+/** Implementation for db_create_tenant(). Creates the
+  * necessary directory structures.
+  */
 int localdb_create_tenant (db *d, uuid tenant, var *meta) {
     localdb *self = (localdb *) d;
     char *insertpos = NULL;
@@ -335,6 +344,10 @@ int localdb_create_tenant (db *d, uuid tenant, var *meta) {
     return 1;
 }
 
+/** Utility function for cleaning out disk directories (rm -rf).
+  * \param path The directory to remove recursively.
+  * \return 1 on success, 0 on failure.
+  */
 int localdb_remove_dir (const char *path) {
     char *newpath;
     struct dirent *dir;
@@ -368,6 +381,7 @@ int localdb_remove_dir (const char *path) {
     return 1;
 }
 
+/** Implementation for db_remove_tenant() */
 int localdb_remove_tenant (db *d, uuid tenantid) {
     localdb *self = (localdb *) d;
     char *insertpos = NULL;
@@ -398,6 +412,7 @@ int localdb_remove_tenant (db *d, uuid tenantid) {
     return 1;
 }
 
+/** Implementation for db_list_hosts() */
 uuid *localdb_list_hosts (db *d, int *outsz) {
     localdb *self = (localdb *) d;
     uuid *res = (uuid *) malloc (4 * sizeof (uuid));
@@ -435,14 +450,20 @@ uuid *localdb_list_hosts (db *d, int *outsz) {
     return res;
 }
 
+/** Implementation for db_get_metadata() */
 var *localdb_get_metadata (db *d) {
     return NULL;
 }
 
+/** Implementation for db_set_metadata */
 int localdb_set_metadata (db *d, var *v) {
     return 1;
 }
 
+/** Allocate an unbound localdb object.
+  * \param prefix The path prefix for local storage.
+  * \return A database handle (or NULL).
+  */
 db *localdb_create (const char *prefix) {
     localdb *self = (localdb *) malloc (sizeof (localdb));
     if (!self) return NULL;
