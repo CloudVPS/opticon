@@ -14,7 +14,7 @@ tenant *tenant_alloc (void) {
     tenant *res = (tenant *) malloc (sizeof(tenant));
     res->first = res->last = NULL;
     res->prev = res->next = NULL;
-    res->key = NULL;
+    memset (&res->key, 0, sizeof (aeskey));
     return res;
 }
 
@@ -48,9 +48,8 @@ tenant *tenant_find (uuid tenantid) {
 }
 
 /** Create a new tenant */
-tenant *tenant_create (uuid tenantid, const char *key) {
+tenant *tenant_create (uuid tenantid, aeskey key) {
     tenant *t = tenant_find (tenantid);
-    if (t->key) free (t->key);
-    t->key = strdup (key);
+    t->key = key;
     return t;
 }

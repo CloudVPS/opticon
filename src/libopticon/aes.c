@@ -18,6 +18,9 @@
 *   OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 */
 #include <libopticon/aes.h>
+#include <fcntl.h>
+#include <sys/types.h>
+#include <unistd.h>
 
 #define F(x)   (((x)<<1) ^ ((((x)>>7) & 1) * 0x1b))
 #define FD(x)  (((x) >> 1) ^ (((x) & 1) ? 0x8d : 0))
@@ -296,6 +299,15 @@ void aes256_decrypt_ecb(aes256_context *ctx, uint8_t *buf)
     }
     aes_addRoundKey( buf, ctx->key); 
 } /* aes256_decrypt */
+
+/** Generate a random AES256 key */
+aeskey aeskey_create (void) {
+    aeskey res;
+    int fdevr = open ("/dev/random",O_RDONLY);
+    read (fdevr, res.data, 32);
+    close (fdevr);
+    return res;
+}
 
 int ioport_encrypt (aeskey *k, ioport *in, ioport *out, time_t ts) {
     size_t left;

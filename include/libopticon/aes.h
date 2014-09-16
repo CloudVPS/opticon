@@ -4,7 +4,6 @@
 #include <stdlib.h>
 #include <libopticon/datatypes.h>
 #include <libopticon/ioport.h>
-#include <libopticon/auth.h>
 
 /* =============================== TYPES =============================== */
 
@@ -21,6 +20,7 @@ void aes256_done(aes256_context *);
 void aes256_encrypt_ecb(aes256_context *, uint8_t * /* plaintext */);
 void aes256_decrypt_ecb(aes256_context *, uint8_t * /* cipertext */);
 
+aeskey aeskey_create (void);
 int ioport_encrypt (aeskey *k, ioport *in, ioport *out, time_t ts);
 int ioport_decrypt (aeskey *k, ioport *in, ioport *out, time_t ts);
 

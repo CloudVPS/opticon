@@ -3,14 +3,10 @@
 
 #include <libopticon/datatypes.h>
 #include <libopticon/ioport.h>
+#include <libopticon/aes.h>
 #include <time.h>
 
 /* =============================== TYPES =============================== */
-
-/** Storage for an AES256 key */
-typedef struct aeskey_s {
-    uint8_t data[32];
-} aeskey;
 
 /** Representation of an active session */
 typedef struct session_s {
@@ -36,8 +32,6 @@ typedef struct sessionlist_s {
 extern sessionlist SESSIONS[256];
 
 /* ============================= FUNCTIONS ============================= */
-
-aeskey       aeskey_create (void);
 
 void         sessionlist_init (void);
 session     *session_alloc (void);

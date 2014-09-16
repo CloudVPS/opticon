@@ -148,12 +148,3 @@ void session_print (session *s, ioport *into) {
     free (keystr);
     ioport_write (into, buf, strlen (buf));
 }
-
-/** Generate a random AES256 key */
-aeskey aeskey_create (void) {
-    aeskey res;
-    int fdevr = open ("/dev/random",O_RDONLY);
-    read (fdevr, res.data, 32);
-    close (fdevr);
-    return res;
-}

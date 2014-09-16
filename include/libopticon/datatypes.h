@@ -8,6 +8,11 @@
 
 /* =============================== TYPES =============================== */
 
+/** Storage for an AES256 key */
+typedef struct aeskey_s {
+    uint8_t data[32];
+} aeskey;
+
 /* Flag types and masks */
 typedef uint64_t        meterid_t;
 typedef uint64_t        metertype_t;
@@ -70,7 +75,7 @@ typedef struct tenant_s {
     host            *first; /**< First linked host */
     host            *last; /**< Last linked host */
     uuid             uuid; /**< The tenant's uuid */
-    char            *key; /**< Key used for auth packets */
+    aeskey           key; /**< Key used for auth packets */
 } tenant;
 
 /** List of tenants */
@@ -91,7 +96,7 @@ uint64_t    idmask (int sz);
 
 void         tenant_init (void);
 tenant      *tenant_find (uuid tenantid);
-tenant      *tenant_create (uuid tenantid, const char *key);
+tenant      *tenant_create (uuid tenantid, aeskey key);
 
 host        *host_alloc (void);
 host        *host_find (uuid tenantid, uuid hostid);

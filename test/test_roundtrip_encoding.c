@@ -101,7 +101,8 @@ int main (int argc, const char *argv[]) {
     tenant_init();
     sessionlist_init();
     
-    tenant_create (tenantid, "test");
+    aeskey tenantkey = aeskey_create();
+    tenant_create (tenantid, tenantkey);
     tenant *T = tenant_find (tenantid);
     assert (T->uuid.lsb == 0x001b71534f4b4f1c);
     assert (T->uuid.msb == 0xb281cc06b134f98f);
