@@ -60,8 +60,8 @@ int parse_config_level (var *v, const char **buf, parse_state st) {
                 if (*c == '\"') st = PSTATE_DICT_VALUE_QUOTED;
                 else {
                     if (! strchr (VALIDUNQUOTED, *c)) {
-                        sprintf (LAST_PARSE_ERROR, "invalid char for "
-                                 "key: '%c'\n", *c);
+                        sprintf (LAST_PARSE_ERROR, "Invalid char for "
+                                 "key: '%c'", *c);
                         return 0;
                     }
                     --c;
@@ -87,8 +87,8 @@ int parse_config_level (var *v, const char **buf, parse_state st) {
                     *buf = c+1;
                     vv = var_get_dict_forkey (v, keybuf);
                     if (! vv) {
-                        sprintf (LAST_PARSE_ERROR, "couldn't get dict "
-                                 "for key '%s'\n", keybuf);
+                        sprintf (LAST_PARSE_ERROR, "Couldn't get dict "
+                                 "for key '%s'", keybuf);
                         return 0;
                     }
                     if (!parse_config_level (vv, buf, PSTATE_DICT_WAITKEY)) {
@@ -102,8 +102,8 @@ int parse_config_level (var *v, const char **buf, parse_state st) {
                     *buf = c+1;
                     vv = var_get_array_forkey (v, keybuf);
                     if (! vv) {
-                        sprintf (LAST_PARSE_ERROR, "couldn't get array "
-                                 "for key '%s'\n", keybuf);
+                        sprintf (LAST_PARSE_ERROR, "Couldn't get array "
+                                 "for key '%s'", keybuf);
                         return 0;
                     }
                     var_clear_array (vv);
@@ -120,8 +120,8 @@ int parse_config_level (var *v, const char **buf, parse_state st) {
                     break;
                 }
                 if (! strchr (VALIDUNQUOTED, *c)) {
-                    sprintf (LAST_PARSE_ERROR, "invalid character in "
-                             "value '%c'\n", *c);
+                    sprintf (LAST_PARSE_ERROR, "Invalid character in "
+                             "value '%c'", *c);
                     return 0;
                 }
                 if (keybuf_pos >= 4095) return 0;
@@ -153,8 +153,8 @@ int parse_config_level (var *v, const char **buf, parse_state st) {
                     *buf = c+1;
                     vv = var_get_dict_forkey (v, keybuf);
                     if (! vv) {
-                        sprintf (LAST_PARSE_ERROR, "couldn't get dict for "
-                                 "key '%s'\n", keybuf);
+                        sprintf (LAST_PARSE_ERROR, "Couldn't get dict for "
+                                 "key '%s'", keybuf);
                         return 0;
                     }
                     if (!parse_config_level (vv, buf, PSTATE_DICT_WAITKEY)) {
@@ -168,8 +168,8 @@ int parse_config_level (var *v, const char **buf, parse_state st) {
                     *buf = c+1;
                     vv = var_get_array_forkey (v, keybuf);
                     if (! vv) {
-                        sprintf (LAST_PARSE_ERROR, "couldn't get array "
-                                 "for key '%s'\n", keybuf);
+                        sprintf (LAST_PARSE_ERROR, "Couldn't get array "
+                                 "for key '%s'", keybuf);
                         return 0;
                     }
                     var_clear_array (vv);
@@ -186,8 +186,8 @@ int parse_config_level (var *v, const char **buf, parse_state st) {
                 }
                 else {
                     if (! strchr (VALIDUNQUOTED, *c)) {
-                        sprintf (LAST_PARSE_ERROR, "invalid character for "
-                                 "value: '%c'\n", *c);
+                        sprintf (LAST_PARSE_ERROR, "Invalid character for "
+                                 "value: '%c'", *c);
                         return 0;
                     }
                     --c;
@@ -218,8 +218,8 @@ int parse_config_level (var *v, const char **buf, parse_state st) {
                     break;
                 }
                 if (! strchr (VALIDUNQUOTEDV, *c)) {
-                    sprintf (LAST_PARSE_ERROR, "invalid character in "
-                             "value: '%c'\n", *c);
+                    sprintf (LAST_PARSE_ERROR, "Invalid character in "
+                             "value: '%c'", *c);
                     return 0;
                 }
                 if ((!value_nondigits) && (*c<'0' || *c>'9')) {
