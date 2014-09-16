@@ -33,7 +33,7 @@ int main (int argc, const char *argv[]) {
     db *d = localdb_create ("./tmpdb");
     assert (db_create_tenant (d, tenantid, NULL));
     assert (db_open (d, tenantid, NULL));
-    
+
     meter_setcount (m_test, 0);
     meter_set_uint (m_test, 0, 10);
     db_save_record (d, t1, h);
@@ -57,6 +57,13 @@ int main (int argc, const char *argv[]) {
     assert (arr[0] == 10 && arr[1] == 15 && arr[2] == 12 && arr[3] == 24);
     free (arr);
 
+    uuid *hosts;
+    int hostcount;
+    assert (hosts = db_list_hosts (d, &hostcount));
+    assert (hostcount == 1);
+    assert (uuidcmp (hosts[0], hostid));
+    free (hosts);
+    
     system ("rm -rf ./tmpdb");
     db_close (d);
     host_delete (h);

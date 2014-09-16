@@ -55,8 +55,17 @@ FILE *localdb_open_dbfile (localdb *ctx, uuid hostid, datestamp dt) {
     if (! dbpath) return NULL;
 
     uuid2str (hostid, uuidstr);
-    sprintf (dbpath, "%s/%s-%u.db", ctx->path, uuidstr, dt);
+    sprintf (dbpath, "%s/%s/%u.db", ctx->path, uuidstr, dt);
     FILE *res = fopen (dbpath, "a+");
+    if (! res) {
+        sprintf (dbpath, "%s/%s", ctx->path, uuidstr);
+        if (mkdir (dbpath, 0750) != 0) {
+            free (dbpath);
+            return NULL;
+        }
+        sprintf (dbpath, "%s/%s/%u.db", ctx->path, uuidstr, dt);
+        res = fopen (dbpath, "a+");
+    }
     free (dbpath);
     return res;
 }
@@ -68,8 +77,17 @@ FILE *localdb_open_indexfile (localdb *ctx, uuid hostid, datestamp dt) {
     if (! dbpath) return NULL;
 
     uuid2str (hostid, uuidstr);
-    sprintf (dbpath, "%s/%s-%u.idx", ctx->path, uuidstr, dt);
+    sprintf (dbpath, "%s/%s/%u.idx", ctx->path, uuidstr, dt);
     FILE *res = fopen (dbpath, "a+");
+    if (! res) {
+        sprintf (dbpath, "%s/%s", ctx->path, uuidstr);
+        if (mkdir (dbpath, 0750) != 0) {
+            free (dbpath);
+            return NULL;
+        }
+        sprintf (dbpath, "%s/%s/%u.idx", ctx->path, uuidstr, dt);
+        res = fopen (dbpath, "a+");
+    }
     free (dbpath);
     return res;
 }
@@ -393,6 +411,7 @@ uuid *localdb_list_hosts (db *d, int *outsz) {
     struct stat st;
     
     if (! D) return res;
+
     while ((dir = readdir (D))) {
         tmpstr = (char *) malloc (strlen(self->path)+strlen(dir->d_name)+4);
         strcpy (tmpstr, self->path);
@@ -402,7 +421,7 @@ uuid *localdb_list_hosts (db *d, int *outsz) {
                 u = mkuuid (dir->d_name);
                 if (u.msb || u.lsb) {
                     res[*outsz] = u;
-                    (*outsz)++;
+                    *outsz = (*outsz) +1;
                     if (*outsz == alloc) {
                         alloc *= 2;
                         res = (uuid *) realloc (res, alloc*sizeof(uuid));
