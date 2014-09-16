@@ -261,6 +261,7 @@ db *db_open_local (const char *path, uuid tenant) {
     res->db.get_value_range_frac = localdb_get_value_range_frac;
     res->db.save_record = localdb_save_record;
     res->db.close = localdb_close;
+    res->tenant = tenant;
     res->path = (char *) malloc (strlen(path) + 96);
     uuid2str (tenant, uuidstr);
     sprintf (res->path, "%s/%c%c", path, uuidstr[0], uuidstr[1]);

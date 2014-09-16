@@ -23,6 +23,7 @@ typedef struct db_s {
     get_vrangef_f    get_value_range_frac; /** Method */
     save_record_f    save_record; /** Method */
     close_db_f       close; /** Method */
+    uuid             tenant; /** The bound tenant */
 } db;
 
 /* ============================= FUNCTIONS ============================= */
