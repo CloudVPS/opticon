@@ -104,8 +104,8 @@ int main (int argc, const char *argv[]) {
     aeskey tenantkey = aeskey_create();
     tenant_create (tenantid, tenantkey);
     tenant *T = tenant_find (tenantid);
-    assert (T->uuid.lsb == 0x001b71534f4b4f1c);
-    assert (T->uuid.msb == 0xb281cc06b134f98f);
+    assert (T->uuid.msb == 0x001b71534f4b4f1c);
+    assert (T->uuid.lsb == 0xb281cc06b134f98f);
     host *H = host_find (tenantid, hostid);
     host_begin_update (H, time (NULL));
 

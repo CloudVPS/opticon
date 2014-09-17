@@ -23,10 +23,10 @@ uuid mkuuid (const char *str) {
     int out = 0;
     uint64_t rout = 0;
     int respos = 0;
-    int majpos = 0;
+    int majpos = 1;
     if (! crsr) return res;
     
-    while (*crsr && (majpos<2)) {
+    while (*crsr && (majpos>=0)) {
         c = *crsr;
         out = -1;
         if ((c>='0')&&(c<='9')) out = c-'0';
@@ -40,7 +40,7 @@ uuid mkuuid (const char *str) {
             respos++;
             if (respos>15) {
                 respos = 0;
-                majpos++;
+                majpos--;
             }
         }
         crsr++;
@@ -175,10 +175,10 @@ uint64_t idmask (int sz) {
 void uuid2str (uuid u, char *into) {
     sprintf (into, "%08llx-%04llx-%04llx-"
                    "%04llx-%012llx",
-                   ((u.lsb & 0xffffffff00000000) >> 32),
-                   ((u.lsb & 0x00000000ffff0000) >> 16),
-                   ((u.lsb & 0x000000000000ffff)),
-                   ((u.msb & 0xffff000000000000) >> 48),
-                   ((u.msb & 0x0000ffffffffffff)));
+                   ((u.msb & 0xffffffff00000000) >> 32),
+                   ((u.msb & 0x00000000ffff0000) >> 16),
+                   ((u.msb & 0x000000000000ffff)),
+                   ((u.lsb & 0xffff000000000000) >> 48),
+                   ((u.lsb & 0x0000ffffffffffff)));
 }
 
