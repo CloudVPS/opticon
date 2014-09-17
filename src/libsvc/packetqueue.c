@@ -55,7 +55,7 @@ pktbuf *packetqueue_waitpkt (packetqueue *self) {
 packetqueue *packetqueue_create (size_t qcount, intransport *producer) {
     packetqueue *self = (packetqueue *) malloc (sizeof (packetqueue));
     self->trans = producer;
-    self->buffer = (pktbuf *) malloc (qcount * sizeof (pktbuf));
+    self->buffer = (pktbuf *) calloc (qcount, sizeof (pktbuf));
     self->cond = conditional_create();
     self->sz = qcount;
     self->rpos = self->wpos = 0;
