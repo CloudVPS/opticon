@@ -2,6 +2,7 @@
 #include <libopticon/compress.h>
 #include <libopticon/aes.h>
 #include <netinet/in.h>
+#include <fcntl.h>
 
 uint32_t SERIAL = 0;
 
@@ -29,7 +30,11 @@ uint32_t gen_networkid (struct sockaddr_storage *stor) {
   * regular interval.
   */
 uint32_t gen_sessionid (void) {
-    return 4; /* fair dice roll */
+    uint32_t res;
+    int fdevr = open ("/dev/random",O_RDONLY);
+    read (fdevr, &res, sizeof (uint32_t));
+    close (fdevr);
+    return res;
 }
 
 /** Generate a packet serial number. The easiest way to guarantee
