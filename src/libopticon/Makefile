@@ -23,7 +23,8 @@ OBJS_LIBOPTICON = aes.o host.o tenant.o \
 				  ioport.o ioport_file.o \
 				  ioport_buffer.o codec.o \
 				  codec_json.o codec_pkt.o \
-				  compress.o defaults.o
+				  compress.o pktwrap.o \
+				  defaults.o
 				  
 all: ../../lib/libopticon.a
 
