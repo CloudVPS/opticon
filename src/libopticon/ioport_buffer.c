@@ -25,7 +25,9 @@ int buffer_write (ioport *io, const char *dat, size_t sz) {
 
 /** Close method of the buffer ioport */
 void buffer_close (ioport *io) {
-    free (io->storage);
+    bufferstorage *S = (bufferstorage *) io->storage;
+    if (S->owned) free (S->buf);
+    free (S);
     free (io);
 }
 
@@ -72,10 +74,17 @@ ioport *ioport_create_buffer (char *buf, size_t sz) {
     res->bitbuffer = 0;
     
     bufferstorage *S = res->storage = malloc (sizeof (bufferstorage));
-    S->buf = buf;
     S->bufsz = sz;
     S->pos = 0;
     S->rpos = 0;
+    if (buf) {
+        S->buf = buf;
+        S->owned = 0;
+    }
+    else {
+        S->buf = (char *) malloc (sz);
+        S->owned = 1;
+    }
     return res;
 }
 

@@ -187,6 +187,17 @@ int ioport_write_u64 (ioport *io, uint64_t i) {
     return ioport_write (io, (const char *)&netorder, sizeof (netorder));
 }
 
+/** Write a raw 32 bits unsigned integer to an ioport in an endian-
+  * safe fashion.
+  * \param io The ioport
+  * \param i The integer to encode
+  * \return 1 on success, 0 on failure 
+  */
+int ioport_write_u32 (ioport *io, uint32_t i) {
+    uint32_t netorder = htonl (i);
+    return ioport_write (io, (const char *)&netorder, sizeof(netorder));
+}
+
 /** Get the amount of bytes left for reading out of the ioport. */
 size_t ioport_read_available (ioport *io) {
     return io->read_available (io);
@@ -278,6 +289,14 @@ uint64_t ioport_read_u64 (ioport *io) {
     res = ((uint64_t) ntohl (dt & 0xffffffffLLU)) << 32;
     res |= ntohl ((dt & 0xffffffff00000000LLU) >> 32);
     return res;
+}
+
+/** Read a raw unsigned 32 bits integer from an ioport */
+uint32_t ioport_read_u32 (ioport *io) {
+    io->bitpos = io->bitbuffer = 0;
+    uint32_t dt;
+    if (! ioport_read (io, (char *)&dt, sizeof (dt))) return 0;
+    return ntohl (dt);
 }
 
 /** Read an encoded 63 bits integer from an ioport */

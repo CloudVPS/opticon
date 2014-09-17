@@ -46,6 +46,7 @@ int          ioport_write_encstring (ioport *io, const char *str);
 int          ioport_write_encfrac (ioport *io, double d);
 int          ioport_write_encint (ioport *io, uint64_t i);
 int          ioport_write_u64 (ioport *io, uint64_t i);
+int          ioport_write_u32 (ioport *io, uint32_t i);
 
 size_t       ioport_read_available (ioport *io);
 int          ioport_read (ioport *io, char *into, size_t sz);
@@ -56,5 +57,6 @@ int          ioport_read_encstring (ioport *io, char *into);
 double       ioport_read_encfrac (ioport *io);
 uint64_t     ioport_read_encint (ioport *io);
 uint64_t     ioport_read_u64 (ioport *io);
+uint32_t     ioport_read_u32 (ioport *io);
 
 #endif

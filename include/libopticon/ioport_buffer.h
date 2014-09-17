@@ -11,6 +11,7 @@ typedef struct bufferstorage_s {
     size_t       bufsz; /** Size of the buffer */
     unsigned int pos; /** Write cursor */
     unsigned int rpos; /** Read cursor */
+    uint8_t      owned; /** 1 if buf is owned by object */
 } bufferstorage;
 
 /* ============================= FUNCTIONS ============================= */
