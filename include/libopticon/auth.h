@@ -16,6 +16,7 @@ typedef struct session_s {
     uuid                 hostid; /**< Host uuid associated */
     uint32_t             addr; /**< IP-derived id */
     uint32_t             sessid; /**< The sessionid */
+    uint32_t             lastserial; /**< Serial# of last packet */
     aeskey               key; /**< Session AES key */
     time_t               lastcycle; /**< Time since last key cycle */
     host                *host; /**< Connected host */

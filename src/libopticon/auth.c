@@ -21,7 +21,7 @@ void sessionlist_init (void) {
 session *session_alloc (void) {
     session *res = (session *) malloc (sizeof (session));
     res->next = res->prev = NULL;
-    res->addr = res->sessid = 0;
+    res->addr = res->sessid = res->lastserial = 0;
     bzero (res->key.data, 8);
     res->lastcycle = time (NULL);
     res->host = NULL;

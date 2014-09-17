@@ -14,6 +14,7 @@ tenant *tenant_alloc (void) {
     tenant *res = (tenant *) malloc (sizeof(tenant));
     res->first = res->last = NULL;
     res->prev = res->next = NULL;
+    res->lastserial = 0;
     memset (&res->key, 0, sizeof (aeskey));
     return res;
 }

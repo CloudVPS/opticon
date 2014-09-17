@@ -76,6 +76,7 @@ typedef struct tenant_s {
     host            *last; /**< Last linked host */
     uuid             uuid; /**< The tenant's uuid */
     aeskey           key; /**< Key used for auth packets */
+    uint32_t         lastserial; /**< Serial# of last auth packet */
 } tenant;
 
 /** List of tenants */
