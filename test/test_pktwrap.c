@@ -54,4 +54,10 @@ int main (int argc, const char *argv[]) {
                                                  resolve_sessionkey));
     assert (ioport_read (unwrapped, worldbuf, 14));
     assert (strcmp (worldbuf, "Hello, world.") == 0);
+    ioport_close (auth_port);
+    free (resauth);
+    ioport_close (outdata);
+    ioport_close (wrapped);
+    ioport_close (unwrapped);
+    return 0;
 }
