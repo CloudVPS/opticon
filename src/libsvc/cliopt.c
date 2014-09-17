@@ -71,3 +71,15 @@ const char **cliopt_dispatch (cliopt *opt, const char **argv, int *argc) {
     
     return res;
 }
+
+int cliopt_runcommand (clicmd *cmds, const char *command,
+                       int argc, const char **argv) {
+    for (int o=0; cmds[o].command; ++o) {
+        if (strcmp (cmds[o].command, command) == 0) {
+            return cmds[o].func (argc, argv);
+        }
+    }
+    
+    fprintf (stderr, "%% Unknown command: %s\n", command);
+    return 1;
+}
