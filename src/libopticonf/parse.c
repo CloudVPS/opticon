@@ -2,6 +2,7 @@
 #include <ctype.h>
 #include <string.h>
 #include <stdio.h>
+#include <sys/stat.h>
 
 static const char *VALIDUNQUOTED = "abcdefghijklmnopqrstuvwxyz"
                                    "ABCDEFGHIJKLMNOPQRSTUVWXUZ"
@@ -320,6 +321,28 @@ int parse_config_level (var *v, const char **buf, parse_state st) {
         *buf = c;
     }
     return 1;
+}
+
+/** Load a configuration file from disk.
+  * \param into The variable space to load the configuration into.
+  * \param path Path to the configuration file.
+  * \return 1 on success, 0 on failure.
+  */
+int load_config (var *into, const char *path) {
+    struct stat st;
+    int res = 0;
+    if (stat (path, &st) == 0) {
+        char *txt = (char *) malloc (st.st_size+2);
+        FILE *F = fopen (path, "r");
+        if (F) {
+            fread (txt, st.st_size, 1, F);
+            txt[st.st_size] = 0;
+            res = parse_config (into, txt);
+            fclose (F);
+        }
+        free (txt);
+    }
+    return res;
 }
 
 /** Parse a configuration text into a variable space.
