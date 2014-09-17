@@ -9,7 +9,11 @@ else
 fi
 
 CC="$*"
-for test in test_*.c; do
+FILES=test_*.c
+if [ ! -z "TEST_ONLY" ]; then
+  FILES=test_${TEST_ONLY}.c
+fi
+for test in $FILES; do
   echo "====================================================================="
   ofile=$(echo "$test" | sed -e 's/\.c$//')
          
