@@ -39,7 +39,24 @@ int ioport_write_byte (ioport *io, uint8_t b) {
     \param u The uuid
     \return 1 on success, 0 on failure */
 int ioport_write_uuid (ioport *io, uuid u) {
-    return 0;
+    uint8_t out[16];
+    out[0] = (u.msb & 0xff00000000000000) >> 56;
+    out[1] = (u.msb & 0x00ff000000000000) >> 48;
+    out[2] = (u.msb & 0x0000ff0000000000) >> 40;
+    out[3] = (u.msb & 0x000000ff00000000) >> 32;
+    out[4] = (u.msb & 0x00000000ff000000) >> 24;
+    out[5] = (u.msb & 0x0000000000ff0000) >> 16;
+    out[6] = (u.msb & 0x000000000000ff00) >> 8;
+    out[7] = (u.msb & 0x00000000000000ff);
+    out[8] = (u.lsb & 0xff00000000000000) >> 56;
+    out[9] = (u.lsb & 0x00ff000000000000) >> 48;
+    out[10] = (u.lsb & 0x0000ff0000000000) >> 40;
+    out[11] = (u.lsb & 0x000000ff00000000) >> 32;
+    out[12] = (u.lsb & 0x00000000ff000000) >> 24;
+    out[13] = (u.lsb & 0x0000000000ff0000) >> 16;
+    out[14] = (u.lsb & 0x000000000000ff00) >> 8;
+    out[15] = (u.lsb & 0x00000000000000ff);
+    return ioport_write (io, (const char *)out, 16);
 }
 
 /** Close an ioport. Also deallocates associated memory. Pointer will
@@ -216,8 +233,27 @@ int ioport_read (ioport *io, char *into, size_t sz) {
 
 /** Read a uuid from an ioport */
 uuid ioport_read_uuid (ioport *io) {
-    uuid res = {0,0};
-    return res;
+    uuid u = {0,0};
+    uint8_t buf[16];
+    if (ioport_read (io, (char*)buf, 16)) {
+        u.msb = (uint64_t)buf[0] << 56 |
+                (uint64_t)buf[1] << 48 |
+                (uint64_t)buf[2] << 40 |
+                (uint64_t)buf[3] << 32 |
+                (uint64_t)buf[4] << 24 |
+                (uint64_t)buf[5] << 16 |
+                (uint64_t)buf[6] << 8 |
+                (uint64_t)buf[7];
+        u.lsb = (uint64_t)buf[8] << 56 |
+                (uint64_t)buf[9] << 48 |
+                (uint64_t)buf[10] << 40 |
+                (uint64_t)buf[11] << 32 |
+                (uint64_t)buf[12] << 24 |
+                (uint64_t)buf[13] << 16 |
+                (uint64_t)buf[14] << 8 |
+                (uint64_t)buf[15];
+    }
+    return u;
 }
 
 /** Read a byte from an ioport */

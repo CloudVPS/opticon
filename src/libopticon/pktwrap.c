@@ -140,8 +140,8 @@ ioport *ioport_unwrap_meterdata (uint32_t networkid, ioport *in,
     if (ioport_read (in, packettype, 4)) {
         packettype[4] = 0;
         if (strcmp (packettype, "o6m1") == 0) {
-            serial = ioport_read_u32 (in);
             sessid = ioport_read_u32 (in);
+            serial = ioport_read_u32 (in);
             k = resolve (networkid, sessid, serial);
             if (k && ioport_decrypt (k, in, decrypted, tnow, serial)) {
                 if (decompress_data (decrypted, res)) {
@@ -182,6 +182,7 @@ authinfo *ioport_unwrap_authdata (ioport *in, resolve_tenantkey_f resolve) {
         if (strcmp (packettype, "o6a1") == 0) {
             res->tenantid = ioport_read_uuid (in);
             serial = ioport_read_u32 (in);
+            printf ("serial %i\n", serial);
             k = resolve (res->tenantid, serial);
             if (k && ioport_decrypt (k, in, decrypted, tnow, serial)) {
                 res->tenantkey = *k;

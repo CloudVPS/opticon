@@ -9,8 +9,8 @@ else
 fi
 
 CC="$*"
-FILES=test_*.c
-if [ ! -z "TEST_ONLY" ]; then
+FILES=$(ls -1 test_*.c)
+if [ ! -z "$TEST_ONLY" ]; then
   FILES=test_${TEST_ONLY}.c
 fi
 for test in $FILES; do
