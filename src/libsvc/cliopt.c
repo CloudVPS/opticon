@@ -39,6 +39,7 @@ const char **cliopt_dispatch (cliopt *opt, const char **argv, int *argc) {
                 }
                 opt[o].handler (cur, val);
                 opt[o].flag |= OPT_ISSET;
+                break;
             }
             if (! optfound) {
                 fprintf (stderr, "%% Invalid option: %s\n", cur);
