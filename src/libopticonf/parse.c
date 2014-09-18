@@ -42,6 +42,7 @@ int parse_config_level (var *v, const char **buf, parse_state st) {
     char valuebuf[4096];
     int valuebuf_pos = 0;
     int value_nondigits = 0;
+    int value_dots = 0;
     parse_state stnext;
 
     while (*c) {    
@@ -193,6 +194,7 @@ int parse_config_level (var *v, const char **buf, parse_state st) {
                     }
                     --c;
                     value_nondigits = 0;
+                    value_dots = 0;
                     st = PSTATE_DICT_VALUE;
                 }
                 valuebuf_pos = 0;
@@ -202,8 +204,14 @@ int parse_config_level (var *v, const char **buf, parse_state st) {
             case PSTATE_DICT_VALUE:
                 if (isspace (*c) || (*c == ',') || (*c == '}') ||
                     (*c == '#')) {
-                    if (! value_nondigits) {
-                        var_set_int_forkey (v, keybuf, atoi(valuebuf));
+                    if ((! value_nondigits) && (value_dots < 2)) {
+                        if (value_dots == 0) {
+                            var_set_int_forkey (v, keybuf, atoi(valuebuf));
+                        }
+                        else {
+                            var_set_double_forkey (v, keybuf,
+                                                   atof(valuebuf));
+                        }
                     }
                     else var_set_str_forkey (v, keybuf, valuebuf);
                     if (*c == '#') {
@@ -223,7 +231,8 @@ int parse_config_level (var *v, const char **buf, parse_state st) {
                              "value: '%c'", *c);
                     return 0;
                 }
-                if ((!value_nondigits) && (*c<'0' || *c>'9')) {
+                if (*c == '.') value_dots++;
+                else if ((!value_nondigits) && (*c<'0' || *c>'9')) {
                     value_nondigits = 1;
                 }
                 if (valuebuf_pos >= 4095) return 0;
@@ -262,6 +271,7 @@ int parse_config_level (var *v, const char **buf, parse_state st) {
                     if (! strchr (VALIDUNQUOTED, *c)) return 0;
                     --c;
                     value_nondigits = 0;
+                    value_dots = 0;
                     st = PSTATE_ARRAY_VALUE;
                 }
                 valuebuf_pos = 0;
@@ -271,8 +281,13 @@ int parse_config_level (var *v, const char **buf, parse_state st) {
             case PSTATE_ARRAY_VALUE:
                 if (isspace (*c) || (*c == ']') || 
                     (*c == ',') || (*c == '#')) {
-                    if (! value_nondigits) {
-                        var_add_int (v, atoi (valuebuf));
+                    if ((! value_nondigits) && (value_dots<2)) {
+                        if (value_dots == 0) {
+                            var_add_int (v, atoi (valuebuf));
+                        }
+                        else {
+                            var_add_double (v, atof (valuebuf));
+                        }
                     }
                     else var_add_str (v, valuebuf);
                     if (*c == '#') {
@@ -288,7 +303,8 @@ int parse_config_level (var *v, const char **buf, parse_state st) {
                     break;
                 }
                 if (! strchr (VALIDUNQUOTEDV, *c)) return 0;
-                if ((!value_nondigits) && (*c<'0' || *c>'9')) {
+                if (*c == '.') value_dots++;
+                else if ((!value_nondigits) && (*c<'0' || *c>'9')) {
                     value_nondigits = 1;
                 }
                 if (valuebuf_pos >= 4095) return 0;

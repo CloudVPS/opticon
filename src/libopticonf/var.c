@@ -192,7 +192,25 @@ int var_get_int_forkey (var *self, const char *key) {
         return atoi (res->value.sval);
     }
     if (res->type == VAR_INT) return res->value.ival;
+    if (res->type == VAR_DOUBLE) return (int) res->value.dval;
     return 0;
+}
+
+/** Get a double value out of a dict var.
+  * \param self The dict
+  * \param key The key inside the dict
+  * \return The double value, or 0.0 if it couldn't be resolved. Strings
+  *         will be autoconverted. PHP all the things.
+  */
+double var_get_double_forkey (var *self, const char *key) {
+    var *res = var_find_key (self, key);
+    if (! res) return 0.0;
+    if (res->type == VAR_STR) {
+        return atof (res->value.sval);
+    }
+    if (res->type == VAR_DOUBLE) return res->value.dval;
+    if (res->type == VAR_INT) return (double) res->value.ival;
+    return 0.0;
 }
 
 /** Get a string value out of a dict var.
@@ -221,8 +239,17 @@ int var_get_count (var *self) {
 /** Get the direct int value of a var object. */
 int var_get_int (var *self) {
     if (self->type == VAR_STR) return atoi (self->value.sval);
+    if (self->type == VAR_DOUBLE) return (int) self->value.dval;
     if (self->type == VAR_INT) return self->value.ival;
     return 0;
+}
+
+/** Get the direct double value of a var object. */
+double var_get_double (var *self) {
+    if (self->type == VAR_STR) return atof (self->value.sval);
+    if (self->type == VAR_DOUBLE) return self->value.dval;
+    if (self->type == VAR_INT) return (double) self->value.ival;
+    return 0.0;
 }
 
 /** Get the direct string value of a var object. */
@@ -322,7 +349,22 @@ int var_get_int_atindex (var *self, int idx) {
     var *res = var_find_index (self, idx);
     if (! res) return 0;
     if (res->type == VAR_INT) return res->value.ival;
+    if (res->type == VAR_DOUBLE) return (int) res->value.dval;
     if (res->type == VAR_STR) return atoi (res->value.sval);
+    return 0;
+}
+
+/** Get the double value of a var inside an array var.
+  * \param self The array
+  * \param idx The array index (negative for measuring from the end).
+  * \return The double value, failed lookups will yield 0.0.
+  */
+double var_get_double_atindex (var *self, int idx) {
+    var *res = var_find_index (self, idx);
+    if (! res) return 0;
+    if (res->type == VAR_INT) return (double) res->value.ival;
+    if (res->type == VAR_DOUBLE) return res->value.dval;
+    if (res->type == VAR_STR) return atof (res->value.sval);
     return 0;
 }
 
@@ -417,6 +459,17 @@ void var_set_int_forkey (var *self, const char *key, int val) {
     var_set_int (v, val);
 }
 
+/** Set the double value of a dict-var sub-var.
+  * \param self The dict.
+  * \param key The key within the dict.
+  * \param val The value to set.
+  */
+void var_set_double_forkey (var *self, const char *key, double val) {
+    var *v = var_get_or_make (self, key, VAR_DOUBLE);
+    if (! v) return;
+    var_set_double (v, val);
+}
+
 /** Set the direct integer value of a var */
 void var_set_int (var *v, int val) {
     int is_orig = 0;
@@ -435,6 +488,26 @@ void var_set_int (var *v, int val) {
     v->value.ival = val;
     var_update_gendata (v, is_orig);
 }
+
+/** Set the direct double value of a var */
+void var_set_double (var *v, double val) {
+    int is_orig = 0;
+    
+    v->generation = v->root->generation;
+    if (v->type == VAR_NULL) {
+        v->type = VAR_DOUBLE;
+        v->lastmodified = v->generation;
+        is_orig = 1;
+    }
+    
+    if (v->type != VAR_DOUBLE) return;
+    if (!is_orig && (v->value.dval != val)) {
+        is_orig = 1;
+    }
+    v->value.dval = val;
+    var_update_gendata (v, is_orig);
+}
+
 
 /** Set the string value of a dict-var sub-var.
   * \param self The dict.
@@ -496,6 +569,19 @@ void var_add_int (var *self, int nval) {
     nvar->type = VAR_INT;
     nvar->id[0] = 0;
     nvar->value.ival = nval;
+    var_link (nvar, self);
+}
+
+/** Add a double value to an array var.
+  * \param self The array
+  * \param nval The integer to add.
+  */
+void var_add_double (var *self, double nval) {
+    if (self->type != VAR_ARRAY) return;
+    var *nvar = var_alloc();
+    nvar->type = VAR_DOUBLE;
+    nvar->id[0] = 0;
+    nvar->value.dval = nval;
     var_link (nvar, self);
 }
 
