@@ -233,10 +233,7 @@ int parse_config_level (var *v, const char **buf, parse_state st) {
             
             case PSTATE_DICT_VALUE_QUOTED:
                 if (*c == '\"') {
-                    if (atoi (valuebuf) || valuebuf[0] == '0') {
-                        var_set_int_forkey (v, keybuf, atoi(valuebuf));
-                    }
-                    else var_set_str_forkey (v, keybuf, valuebuf);
+                    var_set_str_forkey (v, keybuf, valuebuf);
                     st = PSTATE_DICT_WAITKEY;
                     break;
                 }
