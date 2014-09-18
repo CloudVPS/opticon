@@ -13,5 +13,6 @@ void         id2str (meterid_t id, char *into);
 void         nodeid2str (meterid_t id, char *into);
 uint64_t     idhaspath (meterid_t);
 meterid_t    makeid (const char *label, metertype_t type, int pos);
+char        *load_file (const char *);
 
 #endif

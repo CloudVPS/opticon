@@ -2,6 +2,7 @@
 #include <libopticon/util.h>
 #include <stdio.h>
 #include <unistd.h>
+#include <sys/stat.h>
 
 /** Compare two UUIDs.
   * \param first First UUID.
@@ -182,3 +183,25 @@ void uuid2str (uuid u, char *into) {
                    ((u.lsb & 0x0000ffffffffffff)));
 }
 
+char *load_file (const char *fn) {
+    struct stat st;
+    size_t sz;
+    FILE *F;
+    char *res;
+    
+    if (stat (fn, &st) != 0) return NULL;
+    res = malloc (st.st_size+1);
+    if (! res) return NULL;
+    if (! (F = fopen (fn, "r"))) {
+        free (res);
+        return NULL;
+    }
+    sz = fread (res, st.st_size, 1, F);
+    fclose (F);
+    if (sz) {
+        res[st.st_size] = 0;
+        return res;
+    }
+    free (res);
+    return NULL;
+}

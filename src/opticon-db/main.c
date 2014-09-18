@@ -7,7 +7,7 @@
 
 #include "cmd.h"
 
-optinfo OPTIONS = { "","","" };
+optinfo OPTIONS = { "","","","" };
 
 int set_tenant (const char *o, const char *v) { 
     OPTIONS.tenant = v;
@@ -24,9 +24,15 @@ int set_path (const char *o, const char *v) {
     return 1;
 }
 
+int set_host (const char *o, const char *v) {
+    OPTIONS.host = v;
+    return 1;
+}
+
 cliopt CLIOPT[] = {
     {"--tenant","-t",OPT_VALUE,"",set_tenant},
     {"--key","-k",OPT_VALUE,"",set_key},
+    {"--host","-h",OPT_VALUE,"",set_host},
     {"--path","-p",OPT_VALUE,"/var/opticon/db",set_path},
     {NULL,NULL,0,NULL,NULL}
 };
@@ -36,6 +42,7 @@ clicmd CLICMD[] = {
     {"tenant-create",cmd_tenant_create},
     {"tenant-delete",cmd_tenant_delete},
     {"tenant-get-metadata",cmd_tenant_get_metadata},
+    {"host-add-record",cmd_host_add_record},
     {NULL,NULL}
 };
 
@@ -49,7 +56,8 @@ void usage (const char *cmdname) {
          "        tenant-list\n"
          "        tenant-get-metadata --tenant <uuid>\n"
          "        tenant-create --tenant <uuid> [--key <base64>]\n"
-         "        tenant-delete --tenant <uuid>\n",
+         "        tenant-delete --tenant <uuid>\n"
+         "        host-add-record --tenant <uuid> --host <host> <FILENAME>",
         cmdname);
 }
 

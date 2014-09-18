@@ -264,6 +264,36 @@ int parse_json_level (var *v, const char **buf, parse_state st) {
                     *buf = c;
                     return 1;
                 }
+                if (*c == '{') {
+                    *buf = c+1;
+                    vv = var_add_dict (v);
+                    if (! vv) {
+                        sprintf (LAST_PARSE_ERROR, "Couldn't add dict");
+                        return 0;
+                    }
+                    if (!parse_json_level (vv, buf, PSTATE_DICT_WAITKEY)) {
+                        return 0;
+                    }
+                    c = *buf;
+                    st = PSTATE_ARRAY_WAITVALUE;
+                    break;
+                }
+                if (*c == '[') {
+                    *buf = c+1;
+                    vv = var_add_array (v);
+                    if (! vv) {
+                        sprintf (LAST_PARSE_ERROR, "Couldn't add array");
+                        return 0;
+                    }
+                    var_clear_array (vv);
+                    if (!parse_json_level (vv, buf, 
+                                             PSTATE_ARRAY_WAITVALUE)) {
+                        return 0;
+                    }
+                    c = *buf;
+                    st = PSTATE_ARRAY_WAITVALUE;
+                    break;
+                }
                 if (*c == '\"') {
                     st = PSTATE_ARRAY_VALUE_QUOTED;
                 }
