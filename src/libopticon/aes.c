@@ -18,6 +18,7 @@
 *   OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 */
 #include <libopticon/aes.h>
+#include <libopticon/base64.h>
 #include <fcntl.h>
 #include <unistd.h>
 
@@ -306,6 +307,25 @@ aeskey aeskey_create (void) {
     read (fdevr, res.data, 32);
     close (fdevr);
     return res;
+}
+
+aeskey aeskey_from_base64 (const char *b64) {
+    aeskey res;
+    size_t bufsz;
+    char *buf = base64_decode (b64, strlen(b64), &bufsz);
+    if (! buf) return res;
+    if (bufsz != 32) {
+        free (buf);
+        return res;
+    }
+    memcpy (res.data, buf, 32);
+    free (buf);
+    return res;
+}
+
+char *aeskey_to_base64 (aeskey key) {
+    size_t ressz;
+    return base64_encode ((const char*)key.data, 32, &ressz);
 }
 
 int ioport_encrypt (aeskey *k, ioport *in, ioport *out, time_t ts,
