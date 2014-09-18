@@ -42,11 +42,15 @@ clicmd CLICMD[] = {
 void usage (const char *cmdname) {
     fprintf (stderr,
         "%% Usage: %s <command> [options]\n"
-         "         %s tenant-list\n"
-         "         %s tenant-get-metadata --tenant <uuid>\n"
-         "         %s tenant-create --tenant <uuid> [--key <base64>]\n"
-         "         %s tenant-delete --tenant <uuid>\n",
-        cmdname, cmdname, cmdname, cmdname, cmdname);
+         "  Options:\n"
+         "        --path <path to database>\n"
+         "\n"
+         "  Commands:\n"
+         "        tenant-list\n"
+         "        tenant-get-metadata --tenant <uuid>\n"
+         "        tenant-create --tenant <uuid> [--key <base64>]\n"
+         "        tenant-delete --tenant <uuid>\n",
+        cmdname);
 }
 
 int main (int _argc, const char *_argv[]) {
