@@ -35,6 +35,7 @@ clicmd CLICMD[] = {
     {"tenant-list",cmd_tenant_list},
     {"tenant-create",cmd_tenant_create},
     {"tenant-delete",cmd_tenant_delete},
+    {"tenant-get-metadata",cmd_tenant_get_metadata},
     {NULL,NULL}
 };
 
@@ -42,9 +43,10 @@ void usage (const char *cmdname) {
     fprintf (stderr,
         "%% Usage: %s <command> [options]\n"
          "         %s tenant-list\n"
+         "         %s tenant-get-metadata --tenant <uuid>\n"
          "         %s tenant-create --tenant <uuid> [--key <base64>]\n"
          "         %s tenant-delete --tenant <uuid>\n",
-        cmdname, cmdname, cmdname, cmdname);
+        cmdname, cmdname, cmdname, cmdname, cmdname);
 }
 
 int main (int _argc, const char *_argv[]) {
