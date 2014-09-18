@@ -342,7 +342,32 @@ int localdb_create_tenant (db *d, uuid tenant, var *meta) {
     if (stat (tmppath, &st) != 0) {
         if (mkdir (tmppath, 0750) != 0) return 0;
     }
+    
+    if (! meta) {
+        free (tmppath);
+        return 1;
+    }
+    
     strcat (tmppath, "/");
+
+    char *metapath = (char *) malloc (strlen (tmppath) + 17);
+    char *mtmppath = (char *) malloc (strlen (tmppath) + 24);
+    strcpy (metapath, tmppath);
+    strcpy (mtmppath, tmppath);
+    strcat (metapath, "tenant.metadata");
+    strcat (mtmppath, ".tenant.metadata.new");
+    FILE *F = fopen (mtmppath, "w");
+    if (F) {
+        int res = dump_var (meta, F);
+        fclose (F);
+        if (res) {
+            if (rename (mtmppath, metapath) != 0) res = 0;
+        }
+        if (! res) unlink (mtmppath);
+    }
+    free (metapath);
+    free (mtmppath);
+    free (tmppath);
     return 1;
 }
 
