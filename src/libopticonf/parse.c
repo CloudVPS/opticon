@@ -34,7 +34,7 @@ typedef enum parse_state_e {
   * \param buf The cursor (inout)
   * \param st The state to start out with.
   */
-int parse_config_level (var *v, const char **buf, parse_state st) {
+int parse_json_level (var *v, const char **buf, parse_state st) {
     const char *c = *buf;
     var *vv = NULL;
     char keybuf[4096];
@@ -93,7 +93,7 @@ int parse_config_level (var *v, const char **buf, parse_state st) {
                                  "for key '%s'", keybuf);
                         return 0;
                     }
-                    if (!parse_config_level (vv, buf, PSTATE_DICT_WAITKEY)) {
+                    if (!parse_json_level (vv, buf, PSTATE_DICT_WAITKEY)) {
                         return 0;
                     }
                     c = *buf;
@@ -109,7 +109,7 @@ int parse_config_level (var *v, const char **buf, parse_state st) {
                         return 0;
                     }
                     var_clear_array (vv);
-                    if (!parse_config_level (vv, buf, 
+                    if (!parse_json_level (vv, buf, 
                                              PSTATE_ARRAY_WAITVALUE)) {
                         return 0;
                     }
@@ -159,7 +159,7 @@ int parse_config_level (var *v, const char **buf, parse_state st) {
                                  "key '%s'", keybuf);
                         return 0;
                     }
-                    if (!parse_config_level (vv, buf, PSTATE_DICT_WAITKEY)) {
+                    if (!parse_json_level (vv, buf, PSTATE_DICT_WAITKEY)) {
                         return 0;
                     }
                     c = *buf;
@@ -175,7 +175,7 @@ int parse_config_level (var *v, const char **buf, parse_state st) {
                         return 0;
                     }
                     var_clear_array (vv);
-                    if (!parse_config_level (vv, buf, 
+                    if (!parse_json_level (vv, buf, 
                                              PSTATE_ARRAY_WAITVALUE)) {
                         return 0;
                     }
@@ -341,7 +341,7 @@ int parse_config_level (var *v, const char **buf, parse_state st) {
   * \param path Path to the configuration file.
   * \return 1 on success, 0 on failure.
   */
-int load_config (var *into, const char *path) {
+int load_json (var *into, const char *path) {
     struct stat st;
     int res = 0;
     if (stat (path, &st) == 0) {
@@ -350,7 +350,7 @@ int load_config (var *into, const char *path) {
         if (F) {
             fread (txt, st.st_size, 1, F);
             txt[st.st_size] = 0;
-            res = parse_config (into, txt);
+            res = parse_json (into, txt);
             fclose (F);
         }
         free (txt);
@@ -363,9 +363,9 @@ int load_config (var *into, const char *path) {
   * \param buf The configuration text.
   * \return 1 on success, 0 on failure.
   */
-int parse_config (var *into, const char *buf) {
+int parse_json (var *into, const char *buf) {
     const char *crsr = buf;
-    int res = parse_config_level (into, &crsr, PSTATE_DICT_WAITKEY);
+    int res = parse_json_level (into, &crsr, PSTATE_DICT_WAITKEY);
     if (! res) {
         char errbuf[64];
         LAST_PARSE_LINE=1;

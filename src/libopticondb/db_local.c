@@ -553,7 +553,7 @@ var *localdb_get_metadata (db *d) {
     data[st.st_size] = 0;
     fclose (F);
     var *res = var_alloc();
-    if (! parse_config (res, data)) {
+    if (! parse_json (res, data)) {
         printf ("Parse error: %s\n", parse_error());
         var_free (res);
         res = NULL;
