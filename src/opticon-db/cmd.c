@@ -12,34 +12,17 @@
 #include <libopticonf/var.h>
 #include <libopticondb/db_local.h>
 
-void recurse_subs (const char *path, int depthleft) {
-    char *newpath;
-    struct dirent *dir;
-    struct stat st;
-    DIR *D = opendir (path);
-    if (! D) return;
-    
-    while ((dir = readdir (D))) {
-        if (strcmp (dir->d_name, ".") == 0) continue;
-        if (strcmp (dir->d_name, "..") == 0) continue;
-        newpath = (char *) malloc (strlen(path) + strlen(dir->d_name)+4);
-        sprintf (newpath, "%s/%s", path, dir->d_name);
-        if (stat (newpath, &st) == 0) {
-            if ((st.st_mode & S_IFMT) == S_IFDIR) {
-                if (depthleft == 0) {
-                    printf ("%s\n", dir->d_name);
-                }
-                else {
-                    recurse_subs (newpath, depthleft-1);
-                }
-            }
-        }
-        free (newpath);
-    }
-}
-
 int cmd_tenant_list (int argc, const char *argv[]) {
-    recurse_subs (OPTIONS.path, 2);
+    int count = 0;
+    char uuidstr[40];
+    db *DB = localdb_create (OPTIONS.path);
+    uuid *list = db_list_tenants (DB, &count);
+    for (int i=0; i<count; ++i) {
+        uuid2str (list[i], uuidstr);
+        printf ("%s\n", uuidstr);
+    }
+    db_free (DB);
+    free (list);
     return 0;
 }
 

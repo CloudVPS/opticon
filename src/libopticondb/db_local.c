@@ -311,6 +311,51 @@ void localdb_free (db *dbctx) {
     codec_release (self->codec);
 }
 
+void recurse_subs (const char *path, int depthleft,
+                   int *alloc, int *outsz, uuid **res) {
+    char *newpath;
+    struct dirent *dir;
+    struct stat st;
+    DIR *D = opendir (path);
+    if (! D) return;
+    
+    while ((dir = readdir (D))) {
+        if (strcmp (dir->d_name, ".") == 0) continue;
+        if (strcmp (dir->d_name, "..") == 0) continue;
+        newpath = (char *) malloc (strlen(path) + strlen(dir->d_name)+4);
+        sprintf (newpath, "%s/%s", path, dir->d_name);
+        if (stat (newpath, &st) == 0) {
+            if ((st.st_mode & S_IFMT) == S_IFDIR) {
+                if (depthleft == 0) {
+                    uuid u = mkuuid (dir->d_name);
+                    if (u.msb == 0 && u.lsb == 0) continue;
+                    if (*outsz == *alloc) {
+                        *alloc *= 2;
+                        (*res) = (uuid *)
+                            realloc (*res, *alloc * sizeof(uuid));
+                    }
+                    (*res)[*outsz] = u;
+                    (*outsz)++;
+                }
+                else {
+                    recurse_subs (newpath, depthleft-1, alloc, outsz, res);
+                }
+            }
+        }
+        free (newpath);
+    }
+}
+
+uuid *localdb_list_tenants (db *d, int *outsz) {
+    localdb *self = (localdb *) d;
+    int alloc = 4;
+    *outsz = 0;
+    uuid *res = (uuid *) malloc (4 * sizeof (uuid));
+    recurse_subs (self->pathprefix, 2, &alloc, outsz, &res);
+    return res;
+}
+
+
 /** Implementation for db_create_tenant(). Creates the
   * necessary directory structures.
   */
@@ -560,6 +605,7 @@ db *localdb_create (const char *prefix) {
     self->db.get_metadata = localdb_get_metadata;
     self->db.set_metadata = localdb_set_metadata;
     self->db.close = localdb_close;
+    self->db.list_tenants = localdb_list_tenants;
     self->db.create_tenant = localdb_create_tenant;
     self->db.remove_tenant = localdb_remove_tenant;
     self->db.free = localdb_free;

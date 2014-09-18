@@ -115,6 +115,15 @@ void db_free (db *d) {
     free (d);
 }
 
+/** Get a list of all tenants in the database.
+  * \param d The database handle.
+  * \param cnt Output parameter: result count
+  * \return Array of uuids, caller should free() after use.
+  */
+uuid *db_list_tenants (db *d, int *cnt) {
+    return d->list_tenants (d, cnt);
+}
+
 /** Create a new tenant.
   * \param d The database handle.
   * \param u The tenant's uuid.
