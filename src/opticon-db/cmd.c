@@ -104,7 +104,7 @@ int cmd_tenant_create (int argc, const char *argv[]) {
     return 0;
 }
 
-int cmd_host_add_record (int argc, const char *argv[]) {
+int cmd_add_record (int argc, const char *argv[]) {
     uuid tenantid, hostid;
     
     if (OPTIONS.tenant[0] == 0) {
@@ -161,5 +161,52 @@ int cmd_host_add_record (int argc, const char *argv[]) {
     free (json);    
     host_delete (H);
     db_free (DB);
+    return 0;
+}
+
+int cmd_get_record (int argc, const char *argv[]) {
+    uuid tenantid, hostid;
+    
+    if (OPTIONS.tenant[0] == 0) {
+        fprintf (stderr, "%% No tenantid provided\n");
+        return 1;
+    }
+    
+    tenantid = mkuuid (OPTIONS.tenant);
+
+    if (OPTIONS.host[0] == 0) {
+        fprintf (stderr, "%% No hostid provided\n");
+        return 1;
+    }
+    
+    hostid = mkuuid (OPTIONS.host);
+
+    host *H = host_alloc();
+    H->uuid = hostid;
+    db *DB = localdb_create (OPTIONS.path);
+    if (! db_open (DB, tenantid, NULL)) {    
+        fprintf (stderr, "%% Could not open database for "
+                 "tenant %s\n", OPTIONS.tenant);
+        host_delete (H);
+        db_free (DB);
+        return 1;
+    }
+    
+    if (! db_get_record (DB, OPTIONS.time, H)) {
+        fprintf (stderr, "%% Error loading record\n");
+        host_delete (H);
+        db_free (DB);
+        return 1;
+    }
+    
+    ioport *out = ioport_create_filewriter (stdout);
+    codec *c = codec_create_json();
+    
+    codec_encode_host (c, out, H);
+    codec_release (c);
+    ioport_close (out);
+    db_close (DB);
+    db_free (DB);
+    host_delete (H);
     return 0;
 }

@@ -7,7 +7,7 @@
 
 #include "cmd.h"
 
-optinfo OPTIONS = { "","","","" };
+optinfo OPTIONS = { "","","","",0 };
 
 int set_tenant (const char *o, const char *v) { 
     OPTIONS.tenant = v;
@@ -29,10 +29,86 @@ int set_host (const char *o, const char *v) {
     return 1;
 }
 
+int set_time (const char *o, const char *v) {
+    time_t tnow = time (NULL);
+    
+    if (strcmp (v, "now") == 0) {
+        OPTIONS.time = tnow;
+        return 1;
+    }
+    
+    struct tm tm;
+    int year,month,day,hour,minute;
+    
+    /* HH:MM */
+    if (strlen (v) == 5 && v[2] == ':') {
+        localtime_r (&tnow, &tm);
+        hour = atoi (v);
+        minute = atoi (v+3);
+        if (hour<0 || hour>23 || minute < 0 || minute > 60) {
+            fprintf (stderr, "%% Illegal timespec: %s\n", v);
+            return 0;
+        }
+        if (hour < tm.tm_hour) {
+            tm.tm_hour = hour;
+            tm.tm_min = minute;
+        }
+        else if (hour == tm.tm_hour && minute < tm.tm_min) {
+            tm.tm_min = minute;
+        }
+        else {
+            tnow = time (NULL) - 86400;
+            localtime_r (&tnow, &tm);
+            tm.tm_hour = hour;
+            tm.tm_min = minute;
+        }
+        OPTIONS.time = mktime (&tm);
+        return 1;
+    }
+    
+    /* yyyy-mm-ddThh:mm */
+    if (strlen (v) == 16 && v[4] == '-' && v[7] == '-' &&
+        v[10] == 'H' && v[13] == ':') {
+        tm.tm_year = atoi (v) - 1900;
+        tm.tm_mon = atoi (v+5) - 1;
+        tm.tm_mday = atoi (v+8);
+        tm.tm_hour = atoi (v+11);
+        tm.tm_min = atoi (v+14);
+        tm.tm_sec = 0;
+        OPTIONS.time = mktime (&tm);
+        return 1;
+    }
+    
+    if (v[0]=='-' && atoi (v+1)) {
+        char period = v[strlen(v)-1];
+        switch (period) {
+            case 'd':
+                tnow = tnow - (86400 * atoi (v+1));
+                break;
+            
+            case 'h':
+                tnow = tnow - (3600 * atoi (v+1));
+                break;
+            
+            case 'm':
+                tnow = tnow - (60 * atoi (v+1));
+                break;
+            
+            default:
+                fprintf (stderr, "%% Illegal timespec: %s\n", v);
+                return 0;
+        }
+        OPTIONS.time = tnow;
+        return 1;
+    }
+    return 0;
+}
+
 cliopt CLIOPT[] = {
     {"--tenant","-t",OPT_VALUE,"",set_tenant},
     {"--key","-k",OPT_VALUE,"",set_key},
     {"--host","-h",OPT_VALUE,"",set_host},
+    {"--time","-T",OPT_VALUE,"now",set_time},
     {"--path","-p",OPT_VALUE,"/var/opticon/db",set_path},
     {NULL,NULL,0,NULL,NULL}
 };
@@ -42,7 +118,8 @@ clicmd CLICMD[] = {
     {"tenant-create",cmd_tenant_create},
     {"tenant-delete",cmd_tenant_delete},
     {"tenant-get-metadata",cmd_tenant_get_metadata},
-    {"host-add-record",cmd_host_add_record},
+    {"add-record",cmd_add_record},
+    {"get-record",cmd_get_record},
     {NULL,NULL}
 };
 
@@ -57,7 +134,15 @@ void usage (const char *cmdname) {
          "        tenant-get-metadata --tenant <uuid>\n"
          "        tenant-create --tenant <uuid> [--key <base64>]\n"
          "        tenant-delete --tenant <uuid>\n"
-         "        host-add-record --tenant <uuid> --host <host> <FILENAME>",
+         "        add-record --tenant <uuid> --host <host> <FILENAME>\n"
+         "        get-record --tenant <uuid> --host <host> [--time <TIMESPEC>]\n"
+         "\n"
+         "  TIMESPEC examples:\n"
+         "        2014-01-04T13:37\n"
+         "        11:13\n"
+         "        -1d\n"
+         "        -3h\n"
+         "        now\n",
         cmdname);
 }
 
