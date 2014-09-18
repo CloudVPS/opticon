@@ -43,6 +43,20 @@ int cmd_tenant_list (int argc, const char *argv[]) {
     return 0;
 }
 
+int cmd_tenant_delete (int argc, const char *argv[]) {
+   uuid tenant;
+    if (OPTIONS.tenant[0] == 0) {
+        fprintf (stderr, "%% No tenantid provided\n");
+        return 1;
+    }
+    
+    tenant = mkuuid (OPTIONS.tenant);
+    db *DB = localdb_create (OPTIONS.path);
+    db_remove_tenant (DB, tenant);
+    db_free (DB);
+    return 0;
+}
+
 int cmd_tenant_create (int argc, const char *argv[]) {
     uuid tenant;
     aeskey key;

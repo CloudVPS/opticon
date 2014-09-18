@@ -34,6 +34,7 @@ cliopt CLIOPT[] = {
 clicmd CLICMD[] = {
     {"tenant-list",cmd_tenant_list},
     {"tenant-create",cmd_tenant_create},
+    {"tenant-delete",cmd_tenant_delete},
     {NULL,NULL}
 };
 
@@ -42,7 +43,7 @@ void usage (const char *cmdname) {
         "%% Usage: %s <command> [options]\n"
          "         %s tenant-list\n"
          "         %s tenant-create --tenant <uuid> [--key <base64>]\n"
-         "         %s host-list --tenant <uuid>\n",
+         "         %s tenant-delete --tenant <uuid>\n",
         cmdname, cmdname, cmdname, cmdname);
 }
 
