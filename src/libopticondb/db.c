@@ -71,6 +71,11 @@ int db_save_record (db *d, time_t when, host *what) {
     return d->save_record (d, when, what);
 }
 
+/** Get usage information about a specific host */
+int db_get_usage (db *d, usage_info *into, uuid hostid) {
+    return d->get_usage (d, into, hostid);
+}
+
 /** List all hosts stored for the bound tenant.
   * \param d The database handle.
   * \param int Pointer to int that will contain the count.

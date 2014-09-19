@@ -298,6 +298,74 @@ int localdb_save_record (db *dbctx, time_t when, host *h) {
     return 1;
 }
 
+int localdb_get_usage (db *dbctx, usage_info *into, uuid hostid) {
+    localdb *self = (localdb *) dbctx;
+    char uuidstr[40];
+    struct dirent *dir;
+    struct stat st;
+    char *filename;
+    uint64_t szsum = 0;
+    datestamp earliest = 0;
+    datestamp latest = 0;
+    time_t t_earliest = 0;
+    time_t t_latest = 0;
+    datestamp dt;
+    DIR *D;
+    char *dbpath = (char *) malloc (strlen (self->path) + 64);
+    if (! dbpath) return 0;
+
+    uuid2str (hostid, uuidstr);
+    sprintf (dbpath, "%s%s", self->path, uuidstr);
+    
+    if (! (D = opendir (dbpath))) { free (dbpath); return 0; }
+    
+    while ((dir = readdir (D))) {
+        int nlen = strlen (dir->d_name);
+        if (nlen < 5) continue;
+        if (strcmp (dir->d_name + (nlen-3), ".db") == 0) {
+            dt = atoi (dir->d_name);
+            if (! dt) continue;
+            if (! earliest) {
+                earliest = latest = dt;
+            }
+            else {
+                if (dt < earliest) earliest = dt;
+                if (dt > latest) latest = dt;
+            }
+            filename = (char *) malloc (strlen (dbpath) + strlen (dir->d_name) + 2);
+            sprintf (filename, "%s/%s", dbpath, dir->d_name);
+            if (stat (filename, &st) == 0) {
+                szsum += st.st_size;
+            }
+            free (filename);
+        }
+    }
+    closedir (D);
+    if (!earliest) return 0;
+    
+    FILE *F = localdb_open_indexfile(self, hostid, earliest);
+    if (F) {
+        fseek (F, 0, SEEK_SET);
+        uint64_t bs = localdb_read64 (F);
+        t_earliest = bs & 0x00000000ffffffff;
+        fclose (F);
+        F = localdb_open_indexfile(self, hostid, latest);
+        if (fseek (F, -(2*sizeof(uint64_t)), SEEK_END) == 0) {
+            t_latest = localdb_read64 (F)  & 0x00000000ffffffff;
+        }
+        fclose (F);
+    }
+    
+    if (t_earliest && t_latest) {
+        into->bytes = szsum;
+        into->earliest = t_earliest;
+        into->last = t_latest;
+        return 1;
+    }
+    free (dbpath);
+    return 0;
+}
+
 /** Implementation for db_close() */
 void localdb_close (db *dbctx) {
     localdb *self = (localdb *) dbctx;
@@ -601,6 +669,7 @@ db *localdb_create (const char *prefix) {
     self->db.get_value_range_int = localdb_get_value_range_int;
     self->db.get_value_range_frac = localdb_get_value_range_frac;
     self->db.save_record = localdb_save_record;
+    self->db.get_usage = localdb_get_usage;
     self->db.list_hosts = localdb_list_hosts;
     self->db.get_metadata = localdb_get_metadata;
     self->db.set_metadata = localdb_set_metadata;

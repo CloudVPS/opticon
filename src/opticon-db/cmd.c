@@ -104,8 +104,19 @@ int cmd_tenant_create (int argc, const char *argv[]) {
     return 0;
 }
 
+static char *timfmt (time_t w) {
+    struct tm tm;
+    localtime_r (&w, &tm);
+    char *res = (char *) malloc (18);
+    strftime (res, 17, "%F %H:%M", &tm);
+    return res;
+}
+
 int cmd_host_list (int argc, const char *argv[]) {
     uuid tenant;
+    char *str_early;
+    char *str_late;
+    const char *unit = "KB";
     char uuidstr[40];
     if (OPTIONS.tenant[0] == 0) {
         fprintf (stderr, "%% No tenantid provided\n");
@@ -119,11 +130,23 @@ int cmd_host_list (int argc, const char *argv[]) {
         db_free (DB);
         return 1;
     }
+    usage_info usage;
     int count;
     uuid *list = db_list_hosts (DB, &count);
     for (int i=0; i<count; ++i) {
         uuid2str (list[i], uuidstr);
-        printf ("%s\n", uuidstr);
+        db_get_usage (DB, &usage, list[i]);
+        str_early = timfmt (usage.earliest);
+        str_late = timfmt (usage.last);
+        usage.bytes = usage.bytes / 1024;
+        if (usage.bytes > 2048) {
+            unit = "MB";
+            usage.bytes = usage.bytes / 1024;
+        }
+        printf ("%s %4llu %s %s->%s\n", uuidstr, usage.bytes, unit,
+                str_early, str_late);
+        free (str_early);
+        free (str_late);
     }
     db_free (DB);
     free (list);
