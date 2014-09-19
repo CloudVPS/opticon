@@ -143,7 +143,7 @@ int cmd_host_list (int argc, const char *argv[]) {
             unit = "MB";
             usage.bytes = usage.bytes / 1024;
         }
-        printf ("%s %4llu %s %s->%s\n", uuidstr, usage.bytes, unit,
+        printf ("%s %4llu %s %s  %s\n", uuidstr, usage.bytes, unit,
                 str_early, str_late);
         free (str_early);
         free (str_late);
