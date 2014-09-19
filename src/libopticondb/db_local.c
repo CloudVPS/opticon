@@ -10,6 +10,7 @@
 #include <unistd.h>
 
 #define LOCALDB_OFFS_INVALID 0xffffffffffffffffULL
+#define LOCALDB_FLAG_NOCREATE 0x0000001
 
 /** Convert epoch time to a GMT date stamp integer, to be used as part of
   * the filename of underlying database files.
@@ -57,13 +58,17 @@ int localdb_open (db *d, uuid tenant, var *options) {
 }
 
 /** Open the database file for a specified datestamp */
-FILE *localdb_open_dbfile (localdb *ctx, uuid hostid, datestamp dt) {
+FILE *localdb_open_dbfile (localdb *ctx, uuid hostid, datestamp dt, int flags) {
     char uuidstr[40];
+    struct stat st;
     char *dbpath = (char *) malloc (strlen (ctx->path) + 64);
     if (! dbpath) return NULL;
 
     uuid2str (hostid, uuidstr);
     sprintf (dbpath, "%s/%s/%u.db", ctx->path, uuidstr, dt);
+    if (flags & LOCALDB_FLAG_NOCREATE) {
+        if (stat (dbpath, &st) != 0) return NULL;
+    }
     FILE *res = fopen (dbpath, "a+");
     if (! res) {
         sprintf (dbpath, "%s/%s", ctx->path, uuidstr);
@@ -79,13 +84,17 @@ FILE *localdb_open_dbfile (localdb *ctx, uuid hostid, datestamp dt) {
 }
 
 /** Open the index file for a specified datestamp */
-FILE *localdb_open_indexfile (localdb *ctx, uuid hostid, datestamp dt) {
+FILE *localdb_open_indexfile (localdb *ctx, uuid hostid, datestamp dt, int flags) {
     char uuidstr[40];
+    struct stat st;
     char *dbpath = (char *) malloc (strlen (ctx->path) + 64);
     if (! dbpath) return NULL;
 
     uuid2str (hostid, uuidstr);
     sprintf (dbpath, "%s/%s/%u.idx", ctx->path, uuidstr, dt);
+    if (flags & LOCALDB_FLAG_NOCREATE) {
+        if (stat (dbpath, &st) != 0) return NULL;
+    }
     FILE *res = fopen (dbpath, "a+");
     if (! res) {
         sprintf (dbpath, "%s/%s", ctx->path, uuidstr);
@@ -183,8 +192,15 @@ uint64_t localdb_find_index (FILE *fix, time_t ts) {
 int localdb_get_record (db *d, time_t when, host *into) {
     localdb *self = (localdb *) d;
     datestamp dt = time2date (when);
-    FILE *dbf = localdb_open_dbfile (self, into->uuid, dt);
-    FILE *ixf = localdb_open_indexfile (self, into->uuid, dt);
+    FILE *dbf = localdb_open_dbfile (self, into->uuid, dt,
+                                     LOCALDB_FLAG_NOCREATE);
+    if (! dbf) return 0;
+    FILE *ixf = localdb_open_indexfile (self, into->uuid, dt,
+                                        LOCALDB_FLAG_NOCREATE);
+    if (! ixf) {
+        fclose (dbf);
+        return 0;
+    }
     uint64_t offs = localdb_find_index (ixf, when);
     if (offs == LOCALDB_OFFS_INVALID) {
         fclose (dbf);
@@ -276,8 +292,8 @@ int localdb_save_record (db *dbctx, time_t when, host *h) {
     datestamp dt = time2date (when);
     off_t dbpos = 0;
     
-    FILE *dbf = localdb_open_dbfile (self, h->uuid, dt);
-    FILE *ixf = localdb_open_indexfile (self, h->uuid, dt);
+    FILE *dbf = localdb_open_dbfile (self, h->uuid, dt, 0);
+    FILE *ixf = localdb_open_indexfile (self, h->uuid, dt, 0);
     ioport *dbport = ioport_create_filewriter (dbf);
     ioport *ixport = ioport_create_filewriter (ixf);
     
@@ -343,13 +359,13 @@ int localdb_get_usage (db *dbctx, usage_info *into, uuid hostid) {
     closedir (D);
     if (!earliest) return 0;
     
-    FILE *F = localdb_open_indexfile(self, hostid, earliest);
+    FILE *F = localdb_open_indexfile(self, hostid, earliest, 0);
     if (F) {
         fseek (F, 0, SEEK_SET);
         uint64_t bs = localdb_read64 (F);
         t_earliest = bs & 0x00000000ffffffff;
         fclose (F);
-        F = localdb_open_indexfile(self, hostid, latest);
+        F = localdb_open_indexfile(self, hostid, latest, 0);
         if (fseek (F, -(2*sizeof(uint64_t)), SEEK_END) == 0) {
             t_latest = localdb_read64 (F)  & 0x00000000ffffffff;
         }

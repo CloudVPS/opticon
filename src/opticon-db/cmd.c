@@ -20,11 +20,20 @@
 int cmd_tenant_list (int argc, const char *argv[]) {
     int count = 0;
     char uuidstr[40];
+    printf ("UUID                                 Hosts\n");
+    printf ("---------------------------------------------"
+            "----------------------------------\n");
     db *DB = localdb_create (OPTIONS.path);
     uuid *list = db_list_tenants (DB, &count);
     for (int i=0; i<count; ++i) {
+        int cnt = 0;
+        if (db_open (DB, list[i], NULL)) {
+            uuid *list = db_list_hosts (DB, &cnt);
+            if (list) free(list);
+            db_close (DB);
+        }
         uuid2str (list[i], uuidstr);
-        printf ("%s\n", uuidstr);
+        printf ("%s %5i\n", uuidstr, cnt);
     }
     db_free (DB);
     free (list);
@@ -130,6 +139,12 @@ int cmd_host_list (int argc, const char *argv[]) {
         db_free (DB);
         return 1;
     }
+
+    printf ("UUID                                    Size "
+            "First record      Last record\n");
+    printf ("---------------------------------------------"
+            "----------------------------------\n");
+
     usage_info usage;
     int count;
     uuid *list = db_list_hosts (DB, &count);
