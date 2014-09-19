@@ -36,3 +36,12 @@ metering samples.
 Infrastructure for building a system service: Process control, data
 transport, threading, and logging.
 
+**libopticonf**
+
+Code for handling configuration files and other JSON-like data.
+
+**opticon-db**
+
+Query and maintenance tool for the opticon database backend.
+
+
