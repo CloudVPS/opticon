@@ -118,6 +118,7 @@ clicmd CLICMD[] = {
     {"tenant-create",cmd_tenant_create},
     {"tenant-delete",cmd_tenant_delete},
     {"tenant-get-metadata",cmd_tenant_get_metadata},
+    {"host-list",cmd_host_list},
     {"add-record",cmd_add_record},
     {"get-record",cmd_get_record},
     {NULL,NULL}
@@ -134,6 +135,7 @@ void usage (const char *cmdname) {
          "        tenant-get-metadata --tenant <uuid>\n"
          "        tenant-create --tenant <uuid> [--key <base64>]\n"
          "        tenant-delete --tenant <uuid>\n"
+         "        host-list --tenant <uuid>\n"
          "        add-record --tenant <uuid> --host <host> <FILENAME>\n"
          "        get-record --tenant <uuid> --host <host> [--time <TIMESPEC>]\n"
          "\n"

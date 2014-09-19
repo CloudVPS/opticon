@@ -104,6 +104,32 @@ int cmd_tenant_create (int argc, const char *argv[]) {
     return 0;
 }
 
+int cmd_host_list (int argc, const char *argv[]) {
+    uuid tenant;
+    char uuidstr[40];
+    if (OPTIONS.tenant[0] == 0) {
+        fprintf (stderr, "%% No tenantid provided\n");
+        return 1;
+    }
+
+    tenant = mkuuid (OPTIONS.tenant);
+    db *DB = localdb_create (OPTIONS.path);
+    if (! db_open (DB, tenant, NULL)) {
+        fprintf (stderr, "%% Could not open %s\n", OPTIONS.tenant);
+        db_free (DB);
+        return 1;
+    }
+    int count;
+    uuid *list = db_list_hosts (DB, &count);
+    for (int i=0; i<count; ++i) {
+        uuid2str (list[i], uuidstr);
+        printf ("%s\n", uuidstr);
+    }
+    db_free (DB);
+    free (list);
+    return 0;
+}
+
 int cmd_add_record (int argc, const char *argv[]) {
     uuid tenantid, hostid;
     

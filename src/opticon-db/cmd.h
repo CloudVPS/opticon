@@ -17,6 +17,7 @@ int cmd_tenant_list (int argc, const char *argv[]);
 int cmd_tenant_get_metadata (int argc, const char *argv[]);
 int cmd_tenant_delete (int argc, const char *argv[]);
 int cmd_tenant_create (int argc, const char *argv[]);
+int cmd_host_list (int argc, const char *argv[]);
 int cmd_add_record (int argc, const char *argv[]);
 int cmd_get_record (int argc, const char *argv[]);
 
