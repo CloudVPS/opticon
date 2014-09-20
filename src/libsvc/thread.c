@@ -2,6 +2,9 @@
 #include <stdlib.h>
 #include <pthread.h>
 
+/** Post-cancel/post-exit cleanup routing. Will call the thread-defined
+  * cancel routine if there is any.
+  */
 void thread_cleanup (void *dt) {
     thread *self = (thread *) dt;
     if (self->cancel) { self->cancel (self); }

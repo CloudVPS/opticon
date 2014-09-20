@@ -39,6 +39,7 @@ void log_string (int prio, const char *str) {
     }
 }
 
+/** Write a log message at the LOG_INFO level */
 void log_info (const char *fmt, ...) {
     char buffer[4096];
     va_list ap;
@@ -48,6 +49,7 @@ void log_info (const char *fmt, ...) {
     log_string (LOG_INFO, buffer);
 }
 
+/** Write a log message at the LOG_WARNING level */
 void log_warn (const char *fmt, ...) {
     char buffer[4096];
     va_list ap;
@@ -57,6 +59,7 @@ void log_warn (const char *fmt, ...) {
     log_string (LOG_WARNING, buffer);
 }
 
+/** Write a log message at the LOG_ERR level */
 void log_error (const char *fmt, ...) {
     char buffer[4096];
     va_list ap;

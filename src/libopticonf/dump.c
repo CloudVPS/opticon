@@ -9,6 +9,7 @@ static const char *SPC = "                                "
                          "                                "
                          "                                ";
 
+/** Escape quoted string content with backslash */
 char *dump_escape (const char *str) {
     char *res = (char *) malloc (2*strlen(str)+1);
     const char *icrsr = str;
@@ -23,6 +24,12 @@ char *dump_escape (const char *str) {
     return res;
 }
 
+/** Recursive implementation function for dump_var().
+  * \param v The (dict) var at the current level to print out.
+  * \param into The file to write to.
+  * \param _indent The desired indentation level.
+  * \return 1 on success, 0 on failure.
+  */
 int dump_var2 (var *v, FILE *into, int _indent) {
     char *tstr;
     int first=1;
@@ -87,6 +94,11 @@ int dump_var2 (var *v, FILE *into, int _indent) {
     return 0;
 }
 
+/** Dump a variable tree in JSON format to a file (descriptor).
+  * \param v The tree to write out.
+  * \param into The file to write to.
+  * \return 1 on success, 0 on failure.
+  */
 int dump_var (var *v, FILE *into) {
     return dump_var2 (v, into, 0);
 }
