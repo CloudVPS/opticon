@@ -5,6 +5,7 @@
 #include <time.h>
 #include <stdlib.h>
 #include <string.h>
+#include <pthread.h>
 
 /* =============================== TYPES =============================== */
 
@@ -58,15 +59,16 @@ struct tenant_s; /* forward declaration */
 
 /** Structure representing a monitored host */
 typedef struct host_s {
-    struct host_s   *next; /**< List link */
-    struct host_s   *prev; /**< List link */
-    struct tenant_s *tenant; /**< Parent link */
-    time_t           lastmodified; /**< timeout information */
-    uuid             uuid; /**< uuid of the host */
-    status_t         status; /**< current status (if relevant */
-    meter           *first; /**< first connected meter */
-    meter           *last; /**< last connected meter */
-} host; 
+    struct host_s       *next; /**< List link */
+    struct host_s       *prev; /**< List link */
+    struct tenant_s     *tenant; /**< Parent link */
+    time_t               lastmodified; /**< timeout information */
+    uuid                 uuid; /**< uuid of the host */
+    status_t             status; /**< current status (if relevant */
+    meter               *first; /**< first connected meter */
+    meter               *last; /**< last connected meter */
+    pthread_rwlock_t     lock; /**< Threading infrastructure */
+} host;
 
 /** Structure representing a keystone tenant */
 typedef struct tenant_s {

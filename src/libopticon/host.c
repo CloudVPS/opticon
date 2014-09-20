@@ -14,6 +14,7 @@ host *host_alloc (void) {
     res->last = NULL;
     res->tenant = NULL;
     res->status = 0;
+    pthread_rwlock_init (&res->lock, NULL);
     return res;
 }
 
@@ -76,6 +77,7 @@ void host_delete (host *h) {
         free (m);
         m = nm;
     }
+    pthread_rwlock_destroy (&h->lock);
     free (h);
 }
 
@@ -97,13 +99,18 @@ meter *meter_alloc (void) {
   */
 int host_has_meter (host *h, meterid_t id) {
     meterid_t rid = (id & (MMASK_TYPE | MMASK_NAME));
+    pthread_rwlock_rdlock (&h->lock);
     meter *m = h->first;
-    if (! m) return 0;
+    int res = 0;
     while (m) {
-        if (m->id == rid) return 1;
+        if (m->id == rid) {
+            res = 1;
+            break;
+        }
         m = m->next;
     }
-    return 0;
+    pthread_rwlock_unlock (&h->lock);
+    return res;
 }
 
 /** Get (or create) a specific meter for a host.
@@ -114,6 +121,7 @@ int host_has_meter (host *h, meterid_t id) {
   */
 meter *host_get_meter (host *h, meterid_t id) {
     meterid_t rid = (id & (MMASK_TYPE | MMASK_NAME));
+    pthread_rwlock_wrlock (&h->lock);
     meter *m = h->first;
     meter *nm = NULL;
     if (! m) {
@@ -121,6 +129,7 @@ meter *host_get_meter (host *h, meterid_t id) {
         h->first = h->last = nm;
         nm->id = rid;
         nm->host = h;
+        pthread_rwlock_unlock (&h->lock);
         return nm;
     }
     while (m) {
@@ -133,10 +142,11 @@ meter *host_get_meter (host *h, meterid_t id) {
             h->last = nm;
             nm->id = rid;
             nm->host = h;
+            pthread_rwlock_unlock (&h->lock);
             return nm;
         }
     }
-    
+    pthread_rwlock_unlock (&h->lock);
     return NULL;
 }
 
@@ -165,12 +175,15 @@ const char *meter_get_str (meter *m, unsigned int pos) {
   * from constantly asking the kernel for the current time.
   */
 void host_begin_update (host *h, time_t t) {
+    pthread_rwlock_wrlock (&h->lock);
     h->lastmodified = t;
+    pthread_rwlock_unlock (&h->lock);
 }
 
 /** End an update round. Reaps any dangling meters that have been
     inactive for more than five minutes. */
 void host_end_update (host *h) {
+    pthread_rwlock_wrlock (&h->lock);
     time_t last = h->lastmodified;
     meter *m = h->first;
     meter *nm;
@@ -194,6 +207,7 @@ void host_end_update (host *h) {
         }
         m = nm;
     }
+    pthread_rwlock_unlock (&h->lock);
 }
 
 /** Fill up a meter with integer values */
