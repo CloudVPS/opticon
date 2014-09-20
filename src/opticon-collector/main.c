@@ -88,7 +88,7 @@ void handle_auth_packet (ioport *pktbuf, uint32_t netid) {
     if (! auth) return;
     time_t tnow = time (NULL);
     
-    /* Figure out if we're renweing an existing session */
+    /* Figure out if we're renewing an existing session */
     session *S = session_find (netid, auth->sessionid);
     if (S) {
         /* Discard replays */
