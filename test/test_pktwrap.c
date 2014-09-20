@@ -14,7 +14,7 @@ aeskey *resolve_tenantkey (uuid tenant, uint32_t serial) {
 #define NETID 0x23694205
 
 aeskey *resolve_sessionkey (uint32_t netid, uint32_t sessionid,
-                            uint32_t serial) {
+                            uint32_t serial, void **data) {
     return &SESSIONKEY;
 }
 
@@ -51,7 +51,7 @@ int main (int argc, const char *argv[]) {
                                              auth.sessionkey, outdata));
     
     assert (unwrapped = ioport_unwrap_meterdata (NETID, wrapped,
-                                                 resolve_sessionkey));
+                                                 resolve_sessionkey, NULL));
     assert (ioport_read (unwrapped, worldbuf, 14));
     assert (strcmp (worldbuf, "Hello, world.") == 0);
     ioport_close (auth_port);

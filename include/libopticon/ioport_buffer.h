@@ -16,6 +16,6 @@ typedef struct bufferstorage_s {
 
 /* ============================= FUNCTIONS ============================= */
 
-ioport      *ioport_create_buffer (char *buf, size_t sz);
+ioport      *ioport_create_buffer (void *buf, size_t sz);
 
 #endif

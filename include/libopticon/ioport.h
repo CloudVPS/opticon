@@ -37,7 +37,7 @@ char        *ioport_get_buffer (ioport *io);
 void         ioport_reset_read (ioport *io);
 
 size_t       ioport_write_available (ioport *io);
-int          ioport_write (ioport *io, const char *data, size_t sz);
+int          ioport_write (ioport *io, const void *data, size_t sz);
 int          ioport_write_uuid (ioport *io, uuid u);
 int          ioport_write_byte (ioport *io, uint8_t b);
 int          ioport_write_bits (ioport *io, uint8_t d, uint8_t numbits);
@@ -49,7 +49,7 @@ int          ioport_write_u64 (ioport *io, uint64_t i);
 int          ioport_write_u32 (ioport *io, uint32_t i);
 
 size_t       ioport_read_available (ioport *io);
-int          ioport_read (ioport *io, char *into, size_t sz);
+int          ioport_read (ioport *io, void *into, size_t sz);
 uuid         ioport_read_uuid (ioport *io);
 uint8_t      ioport_read_byte (ioport *io);
 uint8_t      ioport_read_bits (ioport *io, uint8_t numbits);

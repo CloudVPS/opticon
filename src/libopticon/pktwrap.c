@@ -132,7 +132,8 @@ ioport *ioport_wrap_authdata (authinfo *auth, uint32_t serial) {
   * \return A buffer ioport for the pktcodec grinder, or NULL.
   */
 ioport *ioport_unwrap_meterdata (uint32_t networkid, ioport *in,
-                                 resolve_sessionkey_f resolve) {
+                                 resolve_sessionkey_f resolve,
+                                 void **sessiondata) {
     ioport *decrypted = ioport_create_buffer (NULL, 2048);
     ioport *res = ioport_create_buffer (NULL, 2048);
     char packettype[5];
@@ -147,7 +148,7 @@ ioport *ioport_unwrap_meterdata (uint32_t networkid, ioport *in,
         if (strcmp (packettype, "o6m1") == 0) {
             sessid = ioport_read_u32 (in);
             serial = ioport_read_u32 (in);
-            k = resolve (networkid, sessid, serial);
+            k = resolve (networkid, sessid, serial, sessiondata);
             if (k && ioport_decrypt (k, in, decrypted, tnow, serial)) {
                 if (decompress_data (decrypted, res)) {
                     success = 1;
@@ -187,7 +188,6 @@ authinfo *ioport_unwrap_authdata (ioport *in, resolve_tenantkey_f resolve) {
         if (strcmp (packettype, "o6a1") == 0) {
             res->tenantid = ioport_read_uuid (in);
             serial = ioport_read_u32 (in);
-            printf ("serial %i\n", serial);
             k = resolve (res->tenantid, serial);
             if (k && ioport_decrypt (k, in, decrypted, tnow, serial)) {
                 res->tenantkey = *k;
@@ -197,6 +197,7 @@ authinfo *ioport_unwrap_authdata (ioport *in, resolve_tenantkey_f resolve) {
                                  sizeof(aeskey))) {
                     success = 1;
                 }
+                res->serial = serial;
             }
         }
     }

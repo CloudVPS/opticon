@@ -15,11 +15,11 @@ size_t ioport_write_available (ioport *io) {
   * \param sz The blob size
   * \return 1 on success, 0 on failure 
   */
-int ioport_write (ioport *io, const char *data, size_t sz) {
+int ioport_write (ioport *io, const void *data, size_t sz) {
     if (io->bitpos) {
         if (! ioport_flush_bits (io)) return 0;
     }
-    return io->write (io, data, sz);
+    return io->write (io, (const char *) data, sz);
 }
 
 /** Write a single byte to an ioport.
@@ -226,9 +226,9 @@ size_t ioport_read_available (ioport *io) {
   * \param sz The number of bytes to read
   * \return 1 on success, 0 on failure 
   */
-int ioport_read (ioport *io, char *into, size_t sz) {
+int ioport_read (ioport *io, void *into, size_t sz) {
     io->bitpos = io->bitbuffer = 0;
-    return io->read (io, into, sz);
+    return io->read (io, (char *) into, sz);
 }
 
 /** Read a uuid from an ioport */

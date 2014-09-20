@@ -1,0 +1,7 @@
+network {
+    port: 1047
+    address: 0.0.0.0
+}
+database {
+    path: "/Users/pi/var"
+}

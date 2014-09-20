@@ -7,10 +7,11 @@
 #include <libopticon/ioport_buffer.h>
 
 typedef aeskey *(*resolve_tenantkey_f)(uuid, uint32_t);
-typedef aeskey *(*resolve_sessionkey_f)(uint32_t, uint32_t, uint32_t);
+typedef aeskey *(*resolve_sessionkey_f)(uint32_t, uint32_t, uint32_t, void **);
 
 typedef struct authinfo_s {
     uint32_t    sessionid;
+    uint32_t    serial;
     uuid        tenantid;
     uuid        hostid;
     aeskey      sessionkey;
@@ -26,7 +27,8 @@ uint32_t     gen_serial (void);
 ioport      *ioport_wrap_meterdata (uint32_t, uint32_t, aeskey, ioport *);
 ioport      *ioport_wrap_authdata (authinfo *, uint32_t);
 ioport      *ioport_unwrap_meterdata (uint32_t, ioport *,
-                                      resolve_sessionkey_f);
+                                      resolve_sessionkey_f,
+                                      void **sessiondata);
 authinfo    *ioport_unwrap_authdata (ioport *, resolve_tenantkey_f);
 
 #endif
