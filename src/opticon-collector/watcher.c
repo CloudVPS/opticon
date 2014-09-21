@@ -106,6 +106,7 @@ void watchthread_handle_host (host *host) {
         m->badness = 0.0;
         int handled = 0;
         
+        /* First go over the tenant-defined watchers */
         w = host->tenant->watch.first;
         while (w) {
             if (w->id == (m->id & MMASK_NAME)) {
@@ -115,6 +116,8 @@ void watchthread_handle_host (host *host) {
             w = w->next;
         }
         
+        /* If the tenant didn't have anything suitable, go over the
+           global watchlist */
         if (! handled) w = APP.watch.first;
          while (w) {
             if (w->id == (m->id & MMASK_NAME)) {

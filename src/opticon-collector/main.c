@@ -31,7 +31,7 @@ aeskey *resolve_sessionkey (uint32_t netid, uint32_t sid, uint32_t serial,
 }
 
 /** Add a meterwatch to a (tenant's) watchlist, with a var object
-  * as configuration.
+  * as configuration; helper for watchlist_populate().
   * \param w The watchlist to add to.
   * \param id The meterid to match
   * \param mtp The metertype to match
@@ -73,6 +73,11 @@ void make_watcher (watchlist *w, meterid_t id, metertype_t mtp,
     }
 }
 
+/** Populate a watchlist out of a meter definition stored in some
+  * variables.
+  * \param w The watchlist to populate.
+  * \param v_meters The meter definitions.
+  */
 void watchlist_populate (watchlist *w, var *v_meters) {
     watchlist_clear (w);
     if (v_meters) {
@@ -266,6 +271,7 @@ int set_pidfile (const char *i, const char *v) {
     return 1;
 }
 
+/** Set the logfile path, @syslog for logging to syslog */
 int set_logpath (const char *i, const char *v) {
     APP.logpath = v;
     return 1;

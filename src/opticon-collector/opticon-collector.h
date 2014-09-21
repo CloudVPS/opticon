@@ -9,6 +9,9 @@
 #include <libsvc/transport.h>
 #include <libsvc/thread.h>
 
+/* =============================== TYPES =============================== */
+
+/** Useful access to application parts and configuration */
 typedef struct appcontext_s {
     codec       *codec;
     db          *db;
@@ -26,7 +29,11 @@ typedef struct appcontext_s {
     const char  *listenaddr;
 } appcontext;
 
+/* ============================== GLOBALS ============================== */
+
 extern appcontext APP;
+
+/* ============================= FUNCTIONS ============================= */
 
 void watchthread_run (thread *self);
 
