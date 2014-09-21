@@ -11,6 +11,7 @@
 #include <libsvc/log.h>
 #include <libsvc/cliopt.h>
 #include <libsvc/transport_udp.h>
+#include <arpa/inet.h>
 
 /** Looks up a session by netid and sessionid. If it's a valid session,
   * returns its current AES session key.
@@ -162,11 +163,26 @@ aeskey *resolve_tenantkey (uuid tenantid, uint32_t serial) {
 }
 
 /** Handler for an auth packet */
-void handle_auth_packet (ioport *pktbuf, uint32_t netid) {
+void handle_auth_packet (ioport *pktbuf, uint32_t netid,
+                         struct sockaddr_storage *remote) {
     authinfo *auth = ioport_unwrap_authdata (pktbuf, resolve_tenantkey);
     
+    char addrbuf[64];
+    if (remote->ss_family == AF_INET) {
+        struct sockaddr_in *in = (struct sockaddr_in *) remote;
+        inet_ntop (AF_INET, &in->sin_addr, addrbuf, 64);
+    }
+    else {
+        struct sockaddr_in6 *in = (struct sockaddr_in6 *) remote;
+        inet_ntop (AF_INET6, &in->sin6_addr, addrbuf, 64);
+    }
+    
     /* No auth means discarded by the crypto/decoding layer */
-    if (! auth) return;
+    if (! auth) {
+        log_warn ("Authentication failed on packet from %s", addrbuf);
+        return;
+    }
+    
     time_t tnow = time (NULL);
     
     /* Figure out if we're renewing an existing session */
@@ -174,12 +190,17 @@ void handle_auth_packet (ioport *pktbuf, uint32_t netid) {
     if (S) {
         /* Discard replays */
         if (S->lastserial >= auth->serial) {
+            log_info ("Renewing session %08x-$08x from %s serial %i",
+                      auth->sessionid, netid, addrbuf, auth->serial);
             S->key = auth->sessionkey;
             S->lastcycle = tnow;
             S->lastserial = auth->serial;
         }
     }
     else {
+        log_info ("New session %08x-%08x from %s serial %i",
+                  auth->sessionid, netid, addrbuf, auth->serial);
+    
         S = session_register (auth->tenantid, auth->hostid, netid,
                               auth->sessionid, auth->sessionkey);
     }
@@ -232,22 +253,22 @@ int daemon_main (int argc, const char *argv[]) {
         pktbuf *pkt = packetqueue_waitpkt (APP.queue);
         if (pkt) {
             uint32_t netid = gen_networkid (&pkt->addr);
-            ioport *pktbuf = ioport_create_buffer (pkt->pkt, 2048);
+            ioport *pktbufport = ioport_create_buffer (pkt->pkt, 2048);
             /* Pointing it at itself will just move the cursor */
-            ioport_write (pktbuf, pkt->pkt, pkt->sz);
+            ioport_write (pktbufport, pkt->pkt, pkt->sz);
             
             /* Check packet version info */
             if (pkt->pkt[0] == 'o' && pkt->pkt[1] == '6') {
                 if (pkt->pkt[2] == 'a' && pkt->pkt[3] == '1') {
                     /* AUTH v1 */
-                    handle_auth_packet (pktbuf, netid);
+                    handle_auth_packet (pktbufport, netid, &pkt->addr);
                 }
                 else if (pkt->pkt[2] == 'm' && pkt->pkt[3] == '1') {
                     /* METER v1 */
-                    handle_meter_packet (pktbuf, netid);
+                    handle_meter_packet (pktbufport, netid);
                 }
             }
-            ioport_close (pktbuf);
+            ioport_close (pktbufport);
         }
     }
     return 0;
@@ -335,8 +356,7 @@ int main (int _argc, const char *_argv[]) {
     const char **argv = cliopt_dispatch (CLIOPT, _argv, &argc);
     if (! argv) return 1;
 
-    opticonf_add_reaction ("network/port", conf_network);
-    opticonf_add_reaction ("network/address", conf_network);
+    opticonf_add_reaction ("network", conf_network);
     opticonf_add_reaction ("database/path", conf_db_path);
     opticonf_add_reaction ("meters", conf_meters);
     
@@ -350,8 +370,14 @@ int main (int _argc, const char *_argv[]) {
         return 1;
     }
     
+    opticonf_handle_config (APP.conf);
+    
     log_info ("Configuration loaded");
-    intransport_setlistenport (APP.transport, APP.listenaddr, APP.listenport);
+    
+    if (! intransport_setlistenport (APP.transport, APP.listenaddr, 
+                                     APP.listenport)) {
+        log_error ("Error setting listening port");
+    }
     APP.queue = packetqueue_create (1024, APP.transport);
     if (! daemonize (APP.pidfile, argc, argv, daemon_main)) {
         log_error ("Error spawning");

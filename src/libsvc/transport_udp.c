@@ -74,6 +74,7 @@ int udp_intransport_setlistenport (intransport *t, const char *addr,
     memset (&hints, 0, sizeof (hints));
     hints.ai_family = PF_UNSPEC;
     hints.ai_socktype = SOCK_DGRAM;
+    hints.ai_flags = AI_NUMERICSERV;
     sprintf (portstr, "%i", port);
     
     if (getaddrinfo (addr, portstr, &hints, &(self->listenaddr)) < 0) {
