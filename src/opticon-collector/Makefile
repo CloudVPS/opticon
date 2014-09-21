@@ -17,7 +17,7 @@ endif
 
 CFLAGS+=-DOSNAME=$(OSNAME) -DOSREL=$(OSREL) -DOSRELMAJOR=$(OSRELMAJOR)
 
-OBJS_OPTICONCOLLECTOR = main.o
+OBJS_OPTICONCOLLECTOR = main.o watcher.o
 LIBS = ../../lib/libopticon.a ../../lib/libopticondb.a \
 		../../lib/libsvc.a ../../lib/libopticonf.a
 				  

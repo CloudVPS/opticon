@@ -30,6 +30,76 @@ aeskey *resolve_sessionkey (uint32_t netid, uint32_t sid, uint32_t serial,
     return &S->key;
 }
 
+/** Add a meterwatch to a (tenant's) watchlist, with a var object
+  * as configuration.
+  * \param w The watchlist to add to.
+  * \param id The meterid to match
+  * \param mtp The metertype to match
+  * \param v Metadata, dict with: cmp, weight, val.
+  * \param vweight The unweighted 'badness' (depending on alert/warning).
+  */
+void make_watcher (watchlist *w, meterid_t id, metertype_t mtp,
+                   var *v, double vweight) {
+    watchtype wtp;
+    const char *cmp = var_get_str_forkey (v, "cmp");
+    double weight = var_get_double_forkey (v, "weight");
+    uint64_t ival = var_get_int_forkey (v, "val");
+    double dval = var_get_double_forkey (v, "val");
+    const char *sval = var_get_str_forkey (v, "val");
+    
+    if (weight < 0.01) weight = 1.0;
+    weight = weight * vweight;
+    
+    if (mtp == MTYPE_INT) {
+        if (strcmp (cmp, "lt") == 0) {
+            watchlist_add_uint (w, id, WATCH_UINT_LT, ival, weight);
+        }
+        else if (strcmp (cmp, "gt") == 0) {
+            watchlist_add_uint (w, id, WATCH_UINT_GT, ival, weight);
+        }
+    }
+    else if (mtp == MTYPE_FRAC) {
+        if (strcmp (cmp, "lt") == 0) {
+            watchlist_add_frac (w, id, WATCH_FRAC_LT, dval, weight);
+        }
+        else if (strcmp (cmp, "gt") == 0) {
+            watchlist_add_uint (w, id, WATCH_FRAC_GT, dval, weight);
+        }
+    }
+    else if (mtp == MTYPE_STR) {
+        if (strcmp (cmp, "eq") == 0) {
+            watchlist_add_str (w, id, WATCH_STR_MATCH, sval, weight);
+        }
+    }
+}
+
+void watchlist_populate (watchlist *w, var *v_meters) {
+    watchlist_clear (w);
+    if (v_meters) {
+        var *mdef = v_meters->value.arr.first;
+        while (mdef) {
+            var *v_warn = var_get_dict_forkey (mdef, "warning");
+            var *v_alert = var_get_dict_forkey (mdef, "alert");
+            const char *type = var_get_str_forkey (mdef, "type");
+            if (type && (v_warn || v_alert)) {
+                metertype_t tp;
+                if (strcmp (type, "int") == 0) tp = MTYPE_INT;
+                else if (strcmp (type, "frac") == 0) tp = MTYPE_FRAC;
+                else if (strcmp (type, "string") == 0) tp = MTYPE_STR;
+                else {
+                    /* FIXME, LOG AND ABORT */
+                    break;
+                }
+                
+                meterid_t id = makeid (mdef->id, tp, 0);
+                if (v_warn) make_watcher (w, id, tp, v_warn, 5.0);
+                if (v_alert) make_watcher (w, id, tp, v_alert, 10.0);
+            }
+            mdef = mdef->next;
+        }
+    }
+}
+
 /** Looks up a tenant in memory and in the database, does the necessary
   * bookkeeping, then returns the AES key for that tenant.
   * \param tenantid The tenant UUID.
@@ -75,6 +145,12 @@ aeskey *resolve_tenantkey (uuid tenantid, uint32_t serial) {
             }
         }
     }
+
+    /* If there's meter data defined in the tenant metadata,
+       put it in the tenant's watchlist */    
+    var *v_meters = var_get_dict_forkey (meta, "meters");
+    if (v_meters) watchlist_populate (&T->watch, v_meters);
+    
     db_close (APP.db);
     var_free (meta);
     return res;
@@ -112,6 +188,7 @@ void handle_auth_packet (ioport *pktbuf, uint32_t netid) {
 void handle_meter_packet (ioport *pktbuf, uint32_t netid) {
     session *S = NULL;
     ioport *unwrap;
+    time_t tnow = time (NULL);
     
     /* Unwrap the outer packet layer (crypto and compression) */
     unwrap = ioport_unwrap_meterdata (netid, pktbuf,
@@ -124,20 +201,29 @@ void handle_meter_packet (ioport *pktbuf, uint32_t netid) {
     
     /* Write the new meterdata into the host */
     host *H = S->host;
-    if (codec_decode_host (APP.codec, unwrap, H)) {
-        if (db_open (APP.db, S->tenantid, NULL)) {
-            db_save_record (APP.db, time(NULL), H);
-            db_close (APP.db);
-        }
-    }
+    pthread_rwlock_wrlock (&H->lock);
+    host_begin_update (H, tnow);
+    codec_decode_host (APP.codec, unwrap, H);
+    host_end_update (H);
+    pthread_rwlock_unlock (&H->lock);
     ioport_close (unwrap);
 }
 
 /** Main loop. Waits for a packet, then handles it. */
 int daemon_main (int argc, const char *argv[]) {
-    log_open_syslog ("opticon-collector");
-    log_info ("Daemonized\n");
+    if (strcmp (APP.logpath, "@syslog") == 0) {
+        log_open_syslog ("opticon-collector");
+    }
+    else {
+        log_open_file (APP.logpath);
+    }
+    
+    log_info ("Daemonized");
+    
+    APP.watchthread = thread_create (watchthread_run, NULL);
+    
     while (1) {
+        log_info ("Starting round");
         pktbuf *pkt = packetqueue_waitpkt (APP.queue);
         if (pkt) {
             uint32_t netid = gen_networkid (&pkt->addr);
@@ -158,7 +244,6 @@ int daemon_main (int argc, const char *argv[]) {
             }
             ioport_close (pktbuf);
         }
-        log_info ("Starting round\n");
     }
     return 0;
 }
@@ -178,6 +263,11 @@ int set_confpath (const char *i, const char *v) {
 /** Set up pidfile path */
 int set_pidfile (const char *i, const char *v) {
     APP.pidfile = v;
+    return 1;
+}
+
+int set_logpath (const char *i, const char *v) {
+    APP.logpath = v;
     return 1;
 }
 
@@ -204,10 +294,17 @@ int conf_network (const char *id, var *v, updatetype tp) {
 int conf_db_path (const char *id, var *v, updatetype tp) {
     if (tp == UPDATE_REMOVE) return 0;
     if (tp == UPDATE_CHANGE) {
-        db_close (APP.db);
         db_free (APP.db);
+        db_free (APP.writedb);
     }
     APP.db = localdb_create (var_get_str (v));
+    APP.writedb = localdb_create (var_get_str (v));
+    return 1;
+}
+
+int conf_meters (const char *id, var *v, updatetype tp) {
+    if (tp != UPDATE_ADD) return 0;
+    watchlist_populate (&APP.watch, v);
     return 1;
 }
 
@@ -218,6 +315,7 @@ cliopt CLIOPT[] = {
     {"--foreground","-f",OPT_FLAG,NULL,set_foreground},
     {"--pidfile","-p",OPT_VALUE,
         "/var/run/opticon-collector.pid", set_pidfile},
+    {"--logfile","-l",OPT_VALUE, "@syslog", set_logpath},
     {"--config-path","-c",OPT_VALUE,
         "/etc/opticon/opticon-collector.conf", set_confpath},
     {NULL,NULL,0,NULL,NULL}
@@ -234,6 +332,7 @@ int main (int _argc, const char *_argv[]) {
     opticonf_add_reaction ("network/port", conf_network);
     opticonf_add_reaction ("network/address", conf_network);
     opticonf_add_reaction ("database/path", conf_db_path);
+    opticonf_add_reaction ("meters", conf_meters);
     
     APP.transport = intransport_create_udp();
     APP.codec = codec_create_pkt();
@@ -241,7 +340,7 @@ int main (int _argc, const char *_argv[]) {
     APP.conf = var_alloc();
     if (! load_json (APP.conf, APP.confpath)) {
         log_error ("Error loading %s: %s\n",
-                 APP.confpath, parse_error());
+                   APP.confpath, parse_error());
         return 1;
     }
     

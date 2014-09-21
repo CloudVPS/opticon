@@ -5,3 +5,19 @@ network {
 database {
     path: "/Users/pi/var"
 }
+meters {
+    "mem/free" {
+        type: int
+        description: "Free RAM"
+        unit: KB
+        warning { cmp: lt, val: 65536, weight: 1.0 }
+        alert { cmp: lt, val: 32768, weight: 1.0 }
+    }
+    "swap/free" {
+        type: int
+        description: "Free Swap"
+        unit: KB
+        warning { cmp: lt, val: 65536, weight: 1.0 }
+        alert { cmp: lt, val: 32768, weight: 1.0 }
+    }
+}

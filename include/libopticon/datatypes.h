@@ -49,6 +49,7 @@ typedef struct meter_s {
     struct meter_s  *prev; /**< List link */
     struct host_s   *host; /**< Parent link */
 
+    double           badness; /**< accumulated badness */
     meterid_t        id; /**< id and type of the data */
     time_t           lastmodified; /**< timeout information */
     int              count; /**< Element count, 0 means direct value */
@@ -64,11 +65,46 @@ typedef struct host_s {
     struct tenant_s     *tenant; /**< Parent link */
     time_t               lastmodified; /**< timeout information */
     uuid                 uuid; /**< uuid of the host */
+    double               badness; /**< accumulated badness */
     status_t             status; /**< current status (if relevant */
     meter               *first; /**< first connected meter */
     meter               *last; /**< last connected meter */
     pthread_rwlock_t     lock; /**< Threading infrastructure */
 } host;
+
+/** Distinguish different type of meterwatch matching */
+typedef enum watchtype_e {
+    WATCH_FRAC_LT, /** Match on a fractional value being less than N */
+    WATCH_FRAC_GT, /** match on a fractional value being greater than N */
+    WATCH_UINT_LT, /** Match on an integer value being less than N */
+    WATCH_UINT_GT, /** Match on an integer value being greater than N */
+    WATCH_STR_MATCH /** Match on a specific string value */
+} watchtype;
+
+/** Storage for the match data of a meterwatch object */
+typedef union {
+    uint64_t         u64;
+    double           frac;
+    fstring          str;
+} watchdata;
+
+/** Definition of a match condition that indicates a problem
+  * for a host.
+  */
+typedef struct meterwatch_s {
+    struct meterwatch_s *next;
+    struct meterwatch_s *prev;
+    meterid_t            id;
+    watchtype            tp;
+    watchdata            dat;
+    double               badness;
+} meterwatch;
+
+/** Linked list header of a meterwatch list */
+typedef struct watchlist_s {
+    meterwatch          *first;
+    meterwatch          *last;
+} watchlist;
 
 /** Structure representing a keystone tenant */
 typedef struct tenant_s {
@@ -79,6 +115,7 @@ typedef struct tenant_s {
     uuid             uuid; /**< The tenant's uuid */
     aeskey           key; /**< Key used for auth packets */
     uint32_t         lastserial; /**< Serial# of last auth packet */
+    watchlist        watch; /**< Tenant-specific watchers */
 } tenant;
 
 /** List of tenants */
@@ -127,6 +164,15 @@ void         meter_set_str (meter *m, unsigned int pos, const char *str);
 
 uint64_t     meter_get_uint (meter *, unsigned int pos);
 double       meter_get_frac (meter *, unsigned int pos);
-const char  *meter_get_str (meter *, unsigned int pos);
+fstring      meter_get_str (meter *, unsigned int pos);
+
+void         watchlist_init (watchlist *);
+void         watchlist_add_uint (watchlist *, meterid_t, watchtype,
+                                 uint64_t, double);
+void         watchlist_add_frac (watchlist *, meterid_t, watchtype,
+                                 double, double);
+void         watchlist_add_str (watchlist *, meterid_t, 
+                                watchtype, const char *, double);
+void         watchlist_clear (watchlist *);
 
 #endif

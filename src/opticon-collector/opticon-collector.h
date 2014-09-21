@@ -7,13 +7,18 @@
 #include <libopticonf/var.h>
 #include <libsvc/packetqueue.h>
 #include <libsvc/transport.h>
+#include <libsvc/thread.h>
 
 typedef struct appcontext_s {
     codec       *codec;
     db          *db;
+    db          *writedb;
     packetqueue *queue;
     intransport *transport;
+    watchlist    watch;
+    thread      *watchthread;
     var         *conf;
+    const char  *logpath;
     const char  *confpath;
     const char  *pidfile;
     int          foreground;
@@ -22,5 +27,7 @@ typedef struct appcontext_s {
 } appcontext;
 
 extern appcontext APP;
+
+void watchthread_run (thread *self);
 
 #endif

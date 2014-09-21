@@ -14,6 +14,7 @@ host *host_alloc (void) {
     res->last = NULL;
     res->tenant = NULL;
     res->status = 0;
+    res->badness = 0.0;
     pthread_rwlock_init (&res->lock, NULL);
     return res;
 }
@@ -99,7 +100,6 @@ meter *meter_alloc (void) {
   */
 int host_has_meter (host *h, meterid_t id) {
     meterid_t rid = (id & (MMASK_TYPE | MMASK_NAME));
-    pthread_rwlock_rdlock (&h->lock);
     meter *m = h->first;
     int res = 0;
     while (m) {
@@ -109,7 +109,6 @@ int host_has_meter (host *h, meterid_t id) {
         }
         m = m->next;
     }
-    pthread_rwlock_unlock (&h->lock);
     return res;
 }
 
@@ -121,7 +120,6 @@ int host_has_meter (host *h, meterid_t id) {
   */
 meter *host_get_meter (host *h, meterid_t id) {
     meterid_t rid = (id & (MMASK_TYPE | MMASK_NAME));
-    pthread_rwlock_wrlock (&h->lock);
     meter *m = h->first;
     meter *nm = NULL;
     if (! m) {
@@ -129,7 +127,6 @@ meter *host_get_meter (host *h, meterid_t id) {
         h->first = h->last = nm;
         nm->id = rid;
         nm->host = h;
-        pthread_rwlock_unlock (&h->lock);
         return nm;
     }
     while (m) {
@@ -142,48 +139,58 @@ meter *host_get_meter (host *h, meterid_t id) {
             h->last = nm;
             nm->id = rid;
             nm->host = h;
-            pthread_rwlock_unlock (&h->lock);
             return nm;
         }
     }
-    pthread_rwlock_unlock (&h->lock);
     return NULL;
 }
 
 /** Get a specific indexed integer value out of a meter */
 uint64_t meter_get_uint (meter *m, unsigned int pos) {
-    if (pos >= (m->count?m->count:1)) return 0;
-    if ((m->id & MMASK_TYPE) != MTYPE_INT) return 0;
-    return m->d.u64[pos];
+    uint64_t res = 0ULL;
+    
+    if (pos < (m->count?m->count:1) &&
+        (m->id & MMASK_TYPE) == MTYPE_INT) {
+        res = m->d.u64[pos];
+    }
+
+    return res;
 }
 
 /** Get a specific indexed fractional value out of a meter */
 double meter_get_frac (meter *m, unsigned int pos) {
-    if (pos >= (m->count?m->count:1)) return 0.0;
-    if ((m->id & MMASK_TYPE) != MTYPE_FRAC) return 0.0;
-    return m->d.frac[pos];
+    double res = 0.0;
+    
+    if (pos < (m->count?m->count:1) &&
+        (m->id & MMASK_TYPE) == MTYPE_FRAC) {
+        res = m->d.frac[pos];
+    }
+
+    return res;
 }
 
 /** Get a string value out of a meter */
-const char *meter_get_str (meter *m, unsigned int pos) {
-    if (pos >= (m->count?m->count:1)) return 0;
-    if ((m->id & MMASK_TYPE) != MTYPE_STR) return "";
-    return (const char *) m->d.str[pos].str;
+fstring meter_get_str (meter *m, unsigned int pos) {
+    fstring res = {""};
+    
+    if (pos < (m->count?m->count:1) &&
+        (m->id & MMASK_TYPE) == MTYPE_STR) {
+        strcpy (res.str, m->d.str[pos].str);
+    }
+
+    return res;
 }
 
 /** Mark the beginning of a new update cycle. Saves the meters
   * from constantly asking the kernel for the current time.
   */
 void host_begin_update (host *h, time_t t) {
-    pthread_rwlock_wrlock (&h->lock);
     h->lastmodified = t;
-    pthread_rwlock_unlock (&h->lock);
 }
 
 /** End an update round. Reaps any dangling meters that have been
     inactive for more than five minutes. */
 void host_end_update (host *h) {
-    pthread_rwlock_wrlock (&h->lock);
     time_t last = h->lastmodified;
     meter *m = h->first;
     meter *nm;
@@ -207,7 +214,6 @@ void host_end_update (host *h) {
         }
         m = nm;
     }
-    pthread_rwlock_unlock (&h->lock);
 }
 
 /** Fill up a meter with integer values */
@@ -250,12 +256,11 @@ meter *host_set_meter_str (host *h, meterid_t id,
 /** Initialize a meter to a specific set size */
 void meter_setcount (meter *m, unsigned int count) {
     int cnt = count ? count : 1;
+    
     m->count = count;
     m->lastmodified = m->host->lastmodified;
-    if (m->d.any) {
-        free (m->d.any);
-        m->d.any = NULL;
-    }
+    
+    void *oldarray = m->d.any;
     
     switch (m->id & MMASK_TYPE) {
         case MTYPE_INT:
@@ -275,31 +280,36 @@ void meter_setcount (meter *m, unsigned int count) {
             m->count = -1;
             break;
     }
+    
+    if (oldarray) free (oldarray);
 }
 
 /** Setter for a specific integer value inside a meter array */
 void meter_set_uint (meter *m, unsigned int pos, uint64_t val) {
-    if ((m->id & MMASK_TYPE) != MTYPE_INT) return;
-    if (pos >= (m->count ? m->count : 1)) return; 
-    m->lastmodified = m->host->lastmodified;
-    m->d.u64[pos] = val;
+    if ((m->id & MMASK_TYPE) == MTYPE_INT &&
+        pos < (m->count ? m->count : 1)) {
+        m->lastmodified = m->host->lastmodified;
+        m->d.u64[pos] = val;
+    }
 }
 
 /** Setter for a specific fractional value inside a meter array */
 void meter_set_frac (meter *m, unsigned int pos, double val) {
-    if ((m->id & MMASK_TYPE) != MTYPE_FRAC) return;
-    if (pos >= (m->count ? m->count : 1)) return;
-    m->lastmodified = m->host->lastmodified;
-    m->d.frac[pos] = val;
+    if ((m->id & MMASK_TYPE) == MTYPE_FRAC &&
+        pos < (m->count ? m->count : 1)) {
+        m->lastmodified = m->host->lastmodified;
+        m->d.frac[pos] = val;
+    }
 }
 
 /** Setter for a specific string value inside a meter array */
 void meter_set_str (meter *m, unsigned int pos, const char *val) {
-    if ((m->id & MMASK_TYPE) != MTYPE_STR) return;
-    if (pos >= (m->count ? m->count : 1)) return;
-    strncpy (m->d.str[pos].str, val, 127);
-    m->lastmodified = m->host->lastmodified;
-    m->d.str[pos].str[127] = '\0';
+    if ((m->id & MMASK_TYPE) == MTYPE_STR &&
+        pos < (m->count ? m->count : 1)) {
+        strncpy (m->d.str[pos].str, val, 127);
+        m->lastmodified = m->host->lastmodified;
+        m->d.str[pos].str[127] = '\0';
+    }
 }
 
 /** Find the next sibling for a meter with a path prefix */
