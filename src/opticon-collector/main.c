@@ -189,23 +189,35 @@ void handle_auth_packet (ioport *pktbuf, uint32_t netid,
         return;
     }
     
+    char s_hostid[40];
+    char s_tenantid[40];
+    
+    uuid2str (auth->hostid, s_hostid);
+    uuid2str (auth->tenantid, s_tenantid);
+    
     time_t tnow = time (NULL);
     
     /* Figure out if we're renewing an existing session */
     session *S = session_find (netid, auth->sessionid);
     if (S) {
         /* Discard replays */
-        if (S->lastserial >= auth->serial) {
-            log_info ("Renewing session %08x-$08x from %s serial %i",
-                      auth->sessionid, netid, addrbuf, auth->serial);
+        if (S->lastserial < auth->serial) {
+            log_info ("Renewing session %08x-%08x from %s serial %i "
+                      "tenant %s host %s", auth->sessionid, netid,
+                      addrbuf, auth->serial, s_tenantid, s_hostid);
             S->key = auth->sessionkey;
             S->lastcycle = tnow;
             S->lastserial = auth->serial;
         }
+        else {
+            log_warn ("Replayed serial on auth from %s: %i >= %i",
+                      addrbuf, S->lastserial, auth->serial);
+        }
     }
     else {
-        log_info ("New session %08x-%08x from %s serial %i",
-                  auth->sessionid, netid, addrbuf, auth->serial);
+        log_info ("New session %08x-%08x from %s serial %i "
+                  "tenant %s host %s", auth->sessionid, netid,
+                  addrbuf, auth->serial, s_tenantid, s_hostid);
     
         S = session_register (auth->tenantid, auth->hostid, netid,
                               auth->sessionid, auth->sessionkey);
@@ -228,8 +240,6 @@ void handle_meter_packet (ioport *pktbuf, uint32_t netid) {
                                       resolve_sessionkey, (void**) &S);
     if (! unwrap) {
         log_warn ("Error unwrapping packet from %08x: %08x", netid, unwrap_errno);
-        log_warn ("decrypt serial %i pserial %i diff %i",
-                  decrypt_serial, decrypt_pserial, decrypt_diff);
         return;
     }
     if (! S) {
@@ -243,11 +253,11 @@ void handle_meter_packet (ioport *pktbuf, uint32_t netid) {
     pthread_rwlock_wrlock (&H->lock);
     host_begin_update (H, tnow);
     if (codec_decode_host (APP.codec, unwrap, H)) {
-        log_info ("Update handled");
+        log_info ("Update handled for session %08x-%08x",
+                   S->sessid, S->addr);
     }
     host_end_update (H);
     pthread_rwlock_unlock (&H->lock);
-    log_info ("Update ended");
     ioport_close (unwrap);
 }
 
@@ -260,14 +270,13 @@ int daemon_main (int argc, const char *argv[]) {
         log_open_file (APP.logpath);
     }
 
-    log_info ("Daemonized");
+    log_info ("Opticon-collector ready for action");
     
     /* Set up threads */
     APP.queue = packetqueue_create (1024, APP.transport);
     APP.watchthread = thread_create (watchthread_run, NULL);
     
     while (1) {
-        log_info ("Starting round");
         pktbuf *pkt = packetqueue_waitpkt (APP.queue);
         if (pkt) {
             uint32_t netid = gen_networkid (&pkt->addr);

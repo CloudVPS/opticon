@@ -211,20 +211,21 @@ int daemon_main (int argc, const char *argv[]) {
 
     log_info ("Daemonized");
     while (1) {
-        time_t tnow = time (NULL);
+        time_t tnow = tlast = time (NULL);
         
-        if (tnow - lastauth > 550) {
+        if (tnow - lastauth > 270) {
             uint32_t sid = APP.auth.sessionid;
             if (! sid) sid = gen_sessionid();
+            log_info ("Authenticating session %08x", sid);
             APP.auth.sessionid = sid;
-            APP.auth.serial = gen_serial();
+            APP.auth.serial = 0;
             APP.auth.tenantid = APP.tenantid;
             APP.auth.hostid = APP.hostid;
             APP.auth.sessionkey = aeskey_create();
             APP.auth.tenantkey = APP.collectorkey;
             
             ioport *io_authpkt = ioport_wrap_authdata (&APP.auth,
-                                                       APP.auth.serial);
+                                                       gen_serial());
             
             sz = ioport_read_available (io_authpkt);
             buf = ioport_get_buffer (io_authpkt);
@@ -236,12 +237,18 @@ int daemon_main (int argc, const char *argv[]) {
         host *h = host_alloc();
         h->uuid = APP.hostid;
         host_begin_update (h, time (NULL));
+
+        log_info ("Poking probes");
+
         probe *p = APP.probes.first;
         while (p) {
             conditional_signal (&p->pulse);
             p = p->next;
         }
         sleep (5);
+        
+        log_info ("Collecting probes");
+        
         p = APP.probes.first;
         while (p) {
             var *v = p->vcurrent;
@@ -254,7 +261,7 @@ int daemon_main (int argc, const char *argv[]) {
             p = p->next;
         }
         
-        __breakme();
+       log_info ("Encoding probes");
         
         ioport *encoded = ioport_create_buffer (NULL, 4096);
         if (! encoded) {
@@ -297,10 +304,11 @@ int daemon_main (int argc, const char *argv[]) {
         host_delete (h);
         
         tnow = time (NULL);
+        
         if (tnow - tlast < 60) {
+            log_info ("Sleeping for %i seconds", (60-(tnow-tlast)));
             sleep (60 - (tnow-tlast));
         }
-        tlast = tnow;
     }
     return 666;
 }

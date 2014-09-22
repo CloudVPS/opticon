@@ -88,7 +88,6 @@ void watchthread_handle_host (host *host) {
     char label[16];
     
     pthread_rwlock_wrlock (&host->lock);
-    log_info ("watchthread: host locked");
 
     /* We'll store the status information as a meter itself */
     meterid_t mid_status = makeid ("status",MTYPE_STR,0);
@@ -99,7 +98,6 @@ void watchthread_handle_host (host *host) {
     if ((tnow - host->lastmodified) > 80) {
         meter_set_str (m_status, 0, "STALE");
         pthread_rwlock_unlock (&host->lock);
-        log_info ("watchthread: host unlocked");
         return;
     }
 
@@ -175,34 +173,38 @@ void watchthread_handle_host (host *host) {
     }
     
     pthread_rwlock_unlock (&host->lock);
-    log_info ("watchthread: host unlocked");
 }
 
 /** Main loop for the watchthread */
 void watchthread_run (thread *self) {
-    time_t t_start, t_end;
     tenant *tcrsr;
     host *hcrsr;
+    time_t t_now = time (NULL);
+    time_t t_next = (t_now+60)-((t_now+60)%60);
+    log_info ("Watchthread started");
+    sleep (t_next - t_now);
+    t_next += 60;
     
     while (1) {
-        t_start = time (NULL);
         tcrsr = TENANTS.first;
         while (tcrsr) {
             hcrsr = tcrsr->first;
             while (hcrsr) {
-                log_info ("watchthread_handle_host");
                 watchthread_handle_host (hcrsr);
                 hcrsr = hcrsr->next;
             }
             tcrsr = tcrsr->next;
         }
-        t_end = time (NULL);
-        if (t_end - t_start < 60) {
-            log_info ("Watchthread took %i seconds", t_end-t_start);
-            sleep (60 - (t_end-t_start));
+        
+        t_now = time (NULL);
+        if (t_now < t_next) {
+            log_info ("Watchthread took %i seconds", 60-(t_next-t_now));
+            sleep (t_next-t_now);
         }
         else {
             log_error ("Watchthread round cannot keep up");
         }
+        t_next += 60;
+        while (t_next < t_now) t_next += 60;
     }
 }
