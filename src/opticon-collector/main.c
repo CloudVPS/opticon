@@ -104,8 +104,12 @@ void watchlist_populate (watchlist *w, var *v_meters) {
                 }
                 
                 meterid_t id = makeid (mdef->id, tp, 0);
-                if (v_warn) make_watcher (w, id, tp, v_warn, 5.0);
-                if (v_alert) make_watcher (w, id, tp, v_alert, 10.0);
+                if (var_get_count (v_warn)) {
+                     make_watcher (w, id, tp, v_warn, 5.0);
+                }
+                if (var_get_count (v_alert)) {
+                     make_watcher (w, id, tp, v_alert, 10.0);
+                }
             }
             mdef = mdef->next;
         }
