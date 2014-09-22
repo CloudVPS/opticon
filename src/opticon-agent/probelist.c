@@ -1,8 +1,9 @@
-#include "probe.h"
+#include "opticon-agent.h"
+#include "probes.h"
 
 probefunc BUILTINS[] = {
-    {"pcpu", runprobe_pcpu},
-    {"top", runprobe_top},
+    {"probe_pcpu", runprobe_pcpu},
+    {"probe_hostname", runprobe_hostname},
     {NULL, NULL}
 };
 
@@ -91,5 +92,12 @@ void probelist_start (probelist *self) {
     while (p) {
         thread_init (&p->thr, probe_run);
         p = p->next;
+    }
+}
+
+void probelist_cancel (probelist *self) {
+    probe *p = self->first;
+    while (p) {
+        thread_cancel (&p->thr);
     }
 }
