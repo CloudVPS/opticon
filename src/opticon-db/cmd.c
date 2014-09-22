@@ -20,9 +20,14 @@
 int cmd_tenant_list (int argc, const char *argv[]) {
     int count = 0;
     char uuidstr[40];
-    printf ("UUID                                 Hosts\n");
-    printf ("---------------------------------------------"
-            "----------------------------------\n");
+    if (OPTIONS.json) {
+        printf ("\"tenants\":{\n");
+    }
+    else {
+        printf ("UUID                                 Hosts\n");
+        printf ("---------------------------------------------"
+                "----------------------------------\n");
+    }
     db *DB = localdb_create (OPTIONS.path);
     uuid *list = db_list_tenants (DB, &count);
     for (int i=0; i<count; ++i) {
@@ -33,8 +38,16 @@ int cmd_tenant_list (int argc, const char *argv[]) {
             db_close (DB);
         }
         uuid2str (list[i], uuidstr);
-        printf ("%s %5i\n", uuidstr, cnt);
+        if (OPTIONS.json) {
+            printf ("    \"%s\":{\"count\":%i}", uuidstr, cnt);
+            if ((i+1)<count) printf (",\n");
+            else printf ("\n");
+        }
+        else {
+            printf ("%s %5i\n", uuidstr, cnt);
+        }
     }
+    if (OPTIONS.json) printf ("}\n");
     db_free (DB);
     free (list);
     return 0;
@@ -106,18 +119,26 @@ int cmd_tenant_create (int argc, const char *argv[]) {
         return 1;
     }
     
-    printf ("Tenant created with key: %s\n", strkey);
+    if (OPTIONS.json) {
+        printf ("\"tenant\":{\n"
+                "    \"id\":\"%s\",\n"
+                "    \"key\":\"%s\"\n"
+                "}\n", OPTIONS.tenant, strkey);
+    }
+    else {
+        printf ("Tenant created with key: %s\n", strkey);
+    }
     free (strkey);
     var_free (meta);
     db_free (DB);
     return 0;
 }
 
-static char *timfmt (time_t w) {
+static char *timfmt (time_t w, int json) {
     struct tm tm;
     localtime_r (&w, &tm);
-    char *res = (char *) malloc (18);
-    strftime (res, 17, "%F %H:%M", &tm);
+    char *res = (char *) malloc (24);
+    strftime (res, 23, json ? "%FT%H:%M:%S" : "%F %H:%M", &tm);
     return res;
 }
 
@@ -140,29 +161,49 @@ int cmd_host_list (int argc, const char *argv[]) {
         return 1;
     }
 
-    printf ("UUID                                    Size "
-            "First record      Last record\n");
-    printf ("---------------------------------------------"
-            "----------------------------------\n");
-
+    if (OPTIONS.json) {
+        printf ("\"hosts\":{\n");
+    }
+    else {
+        printf ("UUID                                    Size "
+                "First record      Last record\n");
+        printf ("---------------------------------------------"
+                "----------------------------------\n");
+    }
+    
     usage_info usage;
     int count;
     uuid *list = db_list_hosts (DB, &count);
     for (int i=0; i<count; ++i) {
         uuid2str (list[i], uuidstr);
         db_get_usage (DB, &usage, list[i]);
-        str_early = timfmt (usage.earliest);
-        str_late = timfmt (usage.last);
-        usage.bytes = usage.bytes / 1024;
-        if (usage.bytes > 2048) {
-            unit = "MB";
-            usage.bytes = usage.bytes / 1024;
+        str_early = timfmt (usage.earliest, OPTIONS.json);
+        str_late = timfmt (usage.last, OPTIONS.json);
+        if (OPTIONS.json) {
+            printf ("    \"%s\":{\n", uuidstr);
+            printf ("        \"usage\":%llu,\n", usage.bytes);
+            printf ("        \"start\":\"%s\",\n", str_early);
+            printf ("        \"end\":\"%s\"\n", str_late);
+            if ((i+1) < count) {
+                printf ("    },\n");
+            }
+            else {
+                printf ("    }\n");
+            }
         }
-        printf ("%s %4llu %s %s  %s\n", uuidstr, usage.bytes, unit,
-                str_early, str_late);
+        else {
+            usage.bytes = usage.bytes / 1024;
+            if (usage.bytes > 2048) {
+                unit = "MB";
+                usage.bytes = usage.bytes / 1024;
+            }
+            printf ("%s %4llu %s %s  %s\n", uuidstr, usage.bytes, unit,
+                    str_early, str_late);
+        }
         free (str_early);
         free (str_late);
     }
+    if (OPTIONS.json) printf ("}\n");
     db_free (DB);
     free (list);
     return 0;

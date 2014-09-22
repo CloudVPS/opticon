@@ -245,6 +245,8 @@ int daemon_main (int argc, const char *argv[]) {
     }
 
     log_info ("Daemonized");
+    
+    /* Set up threads */
     APP.queue = packetqueue_create (1024, APP.transport);
     APP.watchthread = thread_create (watchthread_run, NULL);
     

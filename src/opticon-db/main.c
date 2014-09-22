@@ -29,6 +29,11 @@ int set_host (const char *o, const char *v) {
     return 1;
 }
 
+int set_json (const char *o, const char *v) {
+    OPTIONS.json = 1;
+    return 1;
+}
+
 int set_time (const char *o, const char *v) {
     time_t tnow = time (NULL);
     
@@ -110,6 +115,7 @@ cliopt CLIOPT[] = {
     {"--host","-h",OPT_VALUE,"",set_host},
     {"--time","-T",OPT_VALUE,"now",set_time},
     {"--path","-p",OPT_VALUE,"/var/opticon/db",set_path},
+    {"--json","-j",OPT_FLAG,NULL,set_json},
     {NULL,NULL,0,NULL,NULL}
 };
 
@@ -129,6 +135,7 @@ void usage (const char *cmdname) {
         "%% Usage: %s <command> [options]\n"
          "  Options:\n"
          "        --path <path to database>\n"
+         "        --json\n"
          "\n"
          "  Commands:\n"
          "        tenant-list\n"

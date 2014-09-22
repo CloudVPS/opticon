@@ -4,11 +4,12 @@
 #include <time.h>
 
 typedef struct optinfo {
-    const char *tenant;
-    const char *key;
-    const char *path;
-    const char *host;
-    time_t time;
+    const char  *tenant;
+    const char  *key;
+    const char  *path;
+    const char  *host;
+    time_t       time;
+    int          json;
 } optinfo;
 
 extern optinfo OPTIONS;
