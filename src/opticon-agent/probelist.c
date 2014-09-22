@@ -1,7 +1,9 @@
+#include <libopticonf/parse.h>
+#include <libsvc/log.h>
 #include "opticon-agent.h"
 #include "probes.h"
 
-probefunc BUILTINS[] = {
+builtinfunc BUILTINS[] = {
     {"probe_pcpu", runprobe_pcpu},
     {"probe_hostname", runprobe_hostname},
     {NULL, NULL}
@@ -21,7 +23,7 @@ probe *probe_alloc (void) {
 
 var *runprobe_exec (probe *self) {
     char buffer[4096];
-    FILE *proc = popen (self->call);
+    FILE *proc = popen (self->call, "r");
     if (! proc) return NULL;
     while (!feof (proc)) {
         if (fread (buffer, 4096, 1, proc) < 4096) break;
@@ -43,11 +45,11 @@ void probe_run (thread *t) {
     log_info ("Starting probe %s\n", self->call);
     
     while (1) {
-        conditional_wait_fresh (self->pulse);
+        conditional_wait_fresh (&self->pulse);
         var *nvar = self->func (self);
-        var *ovar = self->vlast;
+        var *ovar = self->vold;
         if (nvar) {
-            self->vlast = self->vcurrent;
+            self->vold = self->vcurrent;
             self->vcurrent = nvar;
             if (ovar) var_free (ovar);
         }
@@ -90,7 +92,7 @@ void probelist_add (probelist *self, probetype t, const char *call, int iv) {
 void probelist_start (probelist *self) {
     probe *p = self->first;
     while (p) {
-        thread_init (&p->thr, probe_run);
+        thread_init (&p->thr, probe_run, NULL);
         p = p->next;
     }
 }

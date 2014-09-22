@@ -7,6 +7,8 @@ all:
 	@cd src/libsvc && make && cd ../..
 	@echo "=== Building libopticonf ============================================"
 	@cd src/libopticonf && make && cd ../..
+	@echo "=== Building opticon-agent =========================================="
+	@cd src/opticon-agent && make && cd ../..
 	@echo "=== Building opticon-db ============================================="
 	@cd src/opticon-db && make && cd ../..
 	@echo "=== Building opticon-collector ======================================"
