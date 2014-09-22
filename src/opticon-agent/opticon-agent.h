@@ -32,7 +32,7 @@ typedef struct probelist_s {
 
 typedef struct builtinfunc_s {
     const char      *name;
-    run_f            func;
+    probefunc_f      func;
 } builtinfunc;
 
 

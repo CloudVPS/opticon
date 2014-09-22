@@ -18,10 +18,62 @@ probe *probe_alloc (void) {
     return res;
 }
 
+var *runprobe_exec (probe *self) {
+    char buffer[4096];
+    FILE *proc = popen (self->call);
+    if (! proc) return NULL;
+    while (!feof (proc)) {
+        if (fread (buffer, 4096, 1, proc) < 4096) break;
+    }
+    pclose (proc);
+    var *res = var_alloc();
+    if (! parse_json (res, buffer)) {
+        log_error ("Error parsing output from %s: %s", self->call,
+                    parse_error());
+        var_free (res);
+        return NULL;
+    }
+    return res;
+}
+
+void probe_run (thread *t) {
+    probe *self = (probe *) t;
+    
+    log_info ("Starting probe %s\n", self->call);
+    
+    while (1) {
+        conditional_wait_fresh (self->pulse);
+        var *nvar = self->func (self);
+        var *ovar = self->vlast;
+        if (nvar) {
+            self->vlast = self->vcurrent;
+            self->vcurrent = nvar;
+            if (ovar) var_free (ovar);
+        }
+    }
+}
+
+probefunc_f probe_find_builtin (const char *id) {
+    int i = 0;
+    while (BUILTINS[i].name) {
+        if (strcmp (BUILTINS[i].name, id) == 0) {
+            return BUILTINS[i].func;
+        }
+        i++;
+    }
+    return NULL;
+}
+
 void probelist_add (probelist *self, probetype t, const char *call, int iv) {
     probe *p = probe_alloc();
     p->type = t;
     p->call = strdup (call);
+    if (t == PROBE_BUILTIN) {
+        p->func = probe_find_builtin (call);
+    }
+    else {
+        p->func = runprobe_exec;
+    }
     p->interval = iv;
     
     if (self->last) {
@@ -37,14 +89,7 @@ void probelist_add (probelist *self, probetype t, const char *call, int iv) {
 void probelist_start (probelist *self) {
     probe *p = self->first;
     while (p) {
-        if (p->type == PROBE_BUILTIN) {
-            run_f tocall = probefunc_find_builtin (p->call);
-            if (tocall) {
-                thread_init (&p->thr, tocall, NULL);
-            }
-        }
-        else if (p->type == PROBE_EXEC) {
-            thread_init (&p->thr, runprobe_exec);
-        }
+        thread_init (&p->thr, probe_run);
+        p = p->next;
     }
 }
