@@ -24,7 +24,47 @@ int daemon_main (int argc, const char *argv[]) {
     }
 
     log_info ("Daemonized");
-    while (1) sleep (60);
+    while (1) {
+        host *h = host_alloc();
+        h->uuid = APP.hostid;
+        probe *p = APP.probes.first;
+        while (p) {
+            conditional_signal (&p->pulse);
+            p = p->next;
+        }
+        sleep (5);
+        p = APP.probes.first;
+        while (p) {
+            var *v = p->vcurrent;
+            if (! v) {
+                p = p->next;
+                continue;
+            }
+            v = v->value.arr.first;
+            while (v) {
+                meterid_t mid;
+                meter *m;
+                if (v->type == VAR_DOUBLE) {
+                    mid = makeid (v->id, MTYPE_FRAC, 0);
+                    m = host_get_meter (h, mid);
+                    meter_setcount (m, 0);
+                    meter_set_frac (m, 0, var_get_double (v));
+                }
+                else if (v->type == VAR_INT) {
+                    mid = makeid (v->id, MTYPE_INT, 0);
+                    m = host_get_meter (h, mid);
+                    meter_setcount (m, 0);
+                    meter_set_uint (m, 0, var_get_int (v));
+                }
+                
+                v = v->next;
+            }
+            
+            p = p->next;
+        }
+        
+        sleep (60);
+    }
     return 666;
 }
 
