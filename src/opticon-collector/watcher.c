@@ -88,6 +88,7 @@ void watchthread_handle_host (host *host) {
     char label[16];
     
     pthread_rwlock_wrlock (&host->lock);
+    log_info ("watchthread: host locked");
 
     /* We'll store the status information as a meter itself */
     meterid_t mid_status = makeid ("status",MTYPE_STR,0);
@@ -98,6 +99,7 @@ void watchthread_handle_host (host *host) {
     if ((tnow - host->lastmodified) > 80) {
         meter_set_str (m_status, 0, "STALE");
         pthread_rwlock_unlock (&host->lock);
+        log_info ("watchthread: host unlocked");
         return;
     }
 
@@ -128,6 +130,7 @@ void watchthread_handle_host (host *host) {
        
         if (m->badness) problemcount++;
         host->badness += m->badness;
+        m = m->next;
     }
     
     /* Put up the problems as a meter as well */
@@ -139,8 +142,8 @@ void watchthread_handle_host (host *host) {
         else if (host->badness > 10.0) host->badness -= 10.0;
         else if (host->badness > 1.0) host->badness = host->badness *0.7;
         else host->badness = 0.0;
-        meter_setcount (m, 0);
-        meter_set_str (m, 0, "none");
+        meter_setcount (m_problems, 0);
+        meter_set_str (m_problems, 0, "none");
     }
     else {
         int i=0;
@@ -172,6 +175,7 @@ void watchthread_handle_host (host *host) {
     }
     
     pthread_rwlock_unlock (&host->lock);
+    log_info ("watchthread: host unlocked");
 }
 
 /** Main loop for the watchthread */
@@ -186,6 +190,7 @@ void watchthread_run (thread *self) {
         while (tcrsr) {
             hcrsr = tcrsr->first;
             while (hcrsr) {
+                log_info ("watchthread_handle_host");
                 watchthread_handle_host (hcrsr);
                 hcrsr = hcrsr->next;
             }

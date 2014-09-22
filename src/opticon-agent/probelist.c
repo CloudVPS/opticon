@@ -42,10 +42,11 @@ var *runprobe_exec (probe *self) {
 void probe_run (thread *t) {
     probe *self = (probe *) t;
     
-    log_info ("Starting probe %s\n", self->call);
+    log_info ("Starting probe %s", self->call);
     
     while (1) {
         conditional_wait_fresh (&self->pulse);
+        log_info ("Probe %s pulse received", self->call);
         var *nvar = self->func (self);
         var *ovar = self->vold;
         if (nvar) {

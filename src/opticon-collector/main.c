@@ -24,8 +24,14 @@
 aeskey *resolve_sessionkey (uint32_t netid, uint32_t sid, uint32_t serial,
                             void **blob) {
     session *S = session_find (netid, sid);
-    if (! S) return NULL;
-    if (S->lastserial >= serial) return NULL;
+    if (! S) {
+        log_warn ("Session %08x-%08x not found", sid, netid);
+        return NULL;
+    }
+    if (S->lastserial >= serial) {
+        log_warn ("Rejecting old serial %i for session %08x-%08x", serial, sid, netid);
+        return NULL;
+    }
     S->lastserial = serial;
     *blob = (void *)S;
     return &S->key;
@@ -203,6 +209,7 @@ void handle_auth_packet (ioport *pktbuf, uint32_t netid,
     
         S = session_register (auth->tenantid, auth->hostid, netid,
                               auth->sessionid, auth->sessionkey);
+        if (! S) log_error ("Session is NULL");
     }
     
     /* Now's a good time to cut the dead wood */
@@ -219,8 +226,14 @@ void handle_meter_packet (ioport *pktbuf, uint32_t netid) {
     /* Unwrap the outer packet layer (crypto and compression) */
     unwrap = ioport_unwrap_meterdata (netid, pktbuf,
                                       resolve_sessionkey, (void**) &S);
-    if (! unwrap) return;
+    if (! unwrap) {
+        log_warn ("Error unwrapping packet from %08x: %08x", netid, unwrap_errno);
+        log_warn ("decrypt serial %i pserial %i diff %i",
+                  decrypt_serial, decrypt_pserial, decrypt_diff);
+        return;
+    }
     if (! S) {
+        log_warn ("Error unwrapping session from %08x", netid);
         ioport_close (unwrap);
         return;
     }
@@ -229,9 +242,12 @@ void handle_meter_packet (ioport *pktbuf, uint32_t netid) {
     host *H = S->host;
     pthread_rwlock_wrlock (&H->lock);
     host_begin_update (H, tnow);
-    codec_decode_host (APP.codec, unwrap, H);
+    if (codec_decode_host (APP.codec, unwrap, H)) {
+        log_info ("Update handled");
+    }
     host_end_update (H);
     pthread_rwlock_unlock (&H->lock);
+    log_info ("Update ended");
     ioport_close (unwrap);
 }
 
@@ -271,6 +287,7 @@ int daemon_main (int argc, const char *argv[]) {
                 }
             }
             ioport_close (pktbufport);
+            pkt->pkt[0] = 0;
         }
     }
     return 0;

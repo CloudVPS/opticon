@@ -364,6 +364,10 @@ int ioport_encrypt (aeskey *k, ioport *in, ioport *out, time_t ts,
     return 1;
 }
 
+int decrypt_serial;
+int decrypt_pserial;
+int decrypt_diff;
+
 int ioport_decrypt (aeskey *k, ioport *in, ioport *out, time_t ts,
                     uint32_t serial) {
     size_t left;
@@ -371,6 +375,8 @@ int ioport_decrypt (aeskey *k, ioport *in, ioport *out, time_t ts,
     size_t done = 0;
     aes256_context ctx;
     aes256_init (&ctx, (uint8_t *) k);
+    
+    decrypt_diff = 0;
     
     sz = ioport_read_encint (in);
     left = sz - done;
@@ -398,8 +404,11 @@ int ioport_decrypt (aeskey *k, ioport *in, ioport *out, time_t ts,
                       ((uint32_t)buf[6]) << 8 |
                       ((uint32_t)buf[7]);
          
+            decrypt_serial = serial;
+            decrypt_pserial = pserial;
+            
             if (pserial != serial) return 0;
-            diff = (pts < uts) ? (uts-pts) : (pts - uts);
+            decrypt_diff = diff = (pts < uts) ? (uts-pts) : (pts - uts);
             if (diff > 180) return 0;
             ioport_write (out, (char *) buf+8, left-8);
             done += (left - 8);

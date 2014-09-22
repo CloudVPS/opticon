@@ -66,6 +66,7 @@ session *session_register (uuid tenantid, uuid hostid,
     
     s->tenantid = tenantid;
     s->hostid = hostid;
+    s->host = h;
     s->addr = addrpart;
     s->sessid = sess_id;
     s->key = sess_key;

@@ -9,6 +9,14 @@
 typedef aeskey *(*resolve_tenantkey_f)(uuid, uint32_t);
 typedef aeskey *(*resolve_sessionkey_f)(uint32_t, uint32_t, uint32_t, void **);
 
+#define UNWRAP_TYPE_ERROR 0x00000001
+#define UNWRAP_KEYRESOLVE_ERROR 0x00000002
+#define UNWRAP_DECRYPT_ERROR 0x00000003
+#define UNWRAP_DECOMPRESS_ERROR 0x00000004
+#define UNWRAP_READ_ERROR 0x0000005
+
+extern int unwrap_errno;
+
 typedef struct authinfo_s {
     uint32_t    sessionid;
     uint32_t    serial;

@@ -15,7 +15,7 @@ uint32_t SERIAL = 0;
 uint32_t gen_networkid (struct sockaddr_storage *stor) {
     if (stor->ss_family == AF_INET) {
         struct sockaddr_in *in = (struct sockaddr_in *) stor;
-        return (uint32_t) &in->sin_addr;
+        return (uint32_t) (in->sin_addr.s_addr);
     }
     else if (stor->ss_family == AF_INET6) {
         struct sockaddr_in6 *in = (struct sockaddr_in6 *) stor;
@@ -122,6 +122,8 @@ ioport *ioport_wrap_authdata (authinfo *auth, uint32_t serial) {
     return res;
 }
 
+int unwrap_errno = 0;
+
 /** Attempt to decrypt and unwrap a received meterdata packet.
   * \param networkid The networkid for the sending host
   * \param in An ioport containing all the juicy packet data.
@@ -134,6 +136,7 @@ ioport *ioport_wrap_authdata (authinfo *auth, uint32_t serial) {
 ioport *ioport_unwrap_meterdata (uint32_t networkid, ioport *in,
                                  resolve_sessionkey_f resolve,
                                  void **sessiondata) {
+    unwrap_errno = 0;
     ioport *decrypted = ioport_create_buffer (NULL, 2048);
     ioport *res = ioport_create_buffer (NULL, 2048);
     char packettype[5];
@@ -149,13 +152,20 @@ ioport *ioport_unwrap_meterdata (uint32_t networkid, ioport *in,
             sessid = ioport_read_u32 (in);
             serial = ioport_read_u32 (in);
             k = resolve (networkid, sessid, serial, sessiondata);
-            if (k && ioport_decrypt (k, in, decrypted, tnow, serial)) {
+            if (!k ) {
+                unwrap_errno = UNWRAP_KEYRESOLVE_ERROR;
+            }
+            else if (ioport_decrypt (k, in, decrypted, tnow, serial)) {
                 if (decompress_data (decrypted, res)) {
                     success = 1;
                 }
+                else unwrap_errno = UNWRAP_DECOMPRESS_ERROR;
             }
+            else unwrap_errno = UNWRAP_DECRYPT_ERROR;
         }
+        else unwrap_errno = UNWRAP_TYPE_ERROR;
     }
+    else unwrap_errno = UNWRAP_READ_ERROR;
     
     ioport_close (decrypted);
     

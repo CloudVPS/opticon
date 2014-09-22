@@ -3,6 +3,8 @@
 
 #include <libopticon/datatypes.h>
 #include <libopticon/codec.h>
+#include <libopticon/auth.h>
+#include <libopticon/pktwrap.h>
 #include <libopticonf/var.h>
 #include <libsvc/transport.h>
 #include <libsvc/thread.h>
@@ -58,6 +60,7 @@ typedef struct appcontext_s {
     aeskey           collectorkey;
     uuid             tenantid;
     uuid             hostid;
+    authinfo         auth;
 } appcontext;
 
 extern builtinfunc BUILTINS[];
