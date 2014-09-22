@@ -10,6 +10,7 @@
   * and puts them on the ringbuffer.
   */
 void packetqueue_run (thread *t) {
+    log_info ("Packetqueue started");
     packetqueue *self = (packetqueue *) t;
     int errcnt = 0;
     while (1) {

@@ -243,9 +243,9 @@ int daemon_main (int argc, const char *argv[]) {
     else {
         log_open_file (APP.logpath);
     }
-    
+
     log_info ("Daemonized");
-    
+    APP.queue = packetqueue_create (1024, APP.transport);
     APP.watchthread = thread_create (watchthread_run, NULL);
     
     while (1) {
@@ -329,6 +329,7 @@ int conf_db_path (const char *id, var *v, updatetype tp) {
     return 1;
 }
 
+/** Set up watchlist from meter definitions */
 int conf_meters (const char *id, var *v, updatetype tp) {
     if (tp != UPDATE_ADD) return 0;
     watchlist_populate (&APP.watch, v);
@@ -378,7 +379,6 @@ int main (int _argc, const char *_argv[]) {
                                      APP.listenport)) {
         log_error ("Error setting listening port");
     }
-    APP.queue = packetqueue_create (1024, APP.transport);
     if (! daemonize (APP.pidfile, argc, argv, daemon_main)) {
         log_error ("Error spawning");
         return 1;

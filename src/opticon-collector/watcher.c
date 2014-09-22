@@ -119,7 +119,7 @@ void watchthread_handle_host (host *host) {
         /* If the tenant didn't have anything suitable, go over the
            global watchlist */
         if (! handled) w = APP.watch.first;
-         while (w) {
+        while (w) {
             if (w->id == (m->id & MMASK_NAME)) {
                 m->badness += calculate_badness (m, w);
             }
