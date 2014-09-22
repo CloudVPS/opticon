@@ -9,31 +9,37 @@
 
 optinfo OPTIONS = { "","","","",0 };
 
+/** Handle --tenant */
 int set_tenant (const char *o, const char *v) { 
     OPTIONS.tenant = v;
     return 1;
 }
 
+/** Handle --key */
 int set_key (const char *o, const char *v) {
     OPTIONS.key = v;
     return 1;
 }
 
+/** Handle --path */
 int set_path (const char *o, const char *v) {
     OPTIONS.path = v;
     return 1;
 }
 
+/** Handle --host */
 int set_host (const char *o, const char *v) {
     OPTIONS.host = v;
     return 1;
 }
 
+/** Handle --json */
 int set_json (const char *o, const char *v) {
     OPTIONS.json = 1;
     return 1;
 }
 
+/** Handle --time */
 int set_time (const char *o, const char *v) {
     time_t tnow = time (NULL);
     
@@ -109,6 +115,7 @@ int set_time (const char *o, const char *v) {
     return 0;
 }
 
+/** Command line flags */
 cliopt CLIOPT[] = {
     {"--tenant","-t",OPT_VALUE,"",set_tenant},
     {"--key","-k",OPT_VALUE,"",set_key},
@@ -119,6 +126,7 @@ cliopt CLIOPT[] = {
     {NULL,NULL,0,NULL,NULL}
 };
 
+/** Sub-commands */
 clicmd CLICMD[] = {
     {"tenant-list",cmd_tenant_list},
     {"tenant-create",cmd_tenant_create},
@@ -130,6 +138,9 @@ clicmd CLICMD[] = {
     {NULL,NULL}
 };
 
+/** Print usage information.
+  * \param cmdname argv[0]
+  */
 void usage (const char *cmdname) {
     fprintf (stderr,
         "%% Usage: %s <command> [options]\n"
@@ -155,6 +166,7 @@ void usage (const char *cmdname) {
         cmdname);
 }
 
+/** Main, uses cliopt to do the dirty. */
 int main (int _argc, const char *_argv[]) {
     int argc = _argc;
     const char **argv = cliopt_dispatch (CLIOPT, _argv, &argc);

@@ -17,6 +17,7 @@
 
 #include "import.h"
 
+/** The tenant-list command */
 int cmd_tenant_list (int argc, const char *argv[]) {
     int count = 0;
     char uuidstr[40];
@@ -53,6 +54,7 @@ int cmd_tenant_list (int argc, const char *argv[]) {
     return 0;
 }
 
+/** The tenant-get-metadata command */
 int cmd_tenant_get_metadata (int argc, const char *argv[]) {
     uuid tenant;
     if (OPTIONS.tenant[0] == 0) {
@@ -74,6 +76,7 @@ int cmd_tenant_get_metadata (int argc, const char *argv[]) {
     return 0;
 }
 
+/** The tenant-delete command */
 int cmd_tenant_delete (int argc, const char *argv[]) {
    uuid tenant;
     if (OPTIONS.tenant[0] == 0) {
@@ -88,6 +91,7 @@ int cmd_tenant_delete (int argc, const char *argv[]) {
     return 0;
 }
 
+/** The tenant-create command */
 int cmd_tenant_create (int argc, const char *argv[]) {
     uuid tenant;
     aeskey key;
@@ -134,6 +138,7 @@ int cmd_tenant_create (int argc, const char *argv[]) {
     return 0;
 }
 
+/** Format a timestamp for output */
 static char *timfmt (time_t w, int json) {
     struct tm tm;
     localtime_r (&w, &tm);
@@ -142,6 +147,7 @@ static char *timfmt (time_t w, int json) {
     return res;
 }
 
+/** The host-list command */
 int cmd_host_list (int argc, const char *argv[]) {
     uuid tenant;
     char *str_early;
@@ -209,6 +215,7 @@ int cmd_host_list (int argc, const char *argv[]) {
     return 0;
 }
 
+/** The add-record command */
 int cmd_add_record (int argc, const char *argv[]) {
     uuid tenantid, hostid;
     
@@ -269,6 +276,7 @@ int cmd_add_record (int argc, const char *argv[]) {
     return 0;
 }
 
+/** The get-recrod command */
 int cmd_get_record (int argc, const char *argv[]) {
     uuid tenantid, hostid;
     

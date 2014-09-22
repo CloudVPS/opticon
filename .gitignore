@@ -1,3 +1,4 @@
+bin/
 doc/
 .DS_Store
 *.o
