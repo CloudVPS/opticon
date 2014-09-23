@@ -10,12 +10,13 @@ LUAINC?=$(shell pkg-config --cflags $(LUA))
 OSNAME?=$(shell uname -s | tr A-Z a-z)
 OSREL?=$(shell uname -r)
 OSRELMAJOR?=$(shell uname -r | cut -f1 -d.)
+OSDEF?=$(shell uname -s | tr a-z A-Z)
 
 ifeq (freebsd,$(OSNAME))
   LDFLAGS+=-lkvm
 endif
 
-CFLAGS+=-DOSNAME=$(OSNAME) -DOSREL=$(OSREL) -DOSRELMAJOR=$(OSRELMAJOR)
+CFLAGS+=-DOS_$(OSDEF) -DOSNAME=$(OSNAME) -DOSREL=$(OSREL) -DOSRELMAJOR=$(OSRELMAJOR)
 
 OBJS_OPTICONAGENT = main.o probelist.o probes.o
 LIBS = ../../lib/libopticon.a ../../lib/libopticondb.a \

@@ -3,14 +3,6 @@
 #include <libopticonf/var.h>
 #include "probes.h"
 
-/** List of built-in probe functions */
-builtinfunc BUILTINS[] = {
-    {"probe_pcpu", runprobe_pcpu},
-    {"probe_hostname", runprobe_hostname},
-    {"probe_uname", runprobe_uname},
-    {NULL, NULL}
-};
-
 var *runprobe_pcpu (probe *self) {
     var *res = var_alloc();
     var_set_double_forkey (res, "pcpu", ((double)(rand()%1000))/10.0);
@@ -35,3 +27,20 @@ var *runprobe_uname (probe *self) {
     var_set_str_forkey (res, "uname", out);
     return res;
 }
+
+#if defined(OS_DARWIN)
+  #include "probes_darwin.c"
+#elif defined (OS_LINUX)
+  #include "probes_linux.c"
+#else
+  #error Undefined Operating System
+#endif
+
+/** List of built-in probe functions */
+builtinfunc BUILTINS[] = {
+    {"probe_pcpu", runprobe_pcpu},
+    {"probe_hostname", runprobe_hostname},
+    {"probe_uname", runprobe_uname},
+    {NULL, NULL}
+};
+
