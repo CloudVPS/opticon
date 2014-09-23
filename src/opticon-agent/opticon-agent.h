@@ -35,6 +35,7 @@ typedef struct probe_s {
     var             *vold; /**< Previous value */
     time_t           lastpulse; /**< Last rigger time */
     time_t           lastreply; /**< Last update time */
+    time_t           lastdispatch; /**< Last time it was dispatched */
     int              interval; /**< Configured time interval */
 } probe;
 

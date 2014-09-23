@@ -18,7 +18,7 @@ probe *probe_alloc (void) {
     res->call = NULL;
     res->prev = res->next = NULL;
     res->vcurrent = res->vold = NULL;
-    res->lastpulse = res->lastreply = 0;
+    res->lastpulse = res->lastreply = res->lastdispatch = 0;
     res->interval = 0;
     return res;
 }
@@ -59,6 +59,7 @@ void probe_run (thread *t) {
         if (nvar) {
             self->vold = self->vcurrent;
             self->vcurrent = nvar;
+            self->lastreply = time (NULL);
             if (ovar) var_free (ovar);
         }
     }

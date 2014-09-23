@@ -220,6 +220,7 @@ int daemon_main (int argc, const char *argv[]) {
     
     time_t tlast = time (NULL);
     time_t lastauth = 0;
+    time_t nextsend = tlast + 5;
 
     log_info ("Daemonized");
     while (1) {
@@ -246,80 +247,95 @@ int daemon_main (int argc, const char *argv[]) {
             lastauth = tnow;
         }
         
-        host *h = host_alloc();
-        h->uuid = APP.hostid;
-        host_begin_update (h, time (NULL));
-
         log_info ("Poking probes");
 
         probe *p = APP.probes.first;
+        
+        time_t wakenext = tnow + 300;
+        
         while (p) {
-            conditional_signal (&p->pulse);
+            time_t firewhen = p->lastpulse + p->interval;
+            if (firewhen <= tnow) {
+                conditional_signal (&p->pulse);
+                p->lastpulse = tnow;
+            }
+            
+            if (p->lastpulse + p->interval < wakenext) {
+                wakenext = p->lastpulse + p->interval;
+            }
+            
             p = p->next;
         }
-        sleep (5);
         
-        log_info ("Collecting probes");
+        int collected = 0;
         
-        p = APP.probes.first;
-        while (p) {
-            var *v = p->vcurrent;
-            if (! v) {
-                log_info ("Skipping empty probe %s", p->call);
+        if (tnow >= nextsend) {
+            host *h = host_alloc();
+            h->uuid = APP.hostid;
+            host_begin_update (h, time (NULL));
+
+            while (nextsend <= tnow) nextsend += 60;
+            log_info ("Collecting probes");
+        
+            p = APP.probes.first;
+            while (p) {
+                var *v = p->vcurrent;
+                if (v && (p->lastdispatch < p->lastreply)) {
+                    result_to_host (h, v);
+                    p->lastdispatch = tnow;
+                    collected++;
+                }
                 p = p->next;
+            }
+        
+           log_info ("Encoding probes");
+        
+            ioport *encoded = ioport_create_buffer (NULL, 4096);
+            if (! encoded) {
+                log_warn ("Error creating ioport");
+                ioport_close (encoded);
+                host_delete (h);
                 continue;
             }
-            result_to_host (h, v);
-            p = p->next;
-        }
         
-       log_info ("Encoding probes");
+            if (! codec_encode_host (APP.codec, encoded, h)) {
+                log_warn ("Error encoding host");
+                ioport_close (encoded);
+                host_delete (h);
+                continue;
+            }
         
-        ioport *encoded = ioport_create_buffer (NULL, 4096);
-        if (! encoded) {
-            log_warn ("Error creating ioport");
-            ioport_close (encoded);
-            host_delete (h);
-            continue;
-        }
-        
-        if (! codec_encode_host (APP.codec, encoded, h)) {
-            log_warn ("Error encoding host");
-            ioport_close (encoded);
-            host_delete (h);
-            continue;
-        }
-        
-        log_info ("Encoded %i bytes", ioport_read_available (encoded));
+            log_info ("Encoded %i bytes", ioport_read_available (encoded));
 
-        ioport *wrapped = ioport_wrap_meterdata (APP.auth.sessionid,
-                                                 gen_serial(),
-                                                 APP.auth.sessionkey,
-                                                 encoded);
+            ioport *wrapped = ioport_wrap_meterdata (APP.auth.sessionid,
+                                                     gen_serial(),
+                                                     APP.auth.sessionkey,
+                                                     encoded);
         
         
-        if (! wrapped) {
-            log_error ("Error wrapping");
+            if (! wrapped) {
+                log_error ("Error wrapping");
+                ioport_close (encoded);
+                host_delete (h);
+                continue;
+            }
+        
+            sz = ioport_read_available (wrapped);
+            buf = ioport_get_buffer (wrapped);
+        
+            outtransport_send (APP.transport, (void*) buf, sz);
+            log_info ("Packet sent: %i bytes", sz);
+
+            ioport_close (wrapped);
             ioport_close (encoded);
             host_delete (h);
-            continue;
         }
-        
-        sz = ioport_read_available (wrapped);
-        buf = ioport_get_buffer (wrapped);
-        
-        outtransport_send (APP.transport, (void*) buf, sz);
-        log_info ("Packet sent: %i bytes", sz);
-
-        ioport_close (wrapped);
-        ioport_close (encoded);
-        host_delete (h);
         
         tnow = time (NULL);
-        
-        if (tnow - tlast < 60) {
-            log_info ("Sleeping for %i seconds", (60-(tnow-tlast)));
-            sleep (60 - (tnow-tlast));
+        if (nextsend < wakenext) wakenext = nextsend;
+        if (wakenext > tnow) {
+            log_info ("Sleeping for %i seconds", (wakenext-tnow));
+            sleep (wakenext-tnow);
         }
     }
     return 666;
