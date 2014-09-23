@@ -1,4 +1,5 @@
 #include <sys/utsname.h>
+#include <unistd.h>
 #include <libopticonf/var.h>
 #include "probes.h"
 
@@ -17,8 +18,10 @@ var *runprobe_pcpu (probe *self) {
 }
 
 var *runprobe_hostname (probe *self) {
+    char out[256];
+    gethostname (out, 255);
     var *res = var_alloc();
-    var_set_str_forkey (res, "hostname", "srv1.heikneuter.nl");
+    var_set_str_forkey (res, "hostname", out);
     return res;
 }
 
