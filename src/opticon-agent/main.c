@@ -219,14 +219,17 @@ int daemon_main (int argc, const char *argv[]) {
     probelist_start (&APP.probes);
     
     time_t tlast = time (NULL);
-    time_t lastauth = 0;
-    time_t nextsend = tlast + 5;
+    time_t nextslow = tlast + 5;
+    time_t nextsend = tlast + 10;
+    int slowround = 0;
 
     log_info ("Daemonized");
     while (1) {
         time_t tnow = tlast = time (NULL);
         
-        if (tnow - lastauth > 270) {
+        slowround = 0;
+        if (nextslow <= tnow) {
+            slowround = 1;
             uint32_t sid = APP.auth.sessionid;
             if (! sid) sid = gen_sessionid();
             log_info ("Authenticating session %08x", sid);
@@ -244,7 +247,7 @@ int daemon_main (int argc, const char *argv[]) {
             buf = ioport_get_buffer (io_authpkt);
             outtransport_send (APP.transport, (void*) buf, sz);
             ioport_close (io_authpkt);
-            lastauth = tnow;
+            nextslow = nextslow + 300;
         }
         
         log_info ("Poking probes");
@@ -268,9 +271,9 @@ int daemon_main (int argc, const char *argv[]) {
         }
         
         int collected = 0;
+        host *h = host_alloc();
         
-        if (tnow >= nextsend) {
-            host *h = host_alloc();
+        if (slowround || (tnow >= nextsend)) {
             h->uuid = APP.hostid;
             host_begin_update (h, time (NULL));
 
@@ -281,9 +284,12 @@ int daemon_main (int argc, const char *argv[]) {
             while (p) {
                 var *v = p->vcurrent;
                 if (v && (p->lastdispatch < p->lastreply)) {
-                    result_to_host (h, v);
-                    p->lastdispatch = tnow;
-                    collected++;
+                    if ((slowround && p->interval>60) ||
+                        ((!slowround) && p->interval<61)) {
+                        result_to_host (h, v);
+                        p->lastdispatch = tnow;
+                        collected++;
+                    }
                 }
                 p = p->next;
             }
@@ -326,7 +332,8 @@ int daemon_main (int argc, const char *argv[]) {
             buf = ioport_get_buffer (wrapped);
         
             outtransport_send (APP.transport, (void*) buf, sz);
-            log_info ("Packet sent: %i bytes", sz);
+            log_info ("%s lane packet sent: %i bytes", 
+                      slowround ? "Slow":"Fast", sz);
 
             ioport_close (wrapped);
             ioport_close (encoded);
@@ -335,6 +342,7 @@ int daemon_main (int argc, const char *argv[]) {
         
         tnow = time (NULL);
         if (nextsend < wakenext) wakenext = nextsend;
+        if (nextslow < wakenext) wakenext = nextslow;
         if (wakenext > tnow) {
             log_info ("Sleeping for %i seconds", (wakenext-tnow));
             sleep (wakenext-tnow);

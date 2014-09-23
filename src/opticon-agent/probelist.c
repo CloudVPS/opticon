@@ -3,13 +3,6 @@
 #include "opticon-agent.h"
 #include "probes.h"
 
-/** List of built-in probe functions */
-builtinfunc BUILTINS[] = {
-    {"probe_pcpu", runprobe_pcpu},
-    {"probe_hostname", runprobe_hostname},
-    {NULL, NULL}
-};
-
 /** Allocate and initialize a probe object in memory */
 probe *probe_alloc (void) {
     probe *res = (probe *) malloc (sizeof (probe));
