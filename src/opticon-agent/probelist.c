@@ -3,12 +3,14 @@
 #include "opticon-agent.h"
 #include "probes.h"
 
+/** List of built-in probe functions */
 builtinfunc BUILTINS[] = {
     {"probe_pcpu", runprobe_pcpu},
     {"probe_hostname", runprobe_hostname},
     {NULL, NULL}
 };
 
+/** Allocate and initialize a probe object in memory */
 probe *probe_alloc (void) {
     probe *res = (probe *) malloc (sizeof (probe));
     conditional_init (&res->pulse);
@@ -21,6 +23,8 @@ probe *probe_alloc (void) {
     return res;
 }
 
+/** Implementation of the exec probe type. Reads JSON from the
+  * stdout of the callde program. */
 var *runprobe_exec (probe *self) {
     char buffer[4096];
     FILE *proc = popen (self->call, "r");
@@ -39,6 +43,9 @@ var *runprobe_exec (probe *self) {
     return res;
 }
 
+/** Main thread loop for all probes. Waits for a pulse, then gets to
+  * work.
+  */
 void probe_run (thread *t) {
     probe *self = (probe *) t;
     
@@ -57,6 +64,7 @@ void probe_run (thread *t) {
     }
 }
 
+/** Look up a built-in probe by name */
 probefunc_f probe_find_builtin (const char *id) {
     int i = 0;
     while (BUILTINS[i].name) {
@@ -68,6 +76,7 @@ probefunc_f probe_find_builtin (const char *id) {
     return NULL;
 }
 
+/** Add a probe to a list */
 void probelist_add (probelist *self, probetype t, const char *call, int iv) {
     probe *p = probe_alloc();
     p->type = t;
@@ -90,6 +99,7 @@ void probelist_add (probelist *self, probetype t, const char *call, int iv) {
     }
 }
 
+/** Start all probes in a list */
 void probelist_start (probelist *self) {
     probe *p = self->first;
     while (p) {
@@ -98,6 +108,7 @@ void probelist_start (probelist *self) {
     }
 }
 
+/** Cancels all probes in a list */
 void probelist_cancel (probelist *self) {
     probe *p = self->first;
     while (p) {

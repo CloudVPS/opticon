@@ -9,36 +9,42 @@
 #include <libsvc/transport.h>
 #include <libsvc/thread.h>
 
+/* =============================== TYPES =============================== */
+
+/** Types of metering probes */
 typedef enum probetype_e {
-    PROBE_NONE,
-    PROBE_BUILTIN,
-    PROBE_EXEC
+    PROBE_NONE, /**< Uninitialized */
+    PROBE_BUILTIN, /**< One of the compiled-in probes */
+    PROBE_EXEC /**< An external process */
 } probetype;
 
 struct probe_s; /**< Forward declaration */
 
 typedef var *(*probefunc_f)(struct probe_s *);
 
+/** Represents a probe */
 typedef struct probe_s {
-    thread           thr;
-    conditional      pulse;
-    probetype        type;
-    const char      *call;
-    probefunc_f      func;
-    struct probe_s  *prev;
-    struct probe_s  *next;
-    var             *vcurrent;
-    var             *vold;
-    time_t           lastpulse;
-    time_t           lastreply;
-    int              interval;
+    thread           thr; /**< Underlying thread */
+    conditional      pulse; /**< Trigger to ask probe to run once */
+    probetype        type; /**< The type */
+    const char      *call; /**< String representation of probe call */
+    probefunc_f      func; /**< Function that performs one probe */
+    struct probe_s  *prev; /**< Link neighbour */
+    struct probe_s  *next; /**< Link neighbour */
+    var             *vcurrent; /**< Current value */
+    var             *vold; /**< Previous value */
+    time_t           lastpulse; /**< Last rigger time */
+    time_t           lastreply; /**< Last update time */
+    int              interval; /**< Configured time interval */
 } probe;
 
+/** List header for a collection of probe objects */
 typedef struct probelist_s {
     probe           *first;
     probe           *last;
 } probelist;
 
+/** Static mapping of built-in probe names to their functions */
 typedef struct builtinfunc_s {
     const char      *name;
     probefunc_f      func;
@@ -63,8 +69,12 @@ typedef struct appcontext_s {
     authinfo         auth;
 } appcontext;
 
-extern builtinfunc BUILTINS[];
-extern appcontext APP;
+/* ============================== GLOBALS ============================== */
+
+extern builtinfunc BUILTINS[]; /**< NULL-terminated map of built-in probes */
+extern appcontext APP; /**< The keep-it-all-together blob */
+
+/* ============================= FUNCTIONS ============================= */
 
 probe   *probe_alloc (void);
 void     probelist_add (probelist *, probetype, const char *, int);

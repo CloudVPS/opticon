@@ -14,6 +14,12 @@
 
 appcontext APP;
 
+/** Changes an array of dictionaries from var data into a meter-style
+  * 'dictionary of arrays'
+  * \param h The host to write meters to.
+  * \param prefix The name of the enveloping array.
+  * \param v The first array node.
+  */
 void dictarray_to_host (host *h, const char *prefix, var *v) {
     char tmpid[16];
     meterid_t mid;
@@ -69,6 +75,11 @@ void dictarray_to_host (host *h, const char *prefix, var *v) {
     }
 }
 
+/** Pick up JSON results from a probe and turn them into metering
+  * data.
+  * \param h The host to write meters to
+  * \param val The data to parse.
+  */
 void result_to_host (host *h, var *val) {
     var *v = val->value.arr.first;
     int count;
@@ -193,6 +204,7 @@ void result_to_host (host *h, var *val) {
 
 void __breakme (void) {}
 
+/** Daemon main run loop. */
 int daemon_main (int argc, const char *argv[]) {
     const char *buf;
     size_t sz;
@@ -313,36 +325,42 @@ int daemon_main (int argc, const char *argv[]) {
     return 666;
 }
 
+/** Parse /collector/address */
 int conf_collector_address (const char *id, var *v, updatetype tp) {
     if (tp == UPDATE_REMOVE) exit (0);
     APP.collectoraddr = strdup (var_get_str (v));
     return 1;
 }
 
+/** Parse /collector/tenant */
 int conf_tenant (const char *id, var *v, updatetype tp) {
     if (tp == UPDATE_REMOVE) exit (0);
     APP.tenantid = mkuuid (var_get_str (v));
     return 1;
 }
 
+/** Parse /collector/host */
 int conf_host (const char *id, var *v, updatetype tp) {
     if (tp == UPDATE_REMOVE) exit (0);
     APP.hostid = mkuuid (var_get_str (v));
     return 1;
 }
 
+/** Parse /collector/port */
 int conf_collector_port (const char *id, var *v, updatetype tp) {
     if (tp == UPDATE_REMOVE) exit (0);
     APP.collectorport = var_get_int (v);
     return 1;
 }
 
+/** Parse /collector/key */
 int conf_collector_key (const char *id, var *v, updatetype tp) {
     if (tp == UPDATE_REMOVE) exit (0);
     APP.collectorkey = aeskey_from_base64 (var_get_str (v));
     return 1;
 }
 
+/** Parse /meter into probes */
 int conf_meter (const char *id, var *v, updatetype tp) {
     if (tp != UPDATE_ADD) exit (0);
     const char *vtp = var_get_str_forkey (v, "type");
@@ -358,26 +376,31 @@ int conf_meter (const char *id, var *v, updatetype tp) {
     return 0;
 }
 
+/** Handle --foreground */
 int set_foreground (const char *i, const char *v) {
     APP.foreground = 1;
     return 1;
 }
 
+/** Handle --config-path */
 int set_confpath (const char *i, const char *v) {
     APP.confpath = v;
     return 1;
 }
 
+/** Handle --pidfile */
 int set_pidfile (const char *i, const char *v) {
     APP.pidfile = v;
     return 1;
 }
 
+/** Handle --logfile */
 int set_logpath (const char *i, const char *v) {
     APP.logpath = v;
     return 1;
 }
 
+/** Command line options */
 cliopt CLIOPT[] = {
     {
         "--foreground",
@@ -410,6 +433,9 @@ cliopt CLIOPT[] = {
     {NULL,NULL,0,NULL,NULL}
 };
 
+/** Application main. Handles configuration and command line flags,
+  * then daemonizes.
+  */
 int main (int _argc, const char *_argv[]) {
     int argc = _argc;
     const char **argv = cliopt_dispatch (CLIOPT, _argv, &argc);

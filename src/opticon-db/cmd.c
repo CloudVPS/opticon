@@ -141,7 +141,8 @@ int cmd_tenant_create (int argc, const char *argv[]) {
 /** Format a timestamp for output */
 static char *timfmt (time_t w, int json) {
     struct tm tm;
-    localtime_r (&w, &tm);
+    if (json) gmtime_r (&w, &tm);
+    else localtime_r (&w, &tm);
     char *res = (char *) malloc (24);
     strftime (res, 23, json ? "%FT%H:%M:%S" : "%F %H:%M", &tm);
     return res;
@@ -198,6 +199,7 @@ int cmd_host_list (int argc, const char *argv[]) {
             }
         }
         else {
+            unit = "KB";
             usage.bytes = usage.bytes / 1024;
             if (usage.bytes > 2048) {
                 unit = "MB";
