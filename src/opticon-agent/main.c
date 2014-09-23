@@ -287,8 +287,10 @@ int daemon_main (int argc, const char *argv[]) {
                 }
                 p = p->next;
             }
+        }
         
-           log_info ("Encoding probes");
+        if (collected) {
+            log_info ("Encoding probes");
         
             ioport *encoded = ioport_create_buffer (NULL, 4096);
             if (! encoded) {
