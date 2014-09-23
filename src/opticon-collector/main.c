@@ -391,7 +391,7 @@ int main (int _argc, const char *_argv[]) {
 
     opticonf_add_reaction ("network", conf_network);
     opticonf_add_reaction ("database/path", conf_db_path);
-    opticonf_add_reaction ("meters", conf_meters);
+    opticonf_add_reaction ("meter", conf_meters);
     
     APP.transport = intransport_create_udp();
     APP.codec = codec_create_pkt();
