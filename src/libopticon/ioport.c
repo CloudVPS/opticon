@@ -180,6 +180,7 @@ int ioport_write_encint (ioport *io, uint64_t i) {
     uint64_t msk;
     uint8_t byte;
     uint8_t started = 0;
+    if (! i) return ioport_write_byte (io, 0);
     for (int bitpos=56;bitpos>=0;bitpos-=7) {
         msk = 0x7f << bitpos;
         byte = (i & msk) >> bitpos;
