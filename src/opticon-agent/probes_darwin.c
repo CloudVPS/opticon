@@ -165,7 +165,7 @@ var *runprobe_df (probe *self) {
     while (! feof (f)) {
         fgets (buffer, 1023, f);
         if (memcmp (buffer, "/dev", 4) != 0) continue;
-        cpystr (device, buffer, 16);
+        cpystr (device, buffer, 12);
         crsr = buffer;
         while ((*crsr) && (! isspace (*crsr))) crsr++;
         if (! *crsr) continue;
