@@ -40,7 +40,7 @@ void dictarray_to_host (host *h, const char *prefix, var *v) {
         crsr = v;
         metertype_t type;
         
-        switch (v->type) {
+        switch (vv->type) {
             case VAR_INT:
                 type = MTYPE_INT;
                 break;
@@ -49,8 +49,12 @@ void dictarray_to_host (host *h, const char *prefix, var *v) {
                 type = MTYPE_FRAC;
                 break;
             
+            case VAR_STR:
+                type = MTYPE_STR;
+                break;
+            
             default:
-                log_error ("Unsupported subtype under '%s'", tmpid);
+                log_error ("Unsupported subtype %i under '%s'", vv->type, tmpid);
                 return;
         }
 
@@ -60,13 +64,16 @@ void dictarray_to_host (host *h, const char *prefix, var *v) {
         int pos = 0;
         int count = v->parent->value.arr.count;
         meter_setcount (m, count);
-
+        
         while (crsr && (pos < count)) {
             if (type == MTYPE_INT) {
-                meter_set_uint (m, pos, var_get_int (crsr));
+                meter_set_uint (m, pos, var_get_int_forkey (crsr, vv->id));
+            }
+            else if (type == MTYPE_STR) {
+                meter_set_str (m, pos, var_get_str_forkey (crsr, vv->id));
             }
             else {
-                meter_set_frac (m, pos, var_get_double (crsr));
+                meter_set_frac (m, pos, var_get_double_forkey (crsr, vv->id));
             }
             pos++;
             crsr = crsr->next;

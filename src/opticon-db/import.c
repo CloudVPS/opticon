@@ -78,8 +78,6 @@ int import_dictlevel (host *into, const char *prefix, var *v) {
     return 1;
 }
 
-void dobreak (void) {}
-
 int import_json (host *into, const char *json) {
     var *dat = var_alloc();
     char idstr[32];
@@ -89,8 +87,6 @@ int import_json (host *into, const char *json) {
         var_free (dat);
         return 0;
     }
-    
-    dobreak();
     
     var *crsr = dat->value.arr.first;
     var *cc;
@@ -207,6 +203,7 @@ int import_json (host *into, const char *json) {
                             break;
                     }
                 }
+                break;
             
             case VAR_DICT:
                 cc = crsr->value.arr.first;
@@ -267,5 +264,6 @@ int import_json (host *into, const char *json) {
         }
         crsr = crsr->next;
     }
+    
     return 1;
 }

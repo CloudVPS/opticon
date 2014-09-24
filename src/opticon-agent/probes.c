@@ -38,7 +38,7 @@ var *runprobe_uname (probe *self) {
 
 /** List of built-in probe functions */
 builtinfunc BUILTINS[] = {
-    {"probe_pcpu", runprobe_pcpu},
+    {"probe_pcpu", runprobe_top},
     {"probe_hostname", runprobe_hostname},
     {"probe_uname", runprobe_uname},
     {NULL, NULL}

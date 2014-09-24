@@ -32,6 +32,10 @@ all: ../../bin/opticon-agent
 clean:
 	rm -f *.o ../../bin/opticon-agent
 
+probes.o: probes.c probes_linux.c probes_darwin.c
+	@echo "[BUILD] probes.c"
+	@$(CC) $(CFLAGS) -I../../include -c probes.c
+
 .SUFFIXES: .c .o
 .c.o:
 	@echo "[BUILD] $<"

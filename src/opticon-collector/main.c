@@ -260,6 +260,7 @@ void handle_meter_packet (ioport *pktbuf, uint32_t netid) {
         log_info ("Update handled for session %08x-%08x",
                    S->sessid, S->addr);
     }
+    
     host_end_update (H);
     pthread_rwlock_unlock (&H->lock);
     ioport_close (unwrap);
