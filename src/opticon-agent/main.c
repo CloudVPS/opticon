@@ -202,6 +202,7 @@ void result_to_host (host *h, var *val) {
                     meter_setcount (m, 0);
                     meter_set_str (m, 0, var_get_str (vv));
                 }
+                vv = vv->next;
             }
         }
         
@@ -293,6 +294,7 @@ int daemon_main (int argc, const char *argv[]) {
                 if (v && (p->lastdispatch < p->lastreply)) {
                     if ((slowround && p->interval>60) ||
                         ((!slowround) && p->interval<61)) {
+                        log_info ("Collecting '%s'", p->call);
                         result_to_host (h, v);
                         p->lastdispatch = tnow;
                         collected++;
