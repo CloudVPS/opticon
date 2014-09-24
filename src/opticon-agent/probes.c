@@ -18,13 +18,13 @@ var *runprobe_hostname (probe *self) {
 }
 
 var *runprobe_uname (probe *self) {
-    char out[256];
     var *res = var_alloc();
+    var *v_os = var_get_dict_forkey (res, "os");
     struct utsname uts;
     uname (&uts);
-    sprintf (out, "%s %s %s", uts.sysname,
-             uts.release, uts.machine);
-    var_set_str_forkey (res, "uname", out);
+    var_set_str_forkey (v_os, "kernel", uts.sysname);
+    var_set_str_forkey (v_os, "version", uts.release);
+    var_set_str_forkey (v_os, "arch", uts.machine);
     return res;
 }
 

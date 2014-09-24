@@ -47,8 +47,9 @@ void run_top (thread *me) {
     char buf[1024];
     topstate st = TOP_HDR;
     int count = 0;
+    int offs_cmd, offs_cpu, offs_mem, offs_user;
     memset (TOP, 0, 2*sizeof(topinfo));
-    FILE *f = popen ("/usr/bin/top -l 0 -o cpu -s 4", "r");
+    FILE *f = popen ("/usr/bin/top -l 0 -o cpu -s 20", "r");
     if (! f) {
         log_error ("Could not open top probe");
         return;
@@ -62,15 +63,19 @@ void run_top (thread *me) {
         
         if (buf[0] == 'P' && buf[1] == 'I' && buf[2] == 'D') {
             st = TOP_BODY;
+            offs_cmd = strstr (buf, "COMMAND ") - buf;
+            offs_cpu = strstr (buf, "%CPU ") - buf;
+            offs_mem = strstr (buf, "MEM ") -buf;
+            offs_user = strstr (buf, "USER ") - buf;
             continue;
         }
         if (st == TOP_BODY) {
             if (strlen (buf) < 240) continue;
             TOP[1].records[count].pid = atoi (buf);
-            cpystr (TOP[1].records[count].cmd, buf+7, 15);
-            TOP[1].records[count].pcpu = atof (buf+24);
-            TOP[1].records[count].sizekb = sz2kb (buf+55);
-            cpystr (TOP[1].records[count].user, buf+234, 15);
+            cpystr (TOP[1].records[count].cmd, buf+offs_cmd, 15);
+            TOP[1].records[count].pcpu = atof (buf+offs_cpu);
+            TOP[1].records[count].sizekb = sz2kb (buf+offs_mem);
+            cpystr (TOP[1].records[count].user, buf+offs_user, 15);
             count++;
             if (count == 14) {
                 memcpy (TOP, TOP+1, sizeof (topinfo));
