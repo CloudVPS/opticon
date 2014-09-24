@@ -255,7 +255,7 @@ int daemon_main (int argc, const char *argv[]) {
             buf = ioport_get_buffer (io_authpkt);
             outtransport_send (APP.transport, (void*) buf, sz);
             ioport_close (io_authpkt);
-            nextslow = nextslow + 300;
+            nextslow = nextslow + 180;
         }
         
         log_info ("Poking probes");
