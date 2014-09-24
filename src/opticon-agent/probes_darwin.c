@@ -63,6 +63,7 @@ void run_top (thread *me) {
         
         if (buf[0] == 'P' && buf[1] == 'I' && buf[2] == 'D') {
             st = TOP_BODY;
+            memset (TOP[1].records, 0, 16 *sizeof (toprec));
             offs_cmd = strstr (buf, "COMMAND ") - buf;
             offs_cpu = strstr (buf, "%CPU ") - buf;
             offs_mem = strstr (buf, "MEM ") -buf;
@@ -71,6 +72,13 @@ void run_top (thread *me) {
         }
         if (st == TOP_BODY) {
             if (strlen (buf) < 240) continue;
+            if (atof (buf+offs_cpu) < 0.0001) {
+                memcpy (TOP, TOP+1, sizeof (topinfo));
+                memset (TOP+1, 0, sizeof(topinfo));
+                st = TOP_HDR;
+                count = 0;
+                continue;
+            }
             TOP[1].records[count].pid = atoi (buf);
             cpystr (TOP[1].records[count].cmd, buf+offs_cmd, 15);
             TOP[1].records[count].pcpu = atof (buf+offs_cpu);
