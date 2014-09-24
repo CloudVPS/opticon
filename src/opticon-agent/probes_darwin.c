@@ -25,6 +25,7 @@ typedef enum { TOP_HDR, TOP_BODY } topstate;
 static void cpystr (char *into, const char *ptr, int sz) {
     int eos = 0;
     for (int i=0; i<sz; ++i) {
+        if (ptr[i] == '\n') break;
         into[i] = ptr[i];
         if (into[i] != ' ') eos = i+1;
     }
@@ -119,7 +120,11 @@ void run_top (thread *me) {
 thread *TOPTHREAD = NULL;
 
 var *runprobe_top (probe *self) {
-    if (! TOPTHREAD) TOPTHREAD = thread_create (run_top, NULL);
+    if (! TOPTHREAD) {
+        TOPTHREAD = thread_create (run_top, NULL);
+        sleep (3);
+    }
+    
     topinfo ti;
     memcpy (&ti, TOP, sizeof (topinfo));
     
@@ -144,5 +149,81 @@ var *runprobe_top (probe *self) {
     FILE *out = fopen ("toprec.json","w");
     dump_var (res, out);
     fclose (out);
+    return res;
+}
+
+var *runprobe_df (probe *self) {
+    char buffer[1024];
+    char device[32];
+    char mount[32];
+    uint64_t szkb;
+    double pused;
+    char *crsr;
+    var *res = var_alloc();
+    var *v_df = var_get_array_forkey (res, "df");
+    FILE *f = popen ("/bin/df -k", "r");
+    while (! feof (f)) {
+        fgets (buffer, 1023, f);
+        if (memcmp (buffer, "/dev", 4) != 0) continue;
+        cpystr (device, buffer, 16);
+        crsr = buffer;
+        while ((*crsr) && (! isspace (*crsr))) crsr++;
+        if (! *crsr) continue;
+        while ((*crsr) && (isspace (*crsr))) crsr++;
+        if (! *crsr) continue;
+        szkb = strtoull (crsr, &crsr, 10);
+
+        /* skip to used */ 
+        while ((*crsr) && (! isspace (*crsr))) crsr++;
+        if (! *crsr) continue;
+        while ((*crsr) && (isspace (*crsr))) crsr++;
+        if (! *crsr) continue;
+       
+        /* skip to available */ 
+        while ((*crsr) && (! isspace (*crsr))) crsr++;
+        if (! *crsr) continue;
+        while ((*crsr) && (isspace (*crsr))) crsr++;
+        if (! *crsr) continue;
+
+        /* skip to used% */ 
+        while ((*crsr) && (! isspace (*crsr))) crsr++;
+        if (! *crsr) continue;
+        while ((*crsr) && (isspace (*crsr))) crsr++;
+        if (! *crsr) continue;
+        
+        pused = atof (crsr);
+
+        /* skip to iused */ 
+        while ((*crsr) && (! isspace (*crsr))) crsr++;
+        if (! *crsr) continue;
+        while ((*crsr) && (isspace (*crsr))) crsr++;
+        if (! *crsr) continue;
+
+        /* skip to ifree */ 
+        while ((*crsr) && (! isspace (*crsr))) crsr++;
+        if (! *crsr) continue;
+        while ((*crsr) && (isspace (*crsr))) crsr++;
+        if (! *crsr) continue;
+
+        /* skip to iused% */ 
+        while ((*crsr) && (! isspace (*crsr))) crsr++;
+        if (! *crsr) continue;
+        while ((*crsr) && (isspace (*crsr))) crsr++;
+        if (! *crsr) continue;
+
+        /* skip to iused% */ 
+        while ((*crsr) && (! isspace (*crsr))) crsr++;
+        if (! *crsr) continue;
+        while ((*crsr) && (isspace (*crsr))) crsr++;
+        if (! *crsr) continue;
+        
+        cpystr (mount, crsr, 24);
+        var *node = var_add_dict (v_df);
+        var_set_str_forkey (node, "device", device);
+        var_set_int_forkey (node, "size", (uint32_t) (szkb/1024));
+        var_set_double_forkey (node, "pused", pused);
+        var_set_str_forkey (node, "mount", mount);
+    }
+    pclose (f);
     return res;
 }

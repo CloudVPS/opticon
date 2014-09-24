@@ -41,6 +41,7 @@ builtinfunc BUILTINS[] = {
     {"probe_pcpu", runprobe_top},
     {"probe_hostname", runprobe_hostname},
     {"probe_uname", runprobe_uname},
+    {"probe_df", runprobe_df},
     {NULL, NULL}
 };
 
