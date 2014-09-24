@@ -205,8 +205,8 @@ void handle_auth_packet (ioport *pktbuf, uint32_t netid,
     if (S) {
         /* Discard replays */
         if (S->lastserial < auth->serial) {
-            log_info ("Renewing session %08x-%08x from %s serial %i "
-                      "tenant %s host %s", auth->sessionid, netid,
+            log_debug ("Renewing session %08x-%08x from %s serial %i "
+                       "tenant %s host %s", auth->sessionid, netid,
                       addrbuf, auth->serial, s_tenantid, s_hostid);
             S->key = auth->sessionkey;
             S->lastcycle = tnow;
@@ -256,8 +256,8 @@ void handle_meter_packet (ioport *pktbuf, uint32_t netid) {
     pthread_rwlock_wrlock (&H->lock);
     host_begin_update (H, tnow);
     if (codec_decode_host (APP.codec, unwrap, H)) {
-        log_info ("Update handled for session %08x-%08x",
-                   S->sessid, S->addr);
+        log_debug ("Update handled for session %08x-%08x",
+                    S->sessid, S->addr);
     }
     
     host_end_update (H);
@@ -274,7 +274,7 @@ int daemon_main (int argc, const char *argv[]) {
         log_open_file (APP.logpath);
     }
 
-    log_info ("Opticon-collector ready for action");
+    log_info ("--- Opticon-collector ready for action ---");
     
     /* Set up threads */
     APP.queue = packetqueue_create (1024, APP.transport);

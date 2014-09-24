@@ -1,6 +1,7 @@
 #include <libopticon/datatypes.h>
 #include <libopticon/util.h>
 #include <libopticon/defaults.h>
+#include <assert.h>
 
 /** Allocate and initialize a host structure.
   * \return Pointer to the initialized struct. Caller is responsible for
@@ -149,6 +150,8 @@ meter *host_get_meter (host *h, meterid_t id) {
 uint64_t meter_get_uint (meter *m, unsigned int pos) {
     uint64_t res = 0ULL;
     
+    if (m->count >= SZ_EMPTY_VAL) return res;
+
     if (pos < (m->count?m->count:1) &&
         (m->id & MMASK_TYPE) == MTYPE_INT) {
         res = m->d.u64[pos];
@@ -161,6 +164,8 @@ uint64_t meter_get_uint (meter *m, unsigned int pos) {
 double meter_get_frac (meter *m, unsigned int pos) {
     double res = 0.0;
     
+    if (m->count >= SZ_EMPTY_VAL) return res;
+
     if (pos < (m->count?m->count:1) &&
         (m->id & MMASK_TYPE) == MTYPE_FRAC) {
         res = m->d.frac[pos];
@@ -173,6 +178,8 @@ double meter_get_frac (meter *m, unsigned int pos) {
 fstring meter_get_str (meter *m, unsigned int pos) {
     fstring res = {""};
     
+    if (m->count >= SZ_EMPTY_VAL) return res;
+
     if (pos < (m->count?m->count:1) &&
         (m->id & MMASK_TYPE) == MTYPE_STR) {
         strcpy (res.str, m->d.str[pos].str);
@@ -253,9 +260,28 @@ meter *host_set_meter_str (host *h, meterid_t id,
     return m;   
 }
 
+void meter_set_empty (meter *m) {
+    meter_setcount (m, SZ_EMPTY_VAL);
+}
+
+void meter_set_empty_array (meter *m) {
+    meter_setcount (m, SZ_EMPTY_ARRAY);
+}
+
 /** Initialize a meter to a specific set size */
 void meter_setcount (meter *m, unsigned int count) {
     int cnt = count ? count : 1;
+    assert (cnt <= SZ_EMPTY_ARRAY);
+    
+    if (cnt >= SZ_EMPTY_VAL) {
+        m->count = cnt;
+        m->lastmodified = m->host->lastmodified;
+        if (m->d.any) {
+            free (m->d.any);
+            m->d.any = NULL;
+        }
+        return;
+    }
     
     m->count = count;
     m->lastmodified = m->host->lastmodified;
@@ -286,6 +312,7 @@ void meter_setcount (meter *m, unsigned int count) {
 
 /** Setter for a specific integer value inside a meter array */
 void meter_set_uint (meter *m, unsigned int pos, uint64_t val) {
+    if (m->count >= SZ_EMPTY_VAL) return;
     if ((m->id & MMASK_TYPE) == MTYPE_INT &&
         pos < (m->count ? m->count : 1)) {
         m->lastmodified = m->host->lastmodified;
@@ -295,6 +322,7 @@ void meter_set_uint (meter *m, unsigned int pos, uint64_t val) {
 
 /** Setter for a specific fractional value inside a meter array */
 void meter_set_frac (meter *m, unsigned int pos, double val) {
+    if (m->count >= SZ_EMPTY_VAL) return;
     if ((m->id & MMASK_TYPE) == MTYPE_FRAC &&
         pos < (m->count ? m->count : 1)) {
         m->lastmodified = m->host->lastmodified;
@@ -304,6 +332,7 @@ void meter_set_frac (meter *m, unsigned int pos, double val) {
 
 /** Setter for a specific string value inside a meter array */
 void meter_set_str (meter *m, unsigned int pos, const char *val) {
+    if (m->count >= SZ_EMPTY_VAL) return;
     if ((m->id & MMASK_TYPE) == MTYPE_STR &&
         pos < (m->count ? m->count : 1)) {
         strncpy (m->d.str[pos].str, val, 127);

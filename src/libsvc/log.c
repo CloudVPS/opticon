@@ -85,6 +85,17 @@ void log_string (int prio, const char *str) {
     }
 }
 
+/** Write a log message at the LOG_DEBUG level */
+void log_debug (const char *fmt, ...) {
+    char buffer[4096];
+    buffer[0] = 0;
+    va_list ap;
+    va_start (ap, fmt);
+    vsnprintf (buffer, 4096, fmt, ap);
+    va_end (ap);
+    log_string (LOG_DEBUG, buffer);
+}
+
 /** Write a log message at the LOG_INFO level */
 void log_info (const char *fmt, ...) {
     char buffer[4096];

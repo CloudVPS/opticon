@@ -1,6 +1,7 @@
 #include <libopticon/codec_json.h>
 #include <libopticon/util.h>
 #include <stdlib.h>
+#include <assert.h>
 
 /** Write out a meter value in JSON value format.
   * \param type The metertype to read and encode
@@ -91,32 +92,48 @@ int jsoncodec_encode_host (ioport *into, host *h) {
             id2str (m->id & pathmask, buffer);
             ioport_write (into, buffer, strlen(buffer));
             ioport_write (into, "\":", 2);
-            if (m->count > 0) {
-                ioport_write (into, "[\n", 2);
+            if (m->count == SZ_EMPTY_VAL) {
+                ioport_write (into, "null",4);
             }
-            
-            for (i=0; (i==0)||(i<m->count); ++i) {
-                if (i) ioport_write (into, ",\n", 2);
-                jsoncodec_dump_pathval (m,i,into,(m->count ? 1 : 0));
+            else if (m->count == SZ_EMPTY_ARRAY) {
+                ioport_write (into, "[]",2);
             }
+            else {
+                if (m->count > 0) {
+                    ioport_write (into, "[\n", 2);
+                }
             
-            if (m->count > 0) {
-                ioport_write (into, "\n]", 2);
+                for (i=0; (i==0)||(i<m->count); ++i) {
+                    if (i) ioport_write (into, ",\n", 2);
+                    jsoncodec_dump_pathval (m,i,into,(m->count ? 1 : 0));
+                }
+            
+                if (m->count > 0) {
+                    ioport_write (into, "\n]", 2);
+                }
             }
         }
         else {
             id2str (m->id, buffer);
             ioport_write (into, buffer, strlen(buffer));
             ioport_write (into, "\":", 2);
-            if (m->count > 0) {
-                ioport_write (into, "[", 1);
+            if (m->count == SZ_EMPTY_VAL) {
+                ioport_write (into, "null", 4);
             }
-            for (i=0; (i==0)||(i<m->count); ++i) {
-                jsoncodec_dump_val (m->id & MMASK_TYPE, m, i, into);
-                if ((i+1)<m->count) ioport_write (into, ",",1);
+            else if (m->count == SZ_EMPTY_ARRAY) {
+                ioport_write (into, "[]", 2);
             }
-            if (m->count > 0) {
-                ioport_write (into, "]", 1);
+            else {
+                if (m->count > 0) {
+                    ioport_write (into, "[", 1);
+                }
+                for (i=0; (i==0)||(i<m->count); ++i) {
+                    jsoncodec_dump_val (m->id & MMASK_TYPE, m, i, into);
+                    if ((i+1)<m->count) ioport_write (into, ",",1);
+                }
+                if (m->count > 0) {
+                    ioport_write (into, "]", 1);
+                }
             }
         }
         m=m->next;

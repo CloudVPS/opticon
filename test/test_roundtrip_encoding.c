@@ -40,6 +40,7 @@ int main (int argc, const char *argv[]) {
     meterid_t M_NET_OUT_PPS = makeid ("net/out.pps",MTYPE_INT,0);
     meterid_t M_HOSTNAME = makeid ("hostname",MTYPE_STR,0);
     meterid_t M_UNAME = makeid ("uname",MTYPE_STR,0);
+    meterid_t M_PROBLEMS = makeid ("problems",MTYPE_STR,0);
 
     fstring D_NET_NAME[2] = {{"eth0"},{"eth1"}};
     uint64_t D_NET_IN_KBS[2] = {100ULL,70ULL};
@@ -117,6 +118,9 @@ int main (int argc, const char *argv[]) {
     M = host_get_meter (H, M_UNAME);
     meter_setcount (M, 0);
     meter_set_str (M, 0, "Linux srv-01.heikneuter.nl 2.6.18-prep #1 SMP");
+    
+    M = host_get_meter (H, M_PROBLEMS);
+    meter_set_empty_array (M);
     
     M = host_get_meter (H, M_PCPU);
     meter_setcount (M, 0);

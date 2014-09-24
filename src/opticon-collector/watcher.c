@@ -140,8 +140,7 @@ void watchthread_handle_host (host *host) {
         else if (host->badness > 10.0) host->badness -= 10.0;
         else if (host->badness > 1.0) host->badness = host->badness *0.7;
         else host->badness = 0.0;
-        meter_setcount (m_problems, 0);
-        meter_set_str (m_problems, 0, "none");
+        meter_set_empty_array (m_problems);
     }
     else {
         int i=0;
@@ -181,7 +180,7 @@ void watchthread_run (thread *self) {
     host *hcrsr;
     time_t t_now = time (NULL);
     time_t t_next = (t_now+60)-((t_now+60)%60);
-    log_info ("Watchthread started");
+    log_debug ("Watchthread started");
     sleep (t_next - t_now);
     t_next += 60;
     
@@ -198,7 +197,7 @@ void watchthread_run (thread *self) {
         
         t_now = time (NULL);
         if (t_now < t_next) {
-            log_info ("Watchthread took %i seconds", 60-(t_next-t_now));
+            log_debug ("Watchthread took %i seconds", 60-(t_next-t_now));
             sleep (t_next-t_now);
         }
         else {

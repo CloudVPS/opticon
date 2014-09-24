@@ -24,8 +24,11 @@ typedef uint32_t        status_t;
 #define MTYPE_STR       0x8000000000000000
 
 #define MMASK_TYPE      0xc000000000000000
-#define MMASK_COUNT     0x000000000000000f
-#define MMASK_NAME      0x3ffffffffffffff0
+#define MMASK_COUNT     0x000000000000001f
+#define MMASK_NAME      0x3fffffffffffffe0
+
+#define SZ_EMPTY_VAL    0x000000000000001e
+#define SZ_EMPTY_ARRAY  0x000000000000001f
 
 /** UUIDs are normally passed by value */
 typedef struct { uint64_t msb; uint64_t lsb; } uuid;
@@ -155,7 +158,9 @@ meter       *host_set_meter_str  (host *h, meterid_t id,
                                   unsigned int count,
                                   const fstring *str);
 
-meter       *meter_next_sibling (meter *m);                               
+meter       *meter_next_sibling (meter *m);
+void         meter_set_empty (meter *m);
+void         meter_set_empty_array (meter *m);
 void         meter_setcount (meter *m, unsigned int count);
 void         meter_set_uint (meter *m, unsigned int pos, uint64_t val);
 void         meter_set_frac (meter *m, unsigned int pos, double val);

@@ -22,12 +22,13 @@ int pktcodec_encode_host (ioport *io, host *h) {
     uint64_t cnt;
     while (m) {
         cnt = m->count;
-        if (cnt > 15) cnt = 15;
         id = m->id | cnt;
         if (cnt == 0) cnt = 1;
         if (! ioport_write_u64 (io, id)) return 0;
-        for (uint8_t i=0; i<cnt; ++i) {
-            if (! pktcodec_write_value (io, m, i)) return 0;
+        if (cnt < SZ_EMPTY_VAL) {
+            for (uint8_t i=0; i<cnt; ++i) {
+                if (! pktcodec_write_value (io, m, i)) return 0;
+            }
         }
         m = m->next;
     }
@@ -48,6 +49,7 @@ int pktcodec_decode_host (ioport *io, host *h) {
         count = mid & MMASK_COUNT;
         meter_setcount (M, count);
         if (! count) count=1;
+        if (count >= SZ_EMPTY_VAL) continue;
         for (uint8_t i=0; i<count; ++i) {
             switch (mid & MMASK_TYPE) {
                 case MTYPE_INT:

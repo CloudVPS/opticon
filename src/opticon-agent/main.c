@@ -240,7 +240,7 @@ int daemon_main (int argc, const char *argv[]) {
             slowround = 1;
             uint32_t sid = APP.auth.sessionid;
             if (! sid) sid = gen_sessionid();
-            log_info ("Authenticating session %08x", sid);
+            log_debug ("Authenticating session %08x", sid);
             APP.auth.sessionid = sid;
             APP.auth.serial = 0;
             APP.auth.tenantid = APP.tenantid;
@@ -258,7 +258,7 @@ int daemon_main (int argc, const char *argv[]) {
             nextslow = nextslow + 180;
         }
         
-        log_info ("Poking probes");
+        log_debug ("Poking probes");
 
         probe *p = APP.probes.first;
         
@@ -286,7 +286,7 @@ int daemon_main (int argc, const char *argv[]) {
             host_begin_update (h, time (NULL));
 
             while (nextsend <= tnow) nextsend += 60;
-            log_info ("Collecting probes");
+            log_debug ("Collecting probes");
         
             p = APP.probes.first;
             while (p) {
@@ -294,7 +294,7 @@ int daemon_main (int argc, const char *argv[]) {
                 if (v && (p->lastdispatch < p->lastreply)) {
                     if ((slowround && p->interval>60) ||
                         ((!slowround) && p->interval<61)) {
-                        log_info ("Collecting '%s'", p->call);
+                        log_debug ("Collecting '%s'", p->call);
                         result_to_host (h, v);
                         p->lastdispatch = tnow;
                         collected++;
@@ -305,7 +305,7 @@ int daemon_main (int argc, const char *argv[]) {
         }
         
         if (collected) {
-            log_info ("Encoding probes");
+            log_debug ("Encoding probes");
         
             ioport *encoded = ioport_create_buffer (NULL, 4096);
             if (! encoded) {
@@ -322,7 +322,7 @@ int daemon_main (int argc, const char *argv[]) {
                 continue;
             }
         
-            log_info ("Encoded %i bytes", ioport_read_available (encoded));
+            log_debug ("Encoded %i bytes", ioport_read_available (encoded));
 
             ioport *wrapped = ioport_wrap_meterdata (APP.auth.sessionid,
                                                      gen_serial(),
@@ -353,7 +353,7 @@ int daemon_main (int argc, const char *argv[]) {
         if (nextsend < wakenext) wakenext = nextsend;
         if (nextslow < wakenext) wakenext = nextslow;
         if (wakenext > tnow) {
-            log_info ("Sleeping for %i seconds", (wakenext-tnow));
+            log_debug ("Sleeping for %i seconds", (wakenext-tnow));
             sleep (wakenext-tnow);
         }
     }

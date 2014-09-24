@@ -21,6 +21,7 @@ extern loghandle *LOG; /**< Log system to use, NULL for stderr */
 
 void log_open_syslog (const char *name);
 void log_open_file (const char *filename);
+void log_debug (const char *fmt, ...);
 void log_info (const char *fmt, ...);
 void log_error (const char *fmt, ...);
 void log_warn (const char *fmt, ...);
