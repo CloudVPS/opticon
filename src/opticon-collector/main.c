@@ -128,9 +128,6 @@ aeskey *resolve_tenantkey (uuid tenantid, uint32_t serial) {
     const char *b64;
     aeskey *res = NULL;
     
-    /* Discard replays */
-    if (T && T->lastserial >= serial) return NULL;
-    
     /* Discard tenants we can't find in the database */
     if (! db_open (APP.db, tenantid, NULL)) {
         // FIXME remove tenant
