@@ -225,6 +225,7 @@ int daemon_main (int argc, const char *argv[]) {
     }
     
     probelist_start (&APP.probes);
+    APP.resender = authresender_create (APP.transport);
     
     time_t tlast = time (NULL);
     time_t nextslow = tlast + 5;
@@ -254,8 +255,9 @@ int daemon_main (int argc, const char *argv[]) {
             sz = ioport_read_available (io_authpkt);
             buf = ioport_get_buffer (io_authpkt);
             outtransport_send (APP.transport, (void*) buf, sz);
+            authresender_schedule (APP.resender, buf, sz);
             ioport_close (io_authpkt);
-            nextslow = nextslow + 180;
+            nextslow = nextslow + 300;
         }
         
         log_debug ("Poking probes");

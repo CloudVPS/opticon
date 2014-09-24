@@ -8,6 +8,7 @@
 #include <libopticonf/var.h>
 #include <libsvc/transport.h>
 #include <libsvc/thread.h>
+#include <libsvc/packetqueue.h>
 
 /* =============================== TYPES =============================== */
 
@@ -51,11 +52,18 @@ typedef struct builtinfunc_s {
     probefunc_f      func;
 } builtinfunc;
 
+typedef struct authresender_s {
+    thread           super;
+    conditional     *cond;
+    outtransport    *trans;
+    pktbuf           buf;
+} authresender;   
 
 /** Useful access to application parts and configuration */
 typedef struct appcontext_s {
     codec           *codec;
     outtransport    *transport;
+    authresender    *resender;
     probelist        probes;
     var             *conf;
     const char      *logpath;
@@ -77,9 +85,12 @@ extern appcontext APP; /**< The keep-it-all-together blob */
 
 /* ============================= FUNCTIONS ============================= */
 
-probe   *probe_alloc (void);
-void     probelist_add (probelist *, probetype, const char *, int);
-void     probelist_start (probelist *);
-void     probelist_cancel (probelist *);
+probe           *probe_alloc (void);
+void             probelist_add (probelist *, probetype, const char *, int);
+void             probelist_start (probelist *);
+void             probelist_cancel (probelist *);
+authresender    *authresender_create (outtransport *);
+void             authresender_schedule (authresender *, const void *, size_t);
+
 
 #endif
