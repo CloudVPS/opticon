@@ -131,11 +131,13 @@ aeskey *resolve_tenantkey (uuid tenantid, uint32_t serial) {
     /* Discard tenants we can't find in the database */
     if (! db_open (APP.db, tenantid, NULL)) {
         // FIXME remove tenant
+        log_error ("(resolve_tenantkey) Packet for unknown tenantid");
         return NULL;
     }
     
     /* Discard tenants with no metadata */
     if (! (meta = db_get_metadata (APP.db))) {
+        log_error ("(resolve_tenantkey) Error reading metadata");
         db_close (APP.db);
         return NULL;
     }
