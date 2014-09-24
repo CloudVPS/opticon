@@ -213,7 +213,7 @@ void handle_auth_packet (ioport *pktbuf, uint32_t netid,
             S->lastserial = auth->serial;
         }
         else {
-            log_warn ("Replayed serial on auth from %s: %i >= %i",
+            log_warn ("Duplicate serial on auth from %s: %i >= %i",
                       addrbuf, S->lastserial, auth->serial);
         }
     }
