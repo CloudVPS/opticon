@@ -23,5 +23,6 @@ clean:
 	@cd src/libsvc && make clean && cd ../..
 	@cd src/libopticonf && make clean && cd ../..
 	@cd src/opticon-db && make clean && cd ../..
+	@cd src/opticon-agent && make clean && cd ../..
 	@cd src/opticon-collector && make clean && cd ../..
 	@cd test && make clean && cd ..

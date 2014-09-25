@@ -230,6 +230,7 @@ int daemon_main (int argc, const char *argv[]) {
     time_t tlast = time (NULL);
     time_t nextslow = tlast + 5;
     time_t nextsend = tlast + 10;
+    time_t lastkeyrotate = 0;
     int slowround = 0;
 
     log_info ("Daemonized");
@@ -246,7 +247,10 @@ int daemon_main (int argc, const char *argv[]) {
             APP.auth.serial = 0;
             APP.auth.tenantid = APP.tenantid;
             APP.auth.hostid = APP.hostid;
-            APP.auth.sessionkey = aeskey_create();
+            if (tnow - lastkeyrotate > 1800) {
+                APP.auth.sessionkey = aeskey_create();
+                lastkeyrotate = tnow;
+            }
             APP.auth.tenantkey = APP.collectorkey;
             
             ioport *io_authpkt = ioport_wrap_authdata (&APP.auth,

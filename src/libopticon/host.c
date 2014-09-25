@@ -15,6 +15,7 @@ host *host_alloc (void) {
     res->last = NULL;
     res->tenant = NULL;
     res->status = 0;
+    res->lastserial = 0;
     res->badness = 0.0;
     pthread_rwlock_init (&res->lock, NULL);
     return res;

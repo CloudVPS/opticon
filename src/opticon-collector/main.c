@@ -32,7 +32,11 @@ aeskey *resolve_sessionkey (uint32_t netid, uint32_t sid, uint32_t serial,
         log_warn ("Rejecting old serial %i for session %08x-%08x", serial, sid, netid);
         return NULL;
     }
-    S->lastserial = serial;
+    if (S->host->lastserial >= serial) {
+        log_warn ("Rejecting old serial %i for session %08x-%08x", serial, sid, netid);
+        return NULL;
+    }
+    S->host->lastserial = serial;
     *blob = (void *)S;
     return &S->key;
 }
@@ -147,7 +151,6 @@ aeskey *resolve_tenantkey (uuid tenantid, uint32_t serial) {
         if (T) {
             /* Update the existing tenant structure with information
                from the database */
-            T->lastserial = serial;
             T->key = aeskey_from_base64 (b64);
             res = &T->key;
         }
@@ -155,7 +158,6 @@ aeskey *resolve_tenantkey (uuid tenantid, uint32_t serial) {
             /* Create a new in-memory tenant */
             T = tenant_create (tenantid, aeskey_from_base64 (b64));
             if (T) {
-                T->lastserial = serial;
                 res = &T->key;
             }
         }

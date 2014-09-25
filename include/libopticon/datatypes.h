@@ -66,6 +66,7 @@ typedef struct host_s {
     struct host_s       *prev; /**< List link */
     struct tenant_s     *tenant; /**< Parent link */
     time_t               lastmodified; /**< timeout information */
+    uint32_t             lastserial; /**< last received serial */
     uuid                 uuid; /**< uuid of the host */
     double               badness; /**< accumulated badness */
     status_t             status; /**< current status (if relevant */
@@ -116,7 +117,6 @@ typedef struct tenant_s {
     host            *last; /**< Last linked host */
     uuid             uuid; /**< The tenant's uuid */
     aeskey           key; /**< Key used for auth packets */
-    uint32_t         lastserial; /**< Serial# of last auth packet */
     watchlist        watch; /**< Tenant-specific watchers */
 } tenant;
 
