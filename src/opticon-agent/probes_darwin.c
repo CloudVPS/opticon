@@ -163,6 +163,7 @@ var *runprobe_df (probe *self) {
     var *v_df = var_get_array_forkey (res, "df");
     FILE *f = popen ("/bin/df -k", "r");
     while (! feof (f)) {
+        buffer[0] = 0;
         fgets (buffer, 1023, f);
         if (memcmp (buffer, "/dev", 4) != 0) continue;
         cpystr (device, buffer, 12);
