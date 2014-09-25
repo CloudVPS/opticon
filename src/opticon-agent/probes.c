@@ -42,6 +42,7 @@ builtinfunc BUILTINS[] = {
     {"probe_hostname", runprobe_hostname},
     {"probe_uname", runprobe_uname},
     {"probe_df", runprobe_df},
+    {"probe_uptime", runprobe_uptime},
     {NULL, NULL}
 };
 

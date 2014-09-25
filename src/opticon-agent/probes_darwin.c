@@ -1,5 +1,8 @@
 #include <libsvc/log.h>
 #include <ctype.h>
+#include <time.h>
+#include <errno.h>
+#include <sys/sysctl.h>
 
 typedef struct toprec_s {
     uint32_t pid;
@@ -226,5 +229,19 @@ var *runprobe_df (probe *self) {
         var_set_str_forkey (node, "mount", mount);
     }
     pclose (f);
+    return res;
+}
+
+var *runprobe_uptime (probe *self) {
+    var *res = var_alloc();
+    struct timeval boottime;
+    size_t len = sizeof (struct timeval);
+    int mib[2] = { CTL_KERN, KERN_BOOTTIME };
+    if (sysctl (mib, 2, &boottime, &len, NULL, 0) < 0) {
+        var_set_int_forkey (res, "uptime", 0);
+        return res;
+    }
+    time_t tnow = time (NULL);
+    var_set_int_forkey (res, "uptime", tnow - boottime.tv_sec);
     return res;
 }
