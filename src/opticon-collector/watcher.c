@@ -124,7 +124,7 @@ void watchthread_handle_host (host *host) {
         /* First go over the tenant-defined watchers */
         w = host->tenant->watch.first;
         while (w) {
-            if (w->id == (m->id & MMASK_NAME)) {
+            if ((w->id & MMASK_NAME) == (m->id & MMASK_NAME)) {
                 m->badness += calculate_badness (m, w, &maxtrigger);
                 handled = 1;
             }
@@ -135,7 +135,7 @@ void watchthread_handle_host (host *host) {
            global watchlist */
         if (! handled) w = APP.watch.first;
         while (w) {
-            if (w->id == (m->id & MMASK_NAME)) {
+            if ((w->id & MMASK_NAME) == (m->id & MMASK_NAME)) {
                 m->badness += calculate_badness (m, w, &maxtrigger);
             }
             w = w->next;
@@ -164,6 +164,8 @@ void watchthread_handle_host (host *host) {
             if (host->badness > 150.0) totalbadness = 0.0;
             break;
     }
+    
+    host->badness += totalbadness;
     
     /* Put up the problems as a meter as well */
     meterid_t mid_problems = makeid ("problems",MTYPE_STR,0);
