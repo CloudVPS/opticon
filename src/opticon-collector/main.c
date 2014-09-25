@@ -74,7 +74,7 @@ void make_watcher (watchlist *w, meterid_t id, metertype_t mtp,
             watchlist_add_frac (w, id, WATCH_FRAC_LT, dval, weight, tr);
         }
         else if (strcmp (cmp, "gt") == 0) {
-            watchlist_add_uint (w, id, WATCH_FRAC_GT, dval, weight, tr);
+            watchlist_add_frac (w, id, WATCH_FRAC_GT, dval, weight, tr);
         }
     }
     else if (mtp == MTYPE_STR) {
@@ -103,6 +103,7 @@ void watchlist_populate (watchlist *w, var *v_meters) {
                 else if (strcmp (type, "frac") == 0) tp = MTYPE_FRAC;
                 else if (strcmp (type, "string") == 0) tp = MTYPE_STR;
                 else {
+                    log_error ("fixme");
                     /* FIXME, LOG AND ABORT */
                     break;
                 }
