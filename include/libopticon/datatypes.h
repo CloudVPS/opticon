@@ -84,6 +84,13 @@ typedef enum watchtype_e {
     WATCH_STR_MATCH /** Match on a specific string value */
 } watchtype;
 
+typedef enum watchtrigger_e {
+    WATCH_NONE,
+    WATCH_WARN,
+    WATCH_ALERT,
+    WATCH_CRIT
+} watchtrigger;
+
 /** Storage for the match data of a meterwatch object */
 typedef union {
     uint64_t         u64;
@@ -97,6 +104,7 @@ typedef union {
 typedef struct meterwatch_s {
     struct meterwatch_s *next;
     struct meterwatch_s *prev;
+    watchtrigger         trigger;
     meterid_t            id;
     watchtype            tp;
     watchdata            dat;
@@ -172,11 +180,11 @@ fstring      meter_get_str (meter *, unsigned int pos);
 
 void         watchlist_init (watchlist *);
 void         watchlist_add_uint (watchlist *, meterid_t, watchtype,
-                                 uint64_t, double);
+                                 uint64_t, double, watchtrigger);
 void         watchlist_add_frac (watchlist *, meterid_t, watchtype,
-                                 double, double);
-void         watchlist_add_str (watchlist *, meterid_t, 
-                                watchtype, const char *, double);
+                                 double, double, watchtrigger);
+void         watchlist_add_str (watchlist *, meterid_t, watchtype,
+                                const char *, double, watchtrigger);
 void         watchlist_clear (watchlist *);
 
 #endif

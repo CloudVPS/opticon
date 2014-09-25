@@ -40,32 +40,45 @@ watchlist WATCHERS;
   * \param w The meterwatch definition to use.
   * \return A badness number, accumulated for all array nodes.
   */
-double calculate_badness (meter *m, meterwatch *w) {
+double calculate_badness (meter *m, meterwatch *w, watchtrigger *maxtrig) {
     double res = 0.0;
     fstring tstr;
     
     for (int i=0; i<((m->count)?m->count:1); ++i) {
         switch (w->tp) {
             case WATCH_FRAC_GT:
-                if (meter_get_frac (m, i) > w->dat.frac) res += w->badness;
+                if (meter_get_frac (m, i) > w->dat.frac) {
+                    res += w->badness;
+                    if (w->trigger > *maxtrig) *maxtrig = w->trigger;
+                }
                 break;
             
             case WATCH_FRAC_LT:
-                if (meter_get_frac (m, i) < w->dat.frac) res += w->badness;
+                if (meter_get_frac (m, i) < w->dat.frac) {
+                    res += w->badness;
+                    if (w->trigger > *maxtrig) *maxtrig = w->trigger;
+                }
                 break;
 
             case WATCH_UINT_GT:
-                if (meter_get_uint (m, i) > w->dat.u64) res += w->badness;
+                if (meter_get_uint (m, i) > w->dat.u64) {
+                    res += w->badness;
+                    if (w->trigger > *maxtrig) *maxtrig = w->trigger;
+                }
                 break;
             
             case WATCH_UINT_LT:
-                if (meter_get_uint (m, i) < w->dat.u64) res += w->badness;
+                if (meter_get_uint (m, i) < w->dat.u64) {
+                    res += w->badness;
+                    if (w->trigger > *maxtrig) *maxtrig = w->trigger;
+                }
                 break;
             
             case WATCH_STR_MATCH:
                 tstr = meter_get_str (m, i);
                 if (strcmp (tstr.str, w->dat.str.str) == 0) {
                     res += w->badness;
+                    if (w->trigger > *maxtrig) *maxtrig = w->trigger;
                 }
                 break;
             
@@ -82,9 +95,11 @@ double calculate_badness (meter *m, meterwatch *w) {
   */
 void watchthread_handle_host (host *host) {
     int problemcount = 0;
+    double totalbadness = 0.0;
     time_t tnow = time (NULL);
     meter *m = host->first;
     meterwatch *w;
+    watchtrigger maxtrigger = WATCH_NONE;
     char label[16];
     
     pthread_rwlock_wrlock (&host->lock);
@@ -110,7 +125,7 @@ void watchthread_handle_host (host *host) {
         w = host->tenant->watch.first;
         while (w) {
             if (w->id == (m->id & MMASK_NAME)) {
-                m->badness += calculate_badness (m, w);
+                m->badness += calculate_badness (m, w, &maxtrigger);
                 handled = 1;
             }
             w = w->next;
@@ -121,28 +136,53 @@ void watchthread_handle_host (host *host) {
         if (! handled) w = APP.watch.first;
         while (w) {
             if (w->id == (m->id & MMASK_NAME)) {
-                m->badness += calculate_badness (m, w);
+                m->badness += calculate_badness (m, w, &maxtrigger);
             }
             w = w->next;
         }
        
         if (m->badness) problemcount++;
-        host->badness += m->badness;
+        totalbadness += m->badness;
         m = m->next;
+    }
+    
+    /* Don't raise a CRIT alert on a WARN condition */
+    switch (maxtrigger) {
+        case WATCH_NONE:
+            totalbadness = 0.0;
+            break;
+        
+        case WATCH_WARN:
+            if (host->badness > 50.0) totalbadness = 0.0;
+            break;
+        
+        case WATCH_ALERT:
+            if (host->badness > 90.0) totalbadness = 0.0;
+            break;
+        
+        case WATCH_CRIT:
+            if (host->badness > 150.0) totalbadness = 0.0;
+            break;
     }
     
     /* Put up the problems as a meter as well */
     meterid_t mid_problems = makeid ("problems",MTYPE_STR,0);
     meter *m_problems = host_get_meter (host, mid_problems);
     
+    /* While we're looking at it, consider the current badness, if there
+       are no problems, it should be going down. */
     if (! problemcount) {
         if (host->badness > 100.0) host->badness = host->badness/2.0;
-        else if (host->badness > 10.0) host->badness -= 10.0;
-        else if (host->badness > 1.0) host->badness = host->badness *0.7;
+        else if (host->badness > 1.0) host->badness = host->badness *0.75;
         else host->badness = 0.0;
         meter_set_empty_array (m_problems);
     }
     else {
+        /* If we reached the top, current level may still be out of
+           its league, so allow it to decay slowly */
+        if (totalbadness == 0.0) host->badness *= 0.9;
+        
+        /* Fill in the problem array */
         int i=0;
         meter_setcount (m_problems, problemcount);
         m = host->first;
@@ -156,6 +196,11 @@ void watchthread_handle_host (host *host) {
         }
     }
     
+    meterid_t mid_badness = makeid ("badness",MTYPE_FRAC,0);
+    meter *m_badness = host_get_meter (host, mid_badness);
+    meter_setcount (m_badness, 0);
+    meter_set_frac (m_badness, 0, host->badness);
+    
     /* Convert badness to a status text */
     if (host->badness < 30.0) {
         meter_set_str (m_status, 0, "OK");
@@ -163,7 +208,12 @@ void watchthread_handle_host (host *host) {
     else if (host->badness < 80.0) {
         meter_set_str (m_status, 0, "WARN");
     }
-    else (meter_set_str (m_status, 0, "ALERT"));
+    else if (host->badness < 120.0) {
+        meter_set_str (m_status, 0, "ALERT");
+    }
+    else {
+        meter_set_str (m_status, 0, "CRIT");
+    }
     
     /* Write to db */
     if (db_open (APP.writedb, host->tenant->uuid, NULL)) {

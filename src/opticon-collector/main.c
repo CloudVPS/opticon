@@ -50,7 +50,7 @@ aeskey *resolve_sessionkey (uint32_t netid, uint32_t sid, uint32_t serial,
   * \param vweight The unweighted 'badness' (depending on alert/warning).
   */
 void make_watcher (watchlist *w, meterid_t id, metertype_t mtp,
-                   var *v, double vweight) {
+                   var *v, double vweight, watchtrigger tr) {
     watchtype wtp;
     const char *cmp = var_get_str_forkey (v, "cmp");
     double weight = var_get_double_forkey (v, "weight");
@@ -63,23 +63,23 @@ void make_watcher (watchlist *w, meterid_t id, metertype_t mtp,
     
     if (mtp == MTYPE_INT) {
         if (strcmp (cmp, "lt") == 0) {
-            watchlist_add_uint (w, id, WATCH_UINT_LT, ival, weight);
+            watchlist_add_uint (w, id, WATCH_UINT_LT, ival, weight, tr);
         }
         else if (strcmp (cmp, "gt") == 0) {
-            watchlist_add_uint (w, id, WATCH_UINT_GT, ival, weight);
+            watchlist_add_uint (w, id, WATCH_UINT_GT, ival, weight, tr);
         }
     }
     else if (mtp == MTYPE_FRAC) {
         if (strcmp (cmp, "lt") == 0) {
-            watchlist_add_frac (w, id, WATCH_FRAC_LT, dval, weight);
+            watchlist_add_frac (w, id, WATCH_FRAC_LT, dval, weight, tr);
         }
         else if (strcmp (cmp, "gt") == 0) {
-            watchlist_add_uint (w, id, WATCH_FRAC_GT, dval, weight);
+            watchlist_add_uint (w, id, WATCH_FRAC_GT, dval, weight, tr);
         }
     }
     else if (mtp == MTYPE_STR) {
         if (strcmp (cmp, "eq") == 0) {
-            watchlist_add_str (w, id, WATCH_STR_MATCH, sval, weight);
+            watchlist_add_str (w, id, WATCH_STR_MATCH, sval, weight, tr);
         }
     }
 }
@@ -109,10 +109,10 @@ void watchlist_populate (watchlist *w, var *v_meters) {
                 
                 meterid_t id = makeid (mdef->id, tp, 0);
                 if (var_get_count (v_warn)) {
-                     make_watcher (w, id, tp, v_warn, 5.0);
+                     make_watcher (w, id, tp, v_warn, 5.0, WATCH_WARN);
                 }
                 if (var_get_count (v_alert)) {
-                     make_watcher (w, id, tp, v_alert, 10.0);
+                     make_watcher (w, id, tp, v_alert, 10.0, WATCH_ALERT);
                 }
             }
             mdef = mdef->next;
@@ -230,7 +230,7 @@ void handle_auth_packet (ioport *pktbuf, uint32_t netid,
     }
     
     /* Now's a good time to cut the dead wood */
-    session_expire (tnow - 600);
+    session_expire (tnow - 905);
     free (auth);
 }
 
