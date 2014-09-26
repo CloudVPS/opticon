@@ -4,6 +4,7 @@
 
 void watchlist_init (watchlist *self) {
     self->first = self->last = NULL;
+    pthread_mutex_init (&self->mutex, NULL);
 }
 
 void watchlist_add (watchlist *self, meterwatch *m) {

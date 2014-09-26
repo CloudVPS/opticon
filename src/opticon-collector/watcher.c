@@ -129,6 +129,7 @@ void watchthread_handle_host (host *host) {
         int handled = 0;
         
         /* First go over the tenant-defined watchers */
+        pthread_mutex_lock (&host->tenant->watch.mutex);
         w = host->tenant->watch.first;
         while (w) {
             if ((w->id & MMASK_NAME) == (m->id & MMASK_NAME)) {
@@ -137,15 +138,20 @@ void watchthread_handle_host (host *host) {
             }
             w = w->next;
         }
+        pthread_mutex_unlock (&host->tenant->watch.mutex);
         
         /* If the tenant didn't have anything suitable, go over the
            global watchlist */
-        if (! handled) w = APP.watch.first;
-        while (w) {
-            if ((w->id & MMASK_NAME) == (m->id & MMASK_NAME)) {
-                m->badness += calculate_badness (m, w, &maxtrigger);
+        if (! handled) {
+            pthread_mutex_lock (&APP.watch.mutex);
+            w = APP.watch.first;
+            while (w) {
+                if ((w->id & MMASK_NAME) == (m->id & MMASK_NAME)) {
+                    m->badness += calculate_badness (m, w, &maxtrigger);
+                }
+                w = w->next;
             }
-            w = w->next;
+            pthread_mutex_unlock (&APP.watch.mutex);
         }
        
         if (m->badness) problemcount++;

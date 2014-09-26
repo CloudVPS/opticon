@@ -88,7 +88,7 @@ void dictarray_to_host (host *h, const char *prefix, var *v) {
   * \param h The host to write meters to
   * \param val The data to parse.
   */
-void result_to_host (host *h, var *val) {
+void result_to_host (host *h, volatile var *val) {
     var *v = val->value.arr.first;
     int count;
     char firstlevel[16];
@@ -312,7 +312,7 @@ int daemon_main (int argc, const char *argv[]) {
                current round being performed */
             p = APP.probes.first;
             while (p) {
-                var *v = p->vcurrent;
+                volatile var *v = p->vcurrent;
                 /* See if data for this probe has been collected since the last kick */
                 if (v && (p->lastdispatch < p->lastreply)) {
                     /* Filter probes for the current lane */

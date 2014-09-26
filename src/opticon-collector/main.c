@@ -91,6 +91,7 @@ void make_watcher (watchlist *w, meterid_t id, metertype_t mtp,
   * \param v_meters The meter definitions.
   */
 void watchlist_populate (watchlist *w, var *v_meters) {
+    pthread_mutex_lock (&w->mutex);
     watchlist_clear (w);
     if (v_meters) {
         var *mdef = v_meters->value.arr.first;
@@ -124,6 +125,7 @@ void watchlist_populate (watchlist *w, var *v_meters) {
             mdef = mdef->next;
         }
     }
+    pthread_mutex_unlock (&w->mutex);
 }
 
 /** Looks up a tenant in memory and in the database, does the necessary
@@ -273,6 +275,36 @@ void handle_meter_packet (ioport *pktbuf, uint32_t netid) {
     ioport_close (unwrap);
 }
 
+void conf_reloader_run (thread *t) {
+    conf_reloader *self = (conf_reloader *) t;
+    while (1) {
+        conditional_wait_fresh (self->cond);
+        if (! load_json (APP.conf, APP.confpath)) {
+            log_error ("Error loading %s: %s\n",
+                       APP.confpath, parse_error());
+        }
+        else {
+            opticonf_handle_config (APP.conf);
+        }
+    }
+}
+
+conf_reloader *conf_reloader_create (void) {
+    conf_reloader *self = (conf_reloader *) malloc (sizeof (conf_reloader));
+    self->cond = conditional_create();
+    thread_init (&self->super, conf_reloader_run, NULL);
+    return self;
+}
+
+void conf_reloader_reload (conf_reloader *self) {
+    conditional_signal (self->cond);
+}
+
+void daemon_sighup_handler (int sig) {
+    conf_reloader_reload (APP.reloader);
+    signal (SIGHUP, daemon_sighup_handler);
+}
+
 /** Main loop. Waits for a packet, then handles it. */
 int daemon_main (int argc, const char *argv[]) {
     if (strcmp (APP.logpath, "@syslog") == 0) {
@@ -286,7 +318,10 @@ int daemon_main (int argc, const char *argv[]) {
     
     /* Set up threads */
     APP.queue = packetqueue_create (1024, APP.transport);
+    APP.reloader = conf_reloader_create();
     APP.watchthread = thread_create (watchthread_run, NULL);
+    
+    signal (SIGHUP, daemon_sighup_handler);
     
     while (1) {
         pktbuf *pkt = packetqueue_waitpkt (APP.queue);
@@ -382,7 +417,7 @@ int conf_db_path (const char *id, var *v, updatetype tp) {
 
 /** Set up watchlist from meter definitions */
 int conf_meters (const char *id, var *v, updatetype tp) {
-    if (tp != UPDATE_ADD) return 0;
+    if (tp == UPDATE_REMOVE) return 0;
     watchlist_populate (&APP.watch, v);
     return 1;
 }

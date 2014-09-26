@@ -115,6 +115,7 @@ typedef struct meterwatch_s {
 typedef struct watchlist_s {
     meterwatch          *first;
     meterwatch          *last;
+    pthread_mutex_t      mutex;
 } watchlist;
 
 /** Structure representing a keystone tenant */

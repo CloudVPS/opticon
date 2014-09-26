@@ -32,10 +32,10 @@ typedef struct probe_s {
     probefunc_f      func; /**< Function that performs one probe */
     struct probe_s  *prev; /**< Link neighbour */
     struct probe_s  *next; /**< Link neighbour */
-    var             *vcurrent; /**< Current value */
-    var             *vold; /**< Previous value */
+    volatile var    *vcurrent; /**< Current value */
+    volatile var    *vold; /**< Previous value */
     time_t           lastpulse; /**< Last rigger time */
-    time_t           lastreply; /**< Last update time */
+    volatile time_t  lastreply; /**< Last update time */
     time_t           lastdispatch; /**< Last time it was dispatched */
     int              interval; /**< Configured time interval */
 } probe;

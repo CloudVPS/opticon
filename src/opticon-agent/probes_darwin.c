@@ -170,6 +170,7 @@ var *runprobe_top (probe *self) {
 
 /** Diskfree probe, parses output of /bin/df */
 var *runprobe_df (probe *self) {
+    log_info ("runprobe_df start");
     char buffer[1024];
     char device[32];
     char mount[32];
@@ -243,6 +244,7 @@ var *runprobe_df (probe *self) {
         var_set_str_forkey (node, "mount", mount);
     }
     pclose (f);
+    log_info ("runprobe_df done");
     return res;
 }
 
