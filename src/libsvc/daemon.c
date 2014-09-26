@@ -8,6 +8,7 @@
 #include <sys/wait.h>
 #include <string.h>
 #include <stdlib.h>
+#include <fcntl.h>
 
 static int WATCHDOG_EXIT; /**< Flag for exiting the respawn-loop */
 static pid_t SERVICE_PID; /**< Currently active pid for the service */
@@ -139,6 +140,10 @@ int daemonize (const char *pidfilepath, int argc,
             close (0);
             close (1);
             close (2);
+            
+            open ("/dev/null", O_RDONLY);
+            open ("/dev/null", O_WRONLY);
+            open ("/dev/null", O_WRONLY);
             
             /* Fork off the watchdog process */
             switch (pwatchdog = fork()) {
