@@ -5,6 +5,7 @@
 #include <stdarg.h>
 #include <stdlib.h>
 #include <time.h>
+#include <pthread.h>
 
 loghandle *LOG = NULL;
 
@@ -13,9 +14,15 @@ void syslog_write (loghandle *h, int prio, const char *dt) {
     syslog (prio, "%s", dt);
 }
 
+typedef struct logfile_data_s {
+    FILE *f;
+    pthread_mutex_t mutex;
+} logfile_data;
+
 /** Implementaton of log_write for file-based logging */
 void logfile_write (loghandle *h, int prio, const char *dt) {
-    FILE *f = (FILE *) h->data;
+    logfile_data *d;
+    FILE *f = (FILE *) d->f;
     char tstr[64];
     time_t tnow = time (NULL);
     struct tm tm;
@@ -44,8 +51,10 @@ void logfile_write (loghandle *h, int prio, const char *dt) {
             break;
     }
     
+    pthread_mutex_lock (&d->mutex);
     fprintf (f, "%s [%s] %s\n", tstr, leveltext, dt);
     fflush (f);
+    pthread_mutex_unlock (&d->mutex);
 }
 
 /** Connect to syslog
@@ -63,7 +72,11 @@ void log_open_syslog (const char *name) {
   */
 void log_open_file (const char *filename) {
     LOG = (loghandle *) malloc (sizeof (loghandle));
-    LOG->data = fopen (filename, "a");
+    LOG->data = malloc (sizeof (logfile_data));
+    logfile_data *d = (logfile_data *) LOG->data;
+    
+    d->f = fopen (filename, "a");
+    pthread_mutex_init (&d->mutex, NULL);
     LOG->write = logfile_write;
 }
 
