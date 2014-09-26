@@ -13,7 +13,7 @@ int import_dictlevel (host *into, const char *prefix, var *v) {
     meterid_t mid;
     meter *m;
     const char *ss;
-    int ii;
+    uint64_t ii;
     double dd;
     
     var *vcrsr = firstnode;
@@ -41,7 +41,6 @@ int import_dictlevel (host *into, const char *prefix, var *v) {
                 for (int i=0; i<count; ++i) {
                     nodecrsr = var_get_dict_atindex (v->parent, i);
                     ii = var_get_int_forkey (nodecrsr, childid);
-                    if (ii<0) continue;
                     meter_set_uint (m, i, ii);
                 }
                 break;
@@ -93,7 +92,7 @@ int import_json (host *into, const char *json) {
     meter *m = NULL;
     meterid_t mid;
     vartype typ;
-    int ival;
+    uint64_t ival;
     double dval;
     int toplen;
     
@@ -111,11 +110,6 @@ int import_json (host *into, const char *json) {
             
             case VAR_INT:
                 ival = crsr->value.ival;
-                if (ival < 0) {
-                    fprintf (stderr, "Warning: cannot encode negative "
-                             "value for %s\n", crsr->id);
-                    ival = 0;
-                }
                 mid = makeid (crsr->id, MTYPE_INT, 0);
                 m = host_get_meter (into, mid);
                 meter_setcount (m, 0);
@@ -188,7 +182,6 @@ int import_json (host *into, const char *json) {
                     switch (typ) {
                         case VAR_NULL:
                         case VAR_INT:
-                            if (cc->value.ival <0) break;
                             meter_set_uint (m, i, cc->value.ival);
                             break;
                         case VAR_DOUBLE:
@@ -219,7 +212,6 @@ int import_json (host *into, const char *json) {
                     strcat (idstr, cc->id);
                     switch (cc->type) {
                         case VAR_INT:
-                            if (cc->value.ival<0) break;
                             mid = makeid (idstr, MTYPE_INT, 0);
                             m = host_get_meter (into, mid);
                             meter_setcount (m, 0);

@@ -102,13 +102,13 @@ typedef union {
   * for a host.
   */
 typedef struct meterwatch_s {
-    struct meterwatch_s *next;
-    struct meterwatch_s *prev;
-    watchtrigger         trigger;
-    meterid_t            id;
-    watchtype            tp;
-    watchdata            dat;
-    double               badness;
+    struct meterwatch_s *next; /**< List neighbour */
+    struct meterwatch_s *prev; /**< List neighbour */
+    watchtrigger         trigger; /**< Alert level trigger type */
+    meterid_t            id; /** id to match */
+    watchtype            tp; /** Evaluation function to use */
+    watchdata            dat; /** Match argument */
+    double               badness; /** Impact weight */
 } meterwatch;
 
 /** Linked list header of a meterwatch list */

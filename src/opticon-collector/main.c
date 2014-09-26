@@ -96,6 +96,7 @@ void watchlist_populate (watchlist *w, var *v_meters) {
         while (mdef) {
             var *v_warn = var_get_dict_forkey (mdef, "warning");
             var *v_alert = var_get_dict_forkey (mdef, "alert");
+            var *v_crit = var_get_dict_forkey (mdef, "critical");
             const char *type = var_get_str_forkey (mdef, "type");
             if (type && (v_warn || v_alert)) {
                 metertype_t tp;
@@ -114,6 +115,9 @@ void watchlist_populate (watchlist *w, var *v_meters) {
                 }
                 if (var_get_count (v_alert)) {
                      make_watcher (w, id, tp, v_alert, 10.0, WATCH_ALERT);
+                }
+                if (var_get_count (v_crit)) {
+                    make_watcher (w, id, tp, v_crit, 10.0, WATCH_CRIT);
                 }
             }
             mdef = mdef->next;

@@ -56,7 +56,7 @@ int dump_var2 (var *v, FILE *into, int _indent) {
                     break;
                 
                 case VAR_INT:
-                    fprintf (into, "%i", crsr->value.ival);
+                    fprintf (into, "%llu", crsr->value.ival);
                     break;
                     
                 case VAR_DOUBLE:

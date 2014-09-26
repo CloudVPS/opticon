@@ -185,14 +185,14 @@ var *var_get_array_forkey (var *self, const char *key) {
   * \return The integer value, or 0 if it couldn't be resolved. Strings
   *         will be autoconverted. PHP all the things.
   */
-int var_get_int_forkey (var *self, const char *key) {
+uint64_t var_get_int_forkey (var *self, const char *key) {
     var *res = var_find_key (self, key);
     if (! res) return 0;
     if (res->type == VAR_STR) {
-        return atoi (res->value.sval);
+        return strtoull (res->value.sval, NULL, 10);
     }
     if (res->type == VAR_INT) return res->value.ival;
-    if (res->type == VAR_DOUBLE) return (int) res->value.dval;
+    if (res->type == VAR_DOUBLE) return (uint64_t) res->value.dval;
     return 0;
 }
 
@@ -237,9 +237,9 @@ int var_get_count (var *self) {
 }
 
 /** Get the direct int value of a var object. */
-int var_get_int (var *self) {
-    if (self->type == VAR_STR) return atoi (self->value.sval);
-    if (self->type == VAR_DOUBLE) return (int) self->value.dval;
+uint64_t var_get_int (var *self) {
+    if (self->type == VAR_STR) return strtoull (self->value.sval, NULL, 10);
+    if (self->type == VAR_DOUBLE) return (uint64_t) self->value.dval;
     if (self->type == VAR_INT) return self->value.ival;
     return 0;
 }
@@ -345,12 +345,12 @@ var *var_get_array_atindex (var *self, int idx) {
   * \param idx The array index (negative for measuring from the end).
   * \return The integer value, failed lookups will yield 0.
   */
-int var_get_int_atindex (var *self, int idx) {
+uint64_t var_get_int_atindex (var *self, int idx) {
     var *res = var_find_index (self, idx);
     if (! res) return 0;
     if (res->type == VAR_INT) return res->value.ival;
-    if (res->type == VAR_DOUBLE) return (int) res->value.dval;
-    if (res->type == VAR_STR) return atoi (res->value.sval);
+    if (res->type == VAR_DOUBLE) return (uint64_t) res->value.dval;
+    if (res->type == VAR_STR) return strtoull (res->value.sval, NULL, 10);
     return 0;
 }
 
@@ -453,7 +453,7 @@ void var_update_gendata (var *v, int is_updated) {
   * \param key The key within the dict.
   * \param val The value to set.
   */
-void var_set_int_forkey (var *self, const char *key, int val) {
+void var_set_int_forkey (var *self, const char *key, uint64_t val) {
     var *v = var_get_or_make (self, key, VAR_INT);
     if (! v) return;
     var_set_int (v, val);
@@ -471,7 +471,7 @@ void var_set_double_forkey (var *self, const char *key, double val) {
 }
 
 /** Set the direct integer value of a var */
-void var_set_int (var *v, int val) {
+void var_set_int (var *v, uint64_t val) {
     int is_orig = 0;
     
     v->generation = v->root->generation;
@@ -563,7 +563,7 @@ void var_clear_array (var *v) {
   * \param self The array
   * \param nval The integer to add.
   */
-void var_add_int (var *self, int nval) {
+void var_add_int (var *self, uint64_t nval) {
     if (self->type != VAR_ARRAY) return;
     var *nvar = var_alloc();
     nvar->type = VAR_INT;
