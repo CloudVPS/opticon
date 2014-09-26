@@ -4,6 +4,7 @@
 #include <errno.h>
 #include <sys/sysctl.h>
 
+/** Structure for keeping track of top records */
 typedef struct toprec_s {
     uint32_t pid;
     char cmd[32];
@@ -12,6 +13,7 @@ typedef struct toprec_s {
     char user[32];
 } toprec;
 
+/** Structure for keeping all the data for a single top round */
 typedef struct topinfo_s {
     toprec records[16];
     double cpu_usage;
@@ -21,10 +23,14 @@ typedef struct topinfo_s {
     double load15;
 } topinfo;
 
+/** Data that will be collected by the topthread. TOP[1] is the copy that is
+  * actively being written to, only after completion will it be copied to TOP[0],
+  * which should be considered the canonical copy */
 topinfo TOP[2];
 
 typedef enum { TOP_HDR, TOP_BODY } topstate;
 
+/** Utility function for copying a substring of a bit of space-formatted text */
 static void cpystr (char *into, const char *ptr, int sz) {
     int eos = 0;
     for (int i=0; i<sz; ++i) {
@@ -35,6 +41,9 @@ static void cpystr (char *into, const char *ptr, int sz) {
     into[eos] = 0;
 }
 
+/** Convert size-information in top output (number + B/M/G/K) to a number in
+  * kilobytes.
+  */
 static uint32_t sz2kb (const char *str) {
     int ival = atoi (str);
     if (! ival) return ival;
@@ -47,6 +56,8 @@ static uint32_t sz2kb (const char *str) {
     return ival;
 }
 
+/** Background thread that spawns /usr/bin/top and lets it run, parsing the output
+  * as it comes along. */
 void run_top (thread *me) {
     char buf[1024];
     topstate st = TOP_HDR;
@@ -120,8 +131,10 @@ void run_top (thread *me) {
     }
 }
 
+/** The above thread */
 thread *TOPTHREAD = NULL;
 
+/** The actual probe. Spawns the thread, reaps the benefits */
 var *runprobe_top (probe *self) {
     if (! TOPTHREAD) {
         TOPTHREAD = thread_create (run_top, NULL);
@@ -155,6 +168,7 @@ var *runprobe_top (probe *self) {
     return res;
 }
 
+/** Diskfree probe, parses output of /bin/df */
 var *runprobe_df (probe *self) {
     char buffer[1024];
     char device[32];
@@ -232,6 +246,7 @@ var *runprobe_df (probe *self) {
     return res;
 }
 
+/** Uptime probe. Uses Darwin-specific sysctl. */
 var *runprobe_uptime (probe *self) {
     var *res = var_alloc();
     struct timeval boottime;
@@ -245,3 +260,13 @@ var *runprobe_uptime (probe *self) {
     var_set_int_forkey (res, "uptime", tnow - boottime.tv_sec);
     return res;
 }
+
+/** List of built-in probe functions */
+builtinfunc BUILTINS[] = {
+    GLOBAL_BUILTINS,
+    {"probe_top", runprobe_top},
+    {"probe_df", runprobe_df},
+    {"probe_uptime", runprobe_uptime},
+    {NULL, NULL}
+};
+

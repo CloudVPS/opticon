@@ -239,6 +239,9 @@ int daemon_main (int argc, const char *argv[]) {
         time_t tnow = tlast = time (NULL);
         
         slowround = 0;
+        
+        /* If a slow round is due at this time, use the excuse to send an
+           authentication packet */
         if (nextslow <= tnow) {
             slowround = 1;
             uint32_t sid = APP.auth.sessionid;
@@ -248,12 +251,15 @@ int daemon_main (int argc, const char *argv[]) {
             APP.auth.serial = 0;
             APP.auth.tenantid = APP.tenantid;
             APP.auth.hostid = APP.hostid;
+            
+            /* Only rotate the AES key every half hour */
             if (tnow - lastkeyrotate > 1800) {
                 APP.auth.sessionkey = aeskey_create();
                 lastkeyrotate = tnow;
             }
             APP.auth.tenantkey = APP.collectorkey;
             
+            /* Dispatch */
             ioport *io_authpkt = ioport_wrap_authdata (&APP.auth,
                                                        gen_serial());
             
@@ -262,15 +268,17 @@ int daemon_main (int argc, const char *argv[]) {
             outtransport_send (APP.transport, (void*) buf, sz);
             authresender_schedule (APP.resender, buf, sz);
             ioport_close (io_authpkt);
+            
+            /* Schedule next slow round */
             nextslow = nextslow + 300;
         }
         
         log_debug ("Poking probes");
 
         probe *p = APP.probes.first;
-        
         time_t wakenext = tnow + 300;
-        
+
+        /* Go over the probes to figure out whether we should kick them */        
         while (p) {
             time_t firewhen = p->lastpulse + p->interval;
             if (firewhen <= tnow) {
@@ -278,6 +286,8 @@ int daemon_main (int argc, const char *argv[]) {
                 p->lastpulse = tnow;
             }
             
+            /* Figure out whether the next event for this probe is sooner
+               than the next wake-up time we determined so far */
             if (p->lastpulse + p->interval < wakenext) {
                 wakenext = p->lastpulse + p->interval;
             }
@@ -288,17 +298,24 @@ int daemon_main (int argc, const char *argv[]) {
         int collected = 0;
         host *h = host_alloc();
         
+        /* If we're in a slow round, we already know we're scheduled. Otherwise,
+           see if the next scheduled moment for sending a (fast lane) packet
+           has passed. */
         if (slowround || (tnow >= nextsend)) {
             h->uuid = APP.hostid;
             host_begin_update (h, time (NULL));
 
-            while (nextsend <= tnow) nextsend += 60;
+            if (! slowround) while (nextsend <= tnow) nextsend += 60;
             log_debug ("Collecting probes");
         
+            /* Go over the probes again, picking up the one relevant to the
+               current round being performed */
             p = APP.probes.first;
             while (p) {
                 var *v = p->vcurrent;
+                /* See if data for this probe has been collected since the last kick */
                 if (v && (p->lastdispatch < p->lastreply)) {
+                    /* Filter probes for the current lane */
                     if ((slowround && p->interval>60) ||
                         ((!slowround) && p->interval<61)) {
                         log_debug ("Collecting '%s'", p->call);
@@ -311,6 +328,7 @@ int daemon_main (int argc, const char *argv[]) {
             }
         }
         
+        /* If any data was collected, encode it */
         if (collected) {
             log_debug ("Encoding probes");
         
@@ -347,6 +365,7 @@ int daemon_main (int argc, const char *argv[]) {
             sz = ioport_read_available (wrapped);
             buf = ioport_get_buffer (wrapped);
         
+            /* Send it off into space */
             outtransport_send (APP.transport, (void*) buf, sz);
             log_info ("%s lane packet sent: %i bytes", 
                       slowround ? "Slow":"Fast", sz);
@@ -356,6 +375,7 @@ int daemon_main (int argc, const char *argv[]) {
             host_delete (h);
         }
         
+        /* Figure out what the next scheduled wake-up time is */
         tnow = time (NULL);
         if (nextsend < wakenext) wakenext = nextsend;
         if (nextslow < wakenext) wakenext = nextslow;

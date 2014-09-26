@@ -3,6 +3,7 @@
 #include <libopticonf/var.h>
 #include "probes.h"
 
+/** Get the hostname. POSIX compliant */
 var *runprobe_hostname (probe *self) {
     char out[256];
     gethostname (out, 255);
@@ -11,6 +12,7 @@ var *runprobe_hostname (probe *self) {
     return res;
 }
 
+/** Get kernel version information. POSIX compliant. */
 var *runprobe_uname (probe *self) {
     var *res = var_alloc();
     var *v_os = var_get_dict_forkey (res, "os");
@@ -22,6 +24,11 @@ var *runprobe_uname (probe *self) {
     return res;
 }
 
+#define GLOBAL_BUILTINS \
+    {"probe_hostname", runprobe_hostname}, \
+    {"probe_uname", runprobe_uname}
+
+
 #if defined(OS_DARWIN)
   #include "probes_darwin.c"
 #elif defined (OS_LINUX)
@@ -29,14 +36,4 @@ var *runprobe_uname (probe *self) {
 #else
   #error Undefined Operating System
 #endif
-
-/** List of built-in probe functions */
-builtinfunc BUILTINS[] = {
-    {"probe_top", runprobe_top},
-    {"probe_hostname", runprobe_hostname},
-    {"probe_uname", runprobe_uname},
-    {"probe_df", runprobe_df},
-    {"probe_uptime", runprobe_uptime},
-    {NULL, NULL}
-};
 
