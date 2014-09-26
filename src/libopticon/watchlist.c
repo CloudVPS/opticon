@@ -65,4 +65,5 @@ void watchlist_clear (watchlist *self) {
         free (w);
         w = nw;
     }
+    self->first = self->last = NULL;
 }
