@@ -71,16 +71,16 @@ probefunc_f probe_find_builtin (const char *id) {
 }
 
 /** Add a probe to a list */
-void probelist_add (probelist *self, probetype t, const char *call, int iv) {
+int probelist_add (probelist *self, probetype t, const char *call, int iv) {
+    probefunc_f func;
+    if (t == PROBE_BUILTIN) func = probe_find_builtin (call);
+    else func = runprobe_exec;
+    if (! func) return 0;
+    
     probe *p = probe_alloc();
     p->type = t;
     p->call = strdup (call);
-    if (t == PROBE_BUILTIN) {
-        p->func = probe_find_builtin (call);
-    }
-    else {
-        p->func = runprobe_exec;
-    }
+    p->func = func;
     p->interval = iv;
     
     if (self->last) {
@@ -91,6 +91,7 @@ void probelist_add (probelist *self, probetype t, const char *call, int iv) {
     else {
         self->first = self->last = p;
     }
+    return 1;
 }
 
 /** Start all probes in a list */

@@ -423,7 +423,7 @@ int conf_collector_key (const char *id, var *v, updatetype tp) {
 }
 
 /** Parse /meter into probes */
-int conf_meter (const char *id, var *v, updatetype tp) {
+int conf_probe (const char *id, var *v, updatetype tp) {
     if (tp != UPDATE_ADD) exit (0);
     const char *vtp = var_get_str_forkey (v, "type");
     const char *call = var_get_str_forkey (v, "call");
@@ -432,8 +432,12 @@ int conf_meter (const char *id, var *v, updatetype tp) {
     
     if (vtp && call && interval) {
         if (strcmp (vtp, "exec") == 0) t = PROBE_EXEC;
-        probelist_add (&APP.probes, t, call, interval);
-        return 1;
+        if (probelist_add (&APP.probes, t, call, interval)) {
+            return 1;
+        }
+        else {
+            log_error ("Error adding probe-call '%s'", call);
+        }
     }
     return 0;
 }
@@ -526,7 +530,7 @@ int main (int _argc, const char *_argv[]) {
     opticonf_add_reaction ("collector/key", conf_collector_key);
     opticonf_add_reaction ("collector/tenant", conf_tenant);
     opticonf_add_reaction ("collector/host", conf_host);
-    opticonf_add_reaction ("meter/*", conf_meter);
+    opticonf_add_reaction ("probes/*", conf_probe);
     
     APP.transport = outtransport_create_udp();
     APP.codec = codec_create_pkt();

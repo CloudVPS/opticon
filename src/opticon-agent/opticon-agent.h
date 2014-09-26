@@ -88,7 +88,7 @@ extern appcontext APP; /**< The keep-it-all-together blob */
 /* ============================= FUNCTIONS ============================= */
 
 probe           *probe_alloc (void);
-void             probelist_add (probelist *, probetype, const char *, int);
+int              probelist_add (probelist *, probetype, const char *, int);
 void             probelist_start (probelist *);
 void             probelist_cancel (probelist *);
 authresender    *authresender_create (outtransport *);
