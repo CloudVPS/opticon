@@ -119,117 +119,130 @@ void watchthread_handle_host (host *host) {
             log_info ("Status change host %s %s -> STALE", uuidstr, ostatus.str);
         }
         meter_set_str (m_status, 0, "STALE");
-        pthread_rwlock_unlock (&host->lock);
-        return;
     }
+    else {
 
-    /* Figure out badness for each meter, and add to host */
-    while (m) {
-        m->badness = 0.0;
-        int handled = 0;
+        /* Figure out badness for each meter, and add to host */
+        while (m) {
+            m->badness = 0.0;
+            int handled = 0;
         
-        /* First go over the tenant-defined watchers */
-        pthread_mutex_lock (&host->tenant->watch.mutex);
-        w = host->tenant->watch.first;
-        while (w) {
-            if ((w->id & MMASK_NAME) == (m->id & MMASK_NAME)) {
-                m->badness += calculate_badness (m, w, &maxtrigger);
-                handled = 1;
-            }
-            w = w->next;
-        }
-        pthread_mutex_unlock (&host->tenant->watch.mutex);
-        
-        /* If the tenant didn't have anything suitable, go over the
-           global watchlist */
-        if (! handled) {
-            pthread_mutex_lock (&APP.watch.mutex);
-            w = APP.watch.first;
+            /* First go over the tenant-defined watchers */
+            pthread_mutex_lock (&host->tenant->watch.mutex);
+            w = host->tenant->watch.first;
             while (w) {
                 if ((w->id & MMASK_NAME) == (m->id & MMASK_NAME)) {
                     m->badness += calculate_badness (m, w, &maxtrigger);
+                    handled = 1;
                 }
                 w = w->next;
             }
-            pthread_mutex_unlock (&APP.watch.mutex);
-        }
+            pthread_mutex_unlock (&host->tenant->watch.mutex);
        
-        if (m->badness) problemcount++;
-        totalbadness += m->badness;
-        m = m->next;
-    }
-    
-    /* Don't raise a CRIT alert on a WARN condition */
-    switch (maxtrigger) {
-        case WATCH_NONE:
-            totalbadness = 0.0;
-            break;
-        
-        case WATCH_WARN:
-            if (host->badness > 50.0) totalbadness = 0.0;
-            break;
-        
-        case WATCH_ALERT:
-            if (host->badness > 90.0) totalbadness = 0.0;
-            break;
-        
-        case WATCH_CRIT:
-            if (host->badness > 150.0) totalbadness = 0.0;
-            break;
-    }
-    
-    host->badness += totalbadness;
-    
-    /* Put up the problems as a meter as well */
-    meterid_t mid_problems = makeid ("problems",MTYPE_STR,0);
-    meter *m_problems = host_get_meter (host, mid_problems);
-    
-    /* While we're looking at it, consider the current badness, if there
-       are no problems, it should be going down. */
-    if (! problemcount) {
-        if (host->badness > 100.0) host->badness = host->badness/2.0;
-        else if (host->badness > 1.0) host->badness = host->badness *0.75;
-        else host->badness = 0.0;
-        meter_set_empty_array (m_problems);
-    }
-    else {
-        /* If we reached the top, current level may still be out of
-           its league, so allow it to decay slowly */
-        if (totalbadness == 0.0) host->badness *= 0.9;
-        
-        /* Fill in the problem array */
-        int i=0;
-        meter_setcount (m_problems, problemcount);
-        m = host->first;
-        
-        while (m && (i<16)) {
-            if (m->badness > 0.00) {
-                id2str (m->id, label);
-                meter_set_str (m_problems, i++, label);
+            /* If the tenant didn't have anything suitable, go over the
+               global watchlist */
+            if (! handled) {
+                pthread_mutex_lock (&APP.watch.mutex);
+                w = APP.watch.first;
+                /* First go over the tenant-defined watchers */
+                w = host->tenant->watch.first;
+                while (w) {
+                    if ((w->id & MMASK_NAME) == (m->id & MMASK_NAME)) {
+                        m->badness += calculate_badness (m, w, &maxtrigger);
+                        handled = 1;
+                    }
+                    w = w->next;
+                }
+       
+                /* If the tenant didn't have anything suitable, go over the
+                   global watchlist */
+                if (! handled) w = APP.watch.first;
+                while (w) {
+                    if ((w->id & MMASK_NAME) == (m->id & MMASK_NAME)) {
+                        m->badness += calculate_badness (m, w, &maxtrigger);
+                    }
+                    w = w->next;
+                }
+                pthread_mutex_unlock (&APP.watch.mutex);
             }
+      
+            if (m->badness) problemcount++;
+            totalbadness += m->badness;
             m = m->next;
         }
+    
+        /* Don't raise a CRIT alert on a WARN condition */
+        switch (maxtrigger) {
+            case WATCH_NONE:
+                totalbadness = 0.0;
+                break;
+        
+            case WATCH_WARN:
+                if (host->badness > 50.0) totalbadness = 0.0;
+                break;
+        
+            case WATCH_ALERT:
+                if (host->badness > 90.0) totalbadness = 0.0;
+                break;
+        
+            case WATCH_CRIT:
+                if (host->badness > 150.0) totalbadness = 0.0;
+                break;
+        }
+    
+        host->badness += totalbadness;
+    
+        /* Put up the problems as a meter as well */
+        meterid_t mid_problems = makeid ("problems",MTYPE_STR,0);
+        meter *m_problems = host_get_meter (host, mid_problems);
+    
+        /* While we're looking at it, consider the current badness, if there
+           are no problems, it should be going down. */
+        if (! problemcount) {
+            if (host->badness > 100.0) host->badness = host->badness/2.0;
+            else if (host->badness > 1.0) host->badness = host->badness *0.75;
+            else host->badness = 0.0;
+            meter_set_empty_array (m_problems);
+        }
+        else {
+            /* If we reached the top, current level may still be out of
+               its league, so allow it to decay slowly */
+            if (totalbadness == 0.0) host->badness *= 0.9;
+        
+            /* Fill in the problem array */
+            int i=0;
+            meter_setcount (m_problems, problemcount);
+            m = host->first;
+        
+            while (m && (i<16)) {
+                if (m->badness > 0.00) {
+                    id2str (m->id, label);
+                    meter_set_str (m_problems, i++, label);
+                }
+                m = m->next;
+            }
+        }
+    
+        meterid_t mid_badness = makeid ("badness",MTYPE_FRAC,0);
+        meter *m_badness = host_get_meter (host, mid_badness);
+        meter_setcount (m_badness, 0);
+        meter_set_frac (m_badness, 0, host->badness);
+    
+        const char *nstatus = "UNSET";
+    
+        /* Convert badness to a status text */
+        if (host->badness < 30.0) nstatus = "OK";
+        else if (host->badness < 80.0) nstatus = "WARN";
+        else if (host->badness < 120.0) nstatus = "ALERT";
+        else nstatus = "CRIT";
+    
+        if (strcmp (nstatus, ostatus.str) != 0) {
+            uuid2str (host->uuid, uuidstr);
+            log_info ("Status change host %s %s -> %s", uuidstr, ostatus.str, nstatus);
+        }
+    
+        meter_set_str (m_status, 0, nstatus);
     }
-    
-    meterid_t mid_badness = makeid ("badness",MTYPE_FRAC,0);
-    meter *m_badness = host_get_meter (host, mid_badness);
-    meter_setcount (m_badness, 0);
-    meter_set_frac (m_badness, 0, host->badness);
-    
-    const char *nstatus = "UNSET";
-    
-    /* Convert badness to a status text */
-    if (host->badness < 30.0) nstatus = "OK";
-    else if (host->badness < 80.0) nstatus = "WARN";
-    else if (host->badness < 120.0) nstatus = "ALERT";
-    else nstatus = "CRIT";
-    
-    if (strcmp (nstatus, ostatus.str) != 0) {
-        uuid2str (host->uuid, uuidstr);
-        log_info ("Status change host %s %s -> %s", uuidstr, ostatus.str, nstatus);
-    }
-    
-    meter_set_str (m_status, 0, nstatus);
     
     /* Write to db */
     if (db_open (APP.writedb, host->tenant->uuid, NULL)) {
