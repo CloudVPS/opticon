@@ -101,6 +101,7 @@ void watchthread_handle_host (host *host) {
     meterwatch *w;
     watchtrigger maxtrigger = WATCH_NONE;
     char label[16];
+    char uuidstr[40];
     
     pthread_rwlock_wrlock (&host->lock);
 
@@ -203,19 +204,21 @@ void watchthread_handle_host (host *host) {
     meter_setcount (m_badness, 0);
     meter_set_frac (m_badness, 0, host->badness);
     
+    const char *nstatus = "UNSET";
+    fstring ostatus = meter_get_str (m_status);
+    
     /* Convert badness to a status text */
-    if (host->badness < 30.0) {
-        meter_set_str (m_status, 0, "OK");
+    if (host->badness < 30.0) nstatus = "OK";
+    else if (host->badness < 80.0) nstatus = "WARN";
+    else if (host->badness < 120.0) nstatus = "ALERT";
+    else nstatus = "CRIT";
+    
+    if (strmp (nstatus, ostatus.str) != 0) {
+        uuid2str (host->uuid, uuidstr);
+        log_info ("Staus change host %s %s -> %s", uuidstr, ostatus.str, nstatus);
     }
-    else if (host->badness < 80.0) {
-        meter_set_str (m_status, 0, "WARN");
-    }
-    else if (host->badness < 120.0) {
-        meter_set_str (m_status, 0, "ALERT");
-    }
-    else {
-        meter_set_str (m_status, 0, "CRIT");
-    }
+    
+    meter_set_str (m_status, 0, nstatus);
     
     /* Write to db */
     if (db_open (APP.writedb, host->tenant->uuid, NULL)) {
