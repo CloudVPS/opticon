@@ -180,6 +180,7 @@ fstring meter_get_str (meter *m, unsigned int pos) {
     fstring res = {""};
     
     if (m->count >= SZ_EMPTY_VAL) return res;
+    if (m->d.any == NULL) return res;
 
     if (pos < (m->count?m->count:1) &&
         (m->id & MMASK_TYPE) == MTYPE_STR) {

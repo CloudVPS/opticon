@@ -108,7 +108,9 @@ void watchthread_handle_host (host *host) {
     /* We'll store the status information as a meter itself */
     meterid_t mid_status = makeid ("status",MTYPE_STR,0);
     meter *m_status = host_get_meter (host, mid_status);
+    fstring ostatus = meter_get_str (m_status, 0);
     meter_setcount (m_status, 0);
+    if (ostatus.str[0] == 0) strcpy (ostatus.str, "UNSET");
     
     /* If the data is stale, don't add to badness, just set the status. */
     if ((tnow - host->lastmodified) > 80) {
@@ -205,7 +207,6 @@ void watchthread_handle_host (host *host) {
     meter_set_frac (m_badness, 0, host->badness);
     
     const char *nstatus = "UNSET";
-    fstring ostatus = meter_get_str (m_status);
     
     /* Convert badness to a status text */
     if (host->badness < 30.0) nstatus = "OK";
@@ -213,9 +214,9 @@ void watchthread_handle_host (host *host) {
     else if (host->badness < 120.0) nstatus = "ALERT";
     else nstatus = "CRIT";
     
-    if (strmp (nstatus, ostatus.str) != 0) {
+    if (strcmp (nstatus, ostatus.str) != 0) {
         uuid2str (host->uuid, uuidstr);
-        log_info ("Staus change host %s %s -> %s", uuidstr, ostatus.str, nstatus);
+        log_info ("Status change host %s %s -> %s", uuidstr, ostatus.str, nstatus);
     }
     
     meter_set_str (m_status, 0, nstatus);
