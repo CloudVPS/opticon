@@ -114,6 +114,10 @@ void watchthread_handle_host (host *host) {
     
     /* If the data is stale, don't add to badness, just set the status. */
     if ((tnow - host->lastmodified) > 80) {
+        if (strcmp (ostatus.str, "STALE") != 0) {
+            uuid2str (host->uuid, uuidstr);
+            log_info ("Status change host %s %s -> STALE", uuidstr, ostatus.str);
+        }
         meter_set_str (m_status, 0, "STALE");
         pthread_rwlock_unlock (&host->lock);
         return;
