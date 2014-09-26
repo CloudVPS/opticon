@@ -21,14 +21,11 @@ typedef struct logfile_data_s {
 
 /** Implementaton of log_write for file-based logging */
 void logfile_write (loghandle *h, int prio, const char *dt) {
-    logfile_data *d;
+    logfile_data *d = (logfile_data *) h->data;
+    const char *leveltext = NULL;
     FILE *f = (FILE *) d->f;
     char tstr[64];
-    time_t tnow = time (NULL);
-    struct tm tm;
-    localtime_r (&tnow, &tm);
-    strftime (tstr, 64, "%Y-%m-%d %H:%M:%S", &tm);
-    const char *leveltext = NULL;
+
     switch (prio) {
         case LOG_ERR:
             leveltext = "ERROR";
@@ -50,6 +47,11 @@ void logfile_write (loghandle *h, int prio, const char *dt) {
             leveltext = "OTHER";
             break;
     }
+
+    time_t tnow = time (NULL);
+    struct tm tm;
+    localtime_r (&tnow, &tm);
+    strftime (tstr, 64, "%Y-%m-%d %H:%M:%S", &tm);
     
     pthread_mutex_lock (&d->mutex);
     fprintf (f, "%s [%s] %s\n", tstr, leveltext, dt);
@@ -60,9 +62,10 @@ void logfile_write (loghandle *h, int prio, const char *dt) {
 /** Connect to syslog
   * \param name Name of our program.
   */
-void log_open_syslog (const char *name) {
+void log_open_syslog (const char *name, int maxprio) {
     LOG = (loghandle *) malloc (sizeof (loghandle));
     LOG->write = syslog_write;
+    LOG->maxprio = maxprio;
     LOG->data = NULL;
     openlog (name, LOG_PID, LOG_DAEMON);
 }
@@ -70,7 +73,7 @@ void log_open_syslog (const char *name) {
 /** Open a file-based logger.
   * \param filename Full path to the file to write/append to.
   */
-void log_open_file (const char *filename) {
+void log_open_file (const char *filename, int maxprio) {
     LOG = (loghandle *) malloc (sizeof (loghandle));
     LOG->data = malloc (sizeof (logfile_data));
     logfile_data *d = (logfile_data *) LOG->data;
@@ -78,11 +81,14 @@ void log_open_file (const char *filename) {
     d->f = fopen (filename, "a");
     pthread_mutex_init (&d->mutex, NULL);
     LOG->write = logfile_write;
+    LOG->maxprio = maxprio;
 }
 
 /** Dispatcer of a message to either stderr, or the log handle. */
 void log_string (int prio, const char *str) {
-    if (LOG) LOG->write (LOG, prio, str);
+    if (LOG) {
+        if (prio <= LOG->maxprio) LOG->write (LOG, prio, str);
+    }
     else {
         if (prio == LOG_ERR) {
             fprintf (stderr, "[ERROR] ");

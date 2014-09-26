@@ -21,6 +21,7 @@ typedef struct appcontext_s {
     watchlist    watch;
     thread      *watchthread;
     var         *conf;
+    int          loglevel;
     const char  *logpath;
     const char  *confpath;
     const char  *pidfile;

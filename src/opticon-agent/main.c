@@ -11,6 +11,7 @@
 #include <libsvc/cliopt.h>
 #include <libsvc/transport_udp.h>
 #include <arpa/inet.h>
+#include <syslog.h>
 
 appcontext APP;
 
@@ -218,10 +219,10 @@ int daemon_main (int argc, const char *argv[]) {
     size_t sz;
 
     if (strcmp (APP.logpath, "@syslog") == 0) {
-        log_open_syslog ("opticon-collector");
+        log_open_syslog ("opticon-collector", APP.loglevel);
     }
     else {
-        log_open_file (APP.logpath);
+        log_open_file (APP.logpath, APP.loglevel);
     }
     
     probelist_start (&APP.probes);
@@ -441,6 +442,17 @@ int set_logpath (const char *i, const char *v) {
     return 1;
 }
 
+/** Handle --loglevel */
+int set_loglevel (const char *i, const char *v) {
+    if (strcmp (v, "CRIT") == 0) APP.loglevel = LOG_CRIT;
+    else if (strcmp (v, "ERR") == 0) APP.loglevel = LOG_ERR;
+    else if (strcmp (v, "WARNING") == 0) APP.loglevel = LOG_WARNING;
+    else if (strcmp (v, "INFO") == 0) APP.loglevel = LOG_INFO;
+    else if (strcmp (v, "DEBUG") == 0) APP.loglevel = LOG_DEBUG;
+    else APP.loglevel = LOG_WARNING;
+    return 1;
+}
+
 /** Command line options */
 cliopt CLIOPT[] = {
     {
@@ -463,6 +475,13 @@ cliopt CLIOPT[] = {
         OPT_VALUE,
         "@syslog",
         set_logpath
+    },
+    {
+        "--loglevel",
+        "-L",
+        OPT_VALUE,
+        "INFO",
+        set_loglevel
     },
     {
         "--config-path",

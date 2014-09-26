@@ -3,6 +3,15 @@
 #include <libopticon/datatypes.h>
 #include <libopticon/util.h>
 
+/** Import an 'array-of-dicts' from a var tree into a host.
+  * This assumes that we are being fed a var array of dicts that all have similar
+  * fields. So "q":[{"a":1,"b":42},{"a":4,"b":69}] turns into two arrays:
+  * "q/a":[1,42] and "q/b":[4,69].
+  * \param into Host to read the data into
+  * \param prefix The variable prefix (like 'q' in our example).
+  * \param v The array object.
+  * \return 1 on success, 0 on failure.
+  */
 int import_dictlevel (host *into, const char *prefix, var *v) {
     char idstr[32];
     strcpy (idstr, prefix);
@@ -77,6 +86,7 @@ int import_dictlevel (host *into, const char *prefix, var *v) {
     return 1;
 }
 
+/** Import a host from json data */
 int import_json (host *into, const char *json) {
     var *dat = var_alloc();
     char idstr[32];

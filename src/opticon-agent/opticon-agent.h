@@ -66,6 +66,7 @@ typedef struct appcontext_s {
     authresender    *resender;
     probelist        probes;
     var             *conf;
+    int              loglevel;
     const char      *logpath;
     const char      *confpath;
     const char      *pidfile;
