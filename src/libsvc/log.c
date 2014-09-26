@@ -14,6 +14,7 @@ void syslog_write (loghandle *h, int prio, const char *dt) {
     syslog (prio, "%s", dt);
 }
 
+/** Metadata for a logfile logger */
 typedef struct logfile_data_s {
     FILE *f;
     pthread_mutex_t mutex;
