@@ -9,7 +9,7 @@
   #define defaultvalue(foo)
 #endif
 
-parameter int default_meter_timeout         defaultvalue(300);
-parameter const char *default_service_user  defaultvalue("opticon");
+parameter int         default_meter_timeout     defaultvalue(600);
+parameter const char *default_service_user      defaultvalue("opticon");
 
 #endif

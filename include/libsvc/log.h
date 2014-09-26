@@ -20,8 +20,8 @@ extern loghandle *LOG; /**< Log system to use, NULL for stderr */
 
 /* ============================= FUNCTIONS ============================= */
 
-void log_open_syslog (const char *name, int prio);
-void log_open_file (const char *filename, int prio);
+void log_open_syslog (const char *name, int maxprio);
+void log_open_file (const char *filename, int maxprio);
 void log_debug (const char *fmt, ...);
 void log_info (const char *fmt, ...);
 void log_error (const char *fmt, ...);

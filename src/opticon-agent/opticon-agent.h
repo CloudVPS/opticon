@@ -52,6 +52,7 @@ typedef struct builtinfunc_s {
     probefunc_f      func;
 } builtinfunc;
 
+/** Thread used for resending a random subset of authentication packets */
 typedef struct authresender_s {
     thread           super;
     conditional     *cond;
