@@ -1,4 +1,4 @@
-#include <libsvc/thread.h>
+#include <libopticon/thread.h>
 #include <stdio.h>
 #include <unistd.h>
 #include <assert.h>

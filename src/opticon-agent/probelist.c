@@ -1,5 +1,5 @@
 #include <libopticon/parse.h>
-#include <libsvc/log.h>
+#include <libopticon/log.h>
 #include "opticon-agent.h"
 #include "probes.h"
 

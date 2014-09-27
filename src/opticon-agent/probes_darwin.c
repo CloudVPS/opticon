@@ -1,4 +1,4 @@
-#include <libsvc/log.h>
+#include <libopticon/log.h>
 #include <ctype.h>
 #include <time.h>
 #include <errno.h>

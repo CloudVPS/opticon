@@ -1,7 +1,7 @@
-#include <libsvc/packetqueue.h>
-#include <libsvc/thread.h>
-#include <libsvc/transport.h>
-#include <libsvc/log.h>
+#include <libopticon/packetqueue.h>
+#include <libopticon/thread.h>
+#include <libopticon/transport.h>
+#include <libopticon/log.h>
 #include <string.h>
 #include <stdio.h>
 #include <unistd.h>

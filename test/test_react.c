@@ -1,5 +1,5 @@
 #include <libopticon/react.h>
-#include <libsvc/log.h>
+#include <libopticon/log.h>
 #include <stdio.h>
 #include <assert.h>
 #include <string.h>

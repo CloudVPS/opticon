@@ -3,7 +3,7 @@
 #include <string.h>
 
 #include <libopticondb/db_local.h>
-#include <libsvc/cliopt.h>
+#include <libopticon/cliopt.h>
 
 #include "cmd.h"
 

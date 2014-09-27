@@ -1,8 +1,8 @@
 #ifndef _PACKETQUEUE_H
 #define _PACKETQUEUE_H 1
 
-#include <libsvc/thread.h>
-#include <libsvc/transport.h>
+#include <libopticon/thread.h>
+#include <libopticon/transport.h>
 #include <pthread.h>
 #include <stdlib.h>
 #include <stdint.h>

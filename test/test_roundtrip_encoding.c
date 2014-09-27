@@ -6,7 +6,7 @@
 #include <libopticon/compress.h>
 #include <libopticon/ioport_file.h>
 #include <libopticon/aes.h>
-#include <libsvc/log.h>
+#include <libopticon/log.h>
 #include <assert.h>
 #include <stdio.h>
 

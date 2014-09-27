@@ -1,6 +1,6 @@
 #include <libopticon/defaults.h>
-#include <libsvc/daemon.h>
-#include <libsvc/log.h>
+#include <libopticon/daemon.h>
+#include <libopticon/log.h>
 #include <sys/types.h>
 #include <pwd.h>
 #include <stdio.h>

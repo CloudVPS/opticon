@@ -7,10 +7,10 @@
 #include <libopticon/var.h>
 #include <libopticon/parse.h>
 #include <libopticon/react.h>
-#include <libsvc/daemon.h>
-#include <libsvc/log.h>
-#include <libsvc/cliopt.h>
-#include <libsvc/transport_udp.h>
+#include <libopticon/daemon.h>
+#include <libopticon/log.h>
+#include <libopticon/cliopt.h>
+#include <libopticon/transport_udp.h>
 #include <arpa/inet.h>
 #include <syslog.h>
 

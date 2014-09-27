@@ -5,9 +5,9 @@
 #include <libopticon/codec.h>
 #include <libopticondb/db.h>
 #include <libopticon/var.h>
-#include <libsvc/packetqueue.h>
-#include <libsvc/transport.h>
-#include <libsvc/thread.h>
+#include <libopticon/packetqueue.h>
+#include <libopticon/transport.h>
+#include <libopticon/thread.h>
 
 /* =============================== TYPES =============================== */
 

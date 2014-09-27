@@ -1,4 +1,4 @@
-#include <libsvc/thread.h>
+#include <libopticon/thread.h>
 #include <stdlib.h>
 #include <pthread.h>
 

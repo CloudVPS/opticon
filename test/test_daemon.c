@@ -1,5 +1,5 @@
-#include <libsvc/daemon.h>
-#include <libsvc/log.h>
+#include <libopticon/daemon.h>
+#include <libopticon/log.h>
 #include <stdio.h>
 #include <unistd.h>
 #include <signal.h>

@@ -1,6 +1,6 @@
 #include <libopticon/parse.h>
 #include <libopticon/dump.h>
-#include <libsvc/log.h>
+#include <libopticon/log.h>
 #include <stdio.h>
 #include <string.h>
 #include <assert.h>
