@@ -4,6 +4,7 @@
 #include <unistd.h>
 #include <sys/stat.h>
 #include <arpa/inet.h>
+#include <fcntl.h>
 
 /** Compare two UUIDs.
   * \param first First UUID.
@@ -47,6 +48,15 @@ uuid mkuuid (const char *str) {
         }
         crsr++;
     }
+    return res;
+}
+
+/** Generate a random uuid */
+uuid uuidgen (void) {
+    uuid res = {0,0};
+    int fdevr = open ("/dev/random",O_RDONLY);
+    read (fdevr, &res, sizeof(res));
+    close (fdevr);
     return res;
 }
 

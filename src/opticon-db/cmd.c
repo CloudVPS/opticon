@@ -25,7 +25,7 @@ int cmd_tenant_list (int argc, const char *argv[]) {
         printf ("\"tenants\":{\n");
     }
     else {
-        printf ("UUID                                 Hosts\n");
+        printf ("UUID                                 Hosts  Name\n");
         printf ("---------------------------------------------"
                 "----------------------------------\n");
     }
@@ -33,20 +33,30 @@ int cmd_tenant_list (int argc, const char *argv[]) {
     uuid *list = db_list_tenants (DB, &count);
     for (int i=0; i<count; ++i) {
         int cnt = 0;
+        var *meta = NULL;
+        const char *tenantname = NULL;
+        
         if (db_open (DB, list[i], NULL)) {
             uuid *list = db_list_hosts (DB, &cnt);
+            meta = db_get_metadata (DB);
             if (list) free(list);
             db_close (DB);
         }
+
+        if (meta) tenantname = var_get_str_forkey (meta, "name");
+        if (! tenantname) tenantname = "";
+        
         uuid2str (list[i], uuidstr);
         if (OPTIONS.json) {
-            printf ("    \"%s\":{\"count\":%i}", uuidstr, cnt);
+            printf ("    \"%s\":{\"count\":%i,\"name\":\"%s\"}", 
+                    uuidstr, cnt, tenantname);
             if ((i+1)<count) printf (",\n");
             else printf ("\n");
         }
         else {
-            printf ("%s %5i\n", uuidstr, cnt);
+            printf ("%s %5i  %s\n", uuidstr, cnt, tenantname);
         }
+        if (meta) var_free (meta);
     }
     if (OPTIONS.json) printf ("}\n");
     db_free (DB);
@@ -76,6 +86,124 @@ int cmd_tenant_get_metadata (int argc, const char *argv[]) {
     return 0;
 }
 
+/** The tenant-set-metadata command */
+int cmd_tenant_set_metadata (int argc, const char *argv[]) {
+    uuid tenant;
+    
+    if (argc < 4) {
+        fprintf (stderr, "%% Missing key and value arguments\n");
+        return 1;
+    }
+    
+    const char *key = argv[2];
+    const char *val = argv[3];
+    
+    if (OPTIONS.tenant[0] == 0) {
+        fprintf (stderr, "%% No tenantid provided\n");
+        return 1;
+    }
+
+    tenant = mkuuid (OPTIONS.tenant);
+    db *DB = localdb_create (OPTIONS.path);
+    if (! db_open (DB, tenant, NULL)) {
+        fprintf (stderr, "%% Could not open %s\n", OPTIONS.tenant);
+        db_free (DB);
+        return 1;
+    }
+    var *meta = db_get_metadata (DB);
+    var_set_str_forkey (meta, key, val);
+    db_set_metadata (DB, meta);
+    var_free (meta);
+    db_free (DB);
+    return 0;
+}
+
+int cmd_tenant_add_meter (int argc, const char *argv[]) {
+    uuid tenant;
+    if (OPTIONS.tenant[0] == 0) {
+        fprintf (stderr, "%% No tenantid provided\n");
+        return 1;
+    }
+    tenant = mkuuid (OPTIONS.tenant);
+    if (OPTIONS.meter[0] == 0) {
+        fprintf (stderr, "%% No meter provided\n");
+        return 1;
+    }
+    db *DB = localdb_create (OPTIONS.path);
+    if (! db_open (DB, tenant, NULL)) {
+        fprintf (stderr, "%% Could not open %s\n", OPTIONS.tenant);
+        db_free (DB);
+        return 1;
+    }
+    var *meta = db_get_metadata (DB);
+    var *v_meter = var_get_dict_forkey (meta, "meter");
+    var *v_this = var_get_dict_forkey (v_meter, OPTIONS.meter);
+    var_set_str_forkey (v_this, "type", OPTIONS.type);
+    if (OPTIONS.description[0]) {
+        var_set_str_forkey (v_this, "description", OPTIONS.description);
+    }
+    if (OPTIONS.unit[0]) {
+        var_set_str_forkey (v_this, "unit", OPTIONS.unit);
+    }
+    db_set_metadata (DB, meta);
+    var_free (meta);
+    db_free (DB);
+    return 0;
+}
+
+int cmd_tenant_set_meter_watch (int argc, const char *argv[]) {
+    uuid tenant;
+    if (OPTIONS.tenant[0] == 0) {
+        fprintf (stderr, "%% No tenantid provided\n");
+        return 1;
+    }
+    tenant = mkuuid (OPTIONS.tenant);
+    if (OPTIONS.meter[0] == 0) {
+        fprintf (stderr, "%% No meter provided\n");
+        return 1;
+    }
+    if (OPTIONS.match[0] == 0) {
+        fprintf (stderr, "%% No match provided\n");
+        return 1;
+    }
+    if (OPTIONS.value[0] == 0) {
+        fprintf (stderr, "%% No value provided\n");
+        return 1;
+    }
+    db *DB = localdb_create (OPTIONS.path);
+    if (! db_open (DB, tenant, NULL)) {
+        fprintf (stderr, "%% Could not open %s\n", OPTIONS.tenant);
+        db_free (DB);
+        return 1;
+    }
+    var *meta = db_get_metadata (DB);
+    var *v_meter = var_get_dict_forkey (meta, "meter");
+    var *v_mdef = var_get_dict_forkey (v_meter, OPTIONS.meter);
+    const char *tp = var_get_str_forkey (v_mdef, "type");
+    if ((!tp) || (! *tp)) {
+        fprintf (stderr, "%% Meter %s not defined\n", OPTIONS.meter);
+        var_free (meta);
+        db_free (DB);
+        return 1;
+    }
+    var *v_this = var_get_dict_forkey (v_mdef, OPTIONS.level);
+    var_set_str_forkey (v_this, "cmp", OPTIONS.match);
+    if (strcmp (tp, "frac") == 0) {
+        var_set_double_forkey (v_this, "val", atof (OPTIONS.value));
+    }
+    else if (strcmp (tp, "int") == 0) {
+        var_set_int_forkey (v_this, "val", strtoull (OPTIONS.value,NULL,10));
+    }
+    else {
+        var_set_str_forkey (v_this, "val", OPTIONS.value);
+    }
+    var_set_double_forkey (v_this, "weight", atof (OPTIONS.weight));
+    db_set_metadata (DB, meta);
+    var_free (meta);
+    db_free (DB);
+    return 0;
+}
+
 /** The tenant-delete command */
 int cmd_tenant_delete (int argc, const char *argv[]) {
    uuid tenant;
@@ -98,11 +226,13 @@ int cmd_tenant_create (int argc, const char *argv[]) {
     char *strkey;
     
     if (OPTIONS.tenant[0] == 0) {
-        fprintf (stderr, "%% No tenantid provided\n");
-        return 1;
+        tenant = uuidgen();
+        OPTIONS.tenant = (const char *) malloc (40);
+        uuid2str (tenant, (char *) OPTIONS.tenant);
     }
-    
-    tenant = mkuuid (OPTIONS.tenant);
+    else {
+        tenant = mkuuid (OPTIONS.tenant);
+    }
     
     if (OPTIONS.key[0] == 0) {
         key = aeskey_create();
@@ -114,6 +244,9 @@ int cmd_tenant_create (int argc, const char *argv[]) {
     db *DB = localdb_create (OPTIONS.path);
     var *meta = var_alloc();
     var_set_str_forkey (meta, "key", strkey);
+    if (OPTIONS.name[0]) {
+        var_set_str_forkey (meta, "name", OPTIONS.name);
+    }
     
     if (! db_create_tenant (DB, tenant, meta)) {
         fprintf (stderr, "%% Error creating tenant\n");
@@ -127,10 +260,19 @@ int cmd_tenant_create (int argc, const char *argv[]) {
         printf ("\"tenant\":{\n"
                 "    \"id\":\"%s\",\n"
                 "    \"key\":\"%s\"\n"
-                "}\n", OPTIONS.tenant, strkey);
+                "    \"name\":\"%s\"\n"
+                "}\n", OPTIONS.tenant, strkey, OPTIONS.name);
     }
     else {
-        printf ("Tenant created with key: %s\n", strkey);
+        printf ("Tenant created:\n"
+                "---------------------------------------------"
+                "----------------------------------\n"
+                "     Name: %s\n"
+                "     UUID: %s\n"
+                "  AES Key: %s\n"
+                "---------------------------------------------"
+                "----------------------------------\n",
+                OPTIONS.name, OPTIONS.tenant, strkey);
     }
     free (strkey);
     var_free (meta);

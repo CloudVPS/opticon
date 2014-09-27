@@ -7,37 +7,36 @@
 
 #include "cmd.h"
 
-optinfo OPTIONS = { "","","","",0 };
+optinfo OPTIONS;
 
-/** Handle --tenant */
-int set_tenant (const char *o, const char *v) { 
-    OPTIONS.tenant = v;
-    return 1;
-}
+#define CONCAT(a,b) a##b
 
-/** Handle --key */
-int set_key (const char *o, const char *v) {
-    OPTIONS.key = v;
-    return 1;
-}
+#define STRINGOPT(xoptname) \
+    int CONCAT(set_,xoptname) (const char *o, const char *v) { \
+        OPTIONS. xoptname = v; \
+        return 1; \
+    }
+    
+#define FLAGOPT(xoptname) \
+    int set_##xoptname (const char *o, const char *v) { \
+        OPTIONS. xoptname = 1; \
+        return 1; \
+    }
 
-/** Handle --path */
-int set_path (const char *o, const char *v) {
-    OPTIONS.path = v;
-    return 1;
-}
-
-/** Handle --host */
-int set_host (const char *o, const char *v) {
-    OPTIONS.host = v;
-    return 1;
-}
-
-/** Handle --json */
-int set_json (const char *o, const char *v) {
-    OPTIONS.json = 1;
-    return 1;
-}
+STRINGOPT(tenant)
+STRINGOPT(key)
+STRINGOPT(path)
+STRINGOPT(host)
+FLAGOPT(json)
+STRINGOPT(name)
+STRINGOPT(meter)
+STRINGOPT(type)
+STRINGOPT(description)
+STRINGOPT(unit)
+STRINGOPT(level)
+STRINGOPT(match)
+STRINGOPT(value)
+STRINGOPT(weight)
 
 /** Handle --time */
 int set_time (const char *o, const char *v) {
@@ -123,6 +122,15 @@ cliopt CLIOPT[] = {
     {"--time","-T",OPT_VALUE,"now",set_time},
     {"--path","-p",OPT_VALUE,"/var/opticon/db",set_path},
     {"--json","-j",OPT_FLAG,NULL,set_json},
+    {"--name","-n",OPT_VALUE,"",set_name},
+    {"--meter","-m",OPT_VALUE,"",set_meter},
+    {"--type","-Y",OPT_VALUE,"int",set_type},
+    {"--description","-D",OPT_VALUE,"",set_description},
+    {"--unit","-U",OPT_VALUE,"",set_unit},
+    {"--level","-L",OPT_VALUE,"alert",set_level},
+    {"--match","-M",OPT_VALUE,"gt",set_match},
+    {"--value","-V",OPT_VALUE,"",set_value},
+    {"--weight","-W",OPT_VALUE,"1.0",set_weight},
     {NULL,NULL,0,NULL,NULL}
 };
 
@@ -132,6 +140,9 @@ clicmd CLICMD[] = {
     {"tenant-create",cmd_tenant_create},
     {"tenant-delete",cmd_tenant_delete},
     {"tenant-get-metadata",cmd_tenant_get_metadata},
+    {"tenant-set-metadata",cmd_tenant_set_metadata},
+    {"tenant-add-meter",cmd_tenant_add_meter},
+    {"tenant-set-meter-watch",cmd_tenant_set_meter_watch},
     {"host-list",cmd_host_list},
     {"add-record",cmd_add_record},
     {"get-record",cmd_get_record},
@@ -151,7 +162,14 @@ void usage (const char *cmdname) {
          "  Commands:\n"
          "        tenant-list\n"
          "        tenant-get-metadata --tenant <uuid>\n"
-         "        tenant-create --tenant <uuid> [--key <base64>]\n"
+         "        tenant-set-metadata --tenant <uuid> <key> <value>\n"
+         "        tenant-add-meter --tenant <uuid> --meter <meterid> [--type <TYPE>]\n"
+         "                        [--description <description> --unit <unitstr>\n"
+         "        tenant-set-meter-watch --tenant <uuid> --meter <meterid>\n"
+         "                               --level <warning|alert|critical>\n"
+         "                               --match <gt|lt|eq> --value <value>\n"
+         "                              [--weight <weight>]\n"
+         "        tenant-create [--tenant <uuid>] [--key <base64>] [--name <name>]\n"
          "        tenant-delete --tenant <uuid>\n"
          "        host-list --tenant <uuid>\n"
          "        add-record --tenant <uuid> --host <host> <FILENAME>\n"
