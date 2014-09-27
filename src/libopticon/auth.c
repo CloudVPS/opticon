@@ -101,6 +101,7 @@ void session_expire (time_t cutoff) {
         while (s) {
             ns = s->next;
             if (s->lastcycle < cutoff) {
+                log_info ("Expiring session %08x-%08x",s->sessid,s->addr);
                 if (s->prev) {
                     if (s->next) {
                         s->prev->next = s->next;
