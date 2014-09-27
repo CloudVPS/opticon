@@ -22,6 +22,17 @@ typedef struct topinfo_s {
     double load1;
     double load5;
     double load15;
+    int numproc;
+    int numrun;
+    int numstuck;
+    uint32_t netin_bytes;
+    uint32_t netout_bytes;
+    int netin_pkt;
+    int netout_pkt;
+    int iops_read;
+    int iops_write;
+    int kmem_avail;
+    int kmem_free;
 } topinfo;
 
 /** Data that will be collected by the topthread. TOP[1] is the copy that is
@@ -57,6 +68,18 @@ static uint32_t sz2kb (const char *str) {
     return ival;
 }
 
+static uint32_t sz2b (const char *str) {
+    int ival = atoi (str);
+    if (! ival) return ival;
+    
+    const char *c = str;
+    while (isdigit (*c)) c++;
+    if (*c == 'K') ival *= 1024;
+    else if (*c == 'M') ival *= (1024*1024);
+    else if (*c == 'G') ival *= (1024*1024*1024);
+    return ival;
+}
+
 /** Background thread that spawns /usr/bin/top and lets it run, parsing the output
   * as it comes along. */
 void run_top (thread *me) {
@@ -65,16 +88,19 @@ void run_top (thread *me) {
     int count = 0;
     int offs_cmd, offs_cpu, offs_mem, offs_user;
     memset (TOP, 0, 2*sizeof(topinfo));
-    FILE *f = popen ("/usr/bin/top -l 0 -o cpu -s 20", "r");
+    FILE *f = popen ("/usr/bin/top -l 0 -o cpu -n 16 -c d -s 30", "r");
     if (! f) {
         log_error ("Could not open top probe");
         return;
     }
     while (1) {
         if (feof (f)) {
+            log_info ("Reopening top");
             pclose (f);
-            f = popen ("/usr/bin/top -l 0 -o cpu -s 10", "r");
+            f = popen ("/usr/bin/top -l 0 -o cpu -n 16 -c d -s 30", "r");
         }
+        
+        buf[0] = 0;
         fgets (buf, 1023, f);
         
         if (buf[0] == 'P' && buf[1] == 'I' && buf[2] == 'D') {
@@ -87,7 +113,7 @@ void run_top (thread *me) {
             continue;
         }
         if (st == TOP_BODY) {
-            if (strlen (buf) < 240) continue;
+            if (strlen (buf) < (offs_user+2)) continue;
             if (atof (buf+offs_cpu) < 0.0001) {
                 memcpy (TOP, TOP+1, sizeof (topinfo));
                 memset (TOP+1, 0, sizeof(topinfo));
@@ -99,7 +125,7 @@ void run_top (thread *me) {
             cpystr (TOP[1].records[count].cmd, buf+offs_cmd, 15);
             TOP[1].records[count].pcpu = atof (buf+offs_cpu);
             TOP[1].records[count].sizekb = sz2kb (buf+offs_mem);
-            cpystr (TOP[1].records[count].user, buf+offs_user, 15);
+            cpystr (TOP[1].records[count].user, buf+offs_user, 14);
             count++;
             if (count == 14) {
                 memcpy (TOP, TOP+1, sizeof (topinfo));
@@ -127,6 +153,61 @@ void run_top (thread *me) {
             }
             else if (memcmp (buf, "VM: ", 3) == 0) {
                 TOP[1].memsizekb = sz2kb (buf+4);
+            }
+            else if (memcmp (buf, "Processes: ", 11) == 0) {
+                TOP[1].numproc = atoi (buf+11);
+                char *next = strchr (buf, ',');
+                if (! next) continue;
+                next++;
+                if (*next != ' ') continue;
+                next++;
+                TOP[1].numrun = atoi (next);
+                next = strchr (next, ',');
+                if (! next) continue;
+                next++;
+                if (*next != ' ') continue;
+                next++;
+                TOP[1].numstuck = atoi (next);
+            }
+            else if (memcmp (buf, "Networks: packets: ", 19) == 0) {
+                TOP[1].netin_pkt = atoi (buf+19);
+                char *next = strchr (buf, '/');
+                if (! next) continue;
+                next++;
+                TOP[1].netin_bytes = sz2b (next);
+                next = strchr (next, ',');
+                if (! next) continue;
+                next++;
+                if (*next != ' ') continue;
+                next++;
+                TOP[1].netout_pkt = atoi (next);
+                next = strchr (next, '/');
+                if (! next) continue;
+                next++;
+                TOP[1].netout_bytes = sz2b (next);
+            }
+            else if (memcmp (buf, "Disks: ", 7) == 0) {
+                TOP[1].iops_read = atoi (buf+7);
+                char *next = strchr (buf, ',');
+                if (! next) continue;
+                next++;
+                if (*next != ' ') continue;
+                next++;
+                TOP[1].iops_write = atoi (next);
+            }
+            else if (memcmp (buf, "PhysMem: ", 9) == 0) {
+                TOP[1].kmem_avail = sz2kb (buf+9);
+                char *next = strchr (buf, '(');
+                if (! next) continue;
+                next++;
+                int kmemused = sz2kb (next);
+                next = strchr (next, ',');
+                if (! next) continue;
+                next++;
+                if (*next != ' ') continue;
+                next++;
+                TOP[1].kmem_avail += sz2kb (next);
+                TOP[1].kmem_free = TOP[1].kmem_avail - kmemused;
             }
         }
     }
@@ -163,6 +244,17 @@ var *runprobe_top (probe *self) {
     var_add_double (arr, ti.load1);
     var_add_double (arr, ti.load5);
     var_add_double (arr, ti.load15);
+    var_set_int_forkey (res, "proc/total", ti.numproc);
+    var_set_int_forkey (res, "proc/run", ti.numrun);
+    var_set_int_forkey (res, "proc/stuck", ti.numstuck);
+    var_set_int_forkey (res, "net/in_kbs", ti.netin_bytes/(30*128));
+    var_set_int_forkey (res, "net/in_pps", ti.netin_pkt/30);
+    var_set_int_forkey (res, "net/out_kbs", ti.netout_bytes/(30*128));
+    var_set_int_forkey (res, "net/out_pps", ti.netout_pkt/30);
+    var_set_int_forkey (res, "io/rdops", ti.iops_read/30);
+    var_set_int_forkey (res, "io/wrops", ti.iops_write/30);
+    var_set_int_forkey (res, "mem/total", ti.kmem_avail);
+    var_set_int_forkey (res, "mem/free", ti.kmem_free);
     FILE *out = fopen ("toprec.json","w");
     dump_var (res, out);
     fclose (out);

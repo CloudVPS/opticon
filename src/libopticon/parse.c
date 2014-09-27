@@ -6,7 +6,7 @@
 
 static const char *VALIDUNQUOTED = "abcdefghijklmnopqrstuvwxyz"
                                    "ABCDEFGHIJKLMNOPQRSTUVWXUZ"
-                                   "0123456789-_.";
+                                   "0123456789-_.*";
 
 static const char *VALIDUNQUOTEDV = "abcdefghijklmnopqrstuvwxyz"
                                     "ABCDEFGHIJKLMNOPQRSTUVWXUZ"
