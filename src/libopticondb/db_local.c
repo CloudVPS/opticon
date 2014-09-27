@@ -6,6 +6,7 @@
 #include <libopticon/dump.h>
 #include <stdio.h>
 #include <sys/stat.h>
+#include <sys/file.h>
 #include <dirent.h>
 #include <unistd.h>
 
@@ -195,19 +196,24 @@ int localdb_get_record (db *d, time_t when, host *into) {
     FILE *dbf = localdb_open_dbfile (self, into->uuid, dt,
                                      LOCALDB_FLAG_NOCREATE);
     if (! dbf) return 0;
+    flock (fileno (dbf), LOCK_SH);
     FILE *ixf = localdb_open_indexfile (self, into->uuid, dt,
                                         LOCALDB_FLAG_NOCREATE);
     if (! ixf) {
         fclose (dbf);
+        flock (fileno (dbf), LOCK_UN);
         return 0;
     }
+    
     uint64_t offs = localdb_find_index (ixf, when);
     if (offs == LOCALDB_OFFS_INVALID) {
+        flock (fileno (dbf), LOCK_UN);
         fclose (dbf);
         fclose (ixf);
         return 0;
     }
     if (fseek (dbf, offs, SEEK_SET) != 0) {
+        flock (fileno (dbf), LOCK_UN);
         fclose (dbf);
         fclose (ixf);
         return 0;
@@ -215,6 +221,7 @@ int localdb_get_record (db *d, time_t when, host *into) {
     ioport *dbport = ioport_create_filereader (dbf);
     uint64_t pad = ioport_read_u64 (dbport);
     if (pad != 0) {
+        flock (fileno (dbf), LOCK_UN);
         fclose (dbf);
         fclose (ixf);
         ioport_close (dbport);
@@ -222,6 +229,7 @@ int localdb_get_record (db *d, time_t when, host *into) {
     }
     (void) ioport_read_u64 (dbport);
     int res = codec_decode_host (self->codec, dbport, into);
+    flock (fileno (dbf), LOCK_UN);
     fclose (dbf);
     fclose (ixf);
     ioport_close (dbport);
@@ -293,7 +301,15 @@ int localdb_save_record (db *dbctx, time_t when, host *h) {
     off_t dbpos = 0;
     
     FILE *dbf = localdb_open_dbfile (self, h->uuid, dt, 0);
+    if (! dbf) return 0;
+    flock (fileno (dbf), LOCK_EX);
+    
     FILE *ixf = localdb_open_indexfile (self, h->uuid, dt, 0);
+    if (! ixf) {
+        flock (fileno (dbf), LOCK_UN);
+        fclose (dbf);
+        return 0;
+    }
     ioport *dbport = ioport_create_filewriter (dbf);
     ioport *ixport = ioport_create_filewriter (ixf);
     
@@ -309,6 +325,7 @@ int localdb_save_record (db *dbctx, time_t when, host *h) {
     ioport_write_u64 (ixport, dbpos);
     ioport_close (dbport);
     ioport_close (ixport);
+    flock (fileno (dbf), LOCK_UN);
     fclose (dbf);
     fclose (ixf);
     return 1;
@@ -632,9 +649,11 @@ var *localdb_get_metadata (db *d) {
         free (metapath);
         return NULL;
     }
+    flock (fileno (F), LOCK_SH);
     char *data = (char *) malloc (st.st_size + 16);
     fread (data, st.st_size, 1, F);
     data[st.st_size] = 0;
+    flock (fileno (F), LOCK_UN);
     fclose (F);
     var *res = var_alloc();
     if (! parse_json (res, data)) {
@@ -663,7 +682,13 @@ int localdb_set_metadata (db *d, var *v) {
         res = dump_var (v, F);
         fclose (F);
         if (res) {
+            F = fopen (metapath, "r");
+            if (F) flock (fileno (F), LOCK_EX);
             if (rename (tmppath, metapath) != 0) res = 0;
+            if (F) {
+                flock (fileno (F), LOCK_UN);
+                fclose (F);
+            }
         }
         if (! res) unlink (tmppath);
     }
