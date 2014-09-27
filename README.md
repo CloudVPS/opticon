@@ -23,17 +23,13 @@ between multiple programs:
 **libopticon**
 
 Data structures for keeping track of hosts and meters, as well as encoding and
-decoding them for transport or storage.
+decoding them for transport or storage. Infrastructure for applications and
+daemons.
 
 **libopticondb**
 
 Access to the timestamp-indexed opticon disk database that tracks metering
 samples.
-
-**libsvc**
-
-Infrastructure for building a system service: Process control, data transport,
-threading, and logging.
 
 **opticon-db**
 
