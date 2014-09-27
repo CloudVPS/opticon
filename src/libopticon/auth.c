@@ -7,6 +7,7 @@
 #include <libopticon/datatypes.h>
 #include <libopticon/auth.h>
 #include <libopticon/base64.h>
+#include <libopticon/log.h>
 
 sessionlist SESSIONS[256];
 
