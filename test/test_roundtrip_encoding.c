@@ -178,11 +178,12 @@ int main (int argc, const char *argv[]) {
     for (i=0; i<11; ++i) meter_set_str (M, i, D_TOP_NAME[i]);
     
     host_end_update (H);
+    struct sockaddr_storage sstor;
     
     aeskey key = aeskey_create();
     session *S = session_register (tenantid, hostid,
                                    0x0a000001, 0x31337666,
-                                   key);
+                                   key, &sstor);
     
     S = session_find (0x0a000001, 0x31337666);
     assert (S != NULL);
