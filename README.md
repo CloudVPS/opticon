@@ -58,18 +58,45 @@ The *opticon-db* tool can be used to add tenants to the database. Use the
 following command to create a new tenant:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-$ opticon-db tenant-create
+$ opticon-db tenant-create --name "Acme"
+Tenant created:
+------------------------------------------------------------------
+     Name: Acme
+     UUID: dbe7c559-297e-e65b-9eca-fc96037c67e2
+  AES Key: nwKT5sfGa+OlYHwa7rZZ7WQaMsAIEWKQii0iuSUPfG0=
+------------------------------------------------------------------
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The tool will spit out the UUID for the newly created tenant, as well as the
 tenant AES256 key to be used in the configuration of this tenant’s
 *opticon-agent* instances.
 
-If you want to create a tenant with a predefined UUID, you can use the command
-line flag:
+If you want to create a tenant with a predefined UUID, you can use the —tenant
+command line flag:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-$ opticon-db --tenant 0296d893-8187-4f44-a31b-bf3b4c19fc10 tenant-create
+$ opticon-db tenant-create --name "Acme" --tenant 0296d893-8187-4f44-a31b-bf3b4c19fc10 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
- 
+### Manipulating tenant metadata
+
+Every tenant object in the opticon database has freeform metadata. Some of it is
+used internally, like the tenant AES key. Use the *tenant-get-metadata
+*sub-command to view a tenant’s metadata in JSON format:
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+$ opticon-db tenant-get-metadata --tenant 0296d893-8187-4f44-a31b-bf3b4c19fc10
+"key": "nwKT5sfGa+OlYHwa7rZZ7WQaMsAIEWKQii0iuSUPfG0=",
+"name": "Acme"
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+You can add keys to the metadata, or change the value of existing keys, by using
+the obviously name *tenant-set-metadata* sub-command:
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+$ opticon-db tenant-set-metadata --tenant 0296d893-8187-4f44-a31b-bf3b4c19fc10 storpel "extra crispy"
+$ opticon-db tenant-get-metadata --tenant 0296d893-8187-4f44-a31b-bf3b4c19fc10
+"key": "nwKT5sfGa+OlYHwa7rZZ7WQaMsAIEWKQii0iuSUPfG0=",
+"name": "Acme",
+"storpel": "extra crispy"
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
