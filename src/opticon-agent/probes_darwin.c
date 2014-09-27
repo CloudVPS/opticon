@@ -2,6 +2,7 @@
 #include <ctype.h>
 #include <time.h>
 #include <errno.h>
+#include <string.h>
 #include <sys/sysctl.h>
 
 /** Structure for keeping track of top records */
@@ -243,6 +244,32 @@ var *runprobe_df (probe *self) {
         var_set_str_forkey (node, "mount", mount);
     }
     pclose (f);
+    int cnt = var_get_count (v_df);
+    f = popen ("/sbin/mount","r");
+    while (! feof (f)) {
+        buffer[0] = 0;
+        fgets (buffer, 1023, f);
+        if (memcmp (buffer, "/dev", 4) != 0) continue;
+        char *crsr = buffer;
+        char *token;
+        if ((token = strsep (&crsr, " "))) {
+            for (int i=0; i<cnt; ++i) {
+                var *node = var_get_dict_atindex (v_df, i);
+                const char *devid = var_get_str_forkey (node, "device");
+                if (strcmp (devid, token) == 0) {
+                    crsr = strchr (crsr, '(');
+                    if (! crsr) continue;
+                    crsr = crsr+1;
+                    if ((token = strsep (&crsr, ","))) {
+                        var_set_str_forkey (node, "fs", token);
+                        break;
+                    }
+                }
+            }
+        }
+    }
+    pclose (f);
+    
     return res;
 }
 
