@@ -4,7 +4,7 @@
 #include <libopticon/datatypes.h>
 #include <libopticon/codec.h>
 #include <libopticondb/db.h>
-#include <libopticonf/var.h>
+#include <libopticon/var.h>
 #include <libsvc/packetqueue.h>
 #include <libsvc/transport.h>
 #include <libsvc/thread.h>

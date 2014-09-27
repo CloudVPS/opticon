@@ -5,8 +5,6 @@ all:
 	@cd src/libopticondb && make && cd ../..
 	@echo "=== Building libsvc ================================================="
 	@cd src/libsvc && make && cd ../..
-	@echo "=== Building libopticonf ============================================"
-	@cd src/libopticonf && make && cd ../..
 	@echo "=== Building opticon-agent =========================================="
 	@cd src/opticon-agent && make && cd ../..
 	@echo "=== Building opticon-db ============================================="
@@ -21,7 +19,6 @@ clean:
 	@cd src/libopticon && make clean && cd ../..
 	@cd src/libopticondb && make clean && cd ../..
 	@cd src/libsvc && make clean && cd ../..
-	@cd src/libopticonf && make clean && cd ../..
 	@cd src/opticon-db && make clean && cd ../..
 	@cd src/opticon-agent && make clean && cd ../..
 	@cd src/opticon-collector && make clean && cd ../..

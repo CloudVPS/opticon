@@ -1,4 +1,4 @@
-#include <libopticonf/react.h>
+#include <libopticon/react.h>
 #include <libsvc/log.h>
 #include <stdio.h>
 #include <assert.h>

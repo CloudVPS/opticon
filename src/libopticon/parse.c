@@ -1,4 +1,4 @@
-#include <libopticonf/parse.h>
+#include <libopticon/parse.h>
 #include <ctype.h>
 #include <string.h>
 #include <stdio.h>

@@ -2,8 +2,8 @@
 #include <libopticon/ioport_file.h>
 #include <libopticon/codec.h>
 #include <libopticon/util.h>
-#include <libopticonf/parse.h>
-#include <libopticonf/dump.h>
+#include <libopticon/parse.h>
+#include <libopticon/dump.h>
 #include <stdio.h>
 #include <sys/stat.h>
 #include <dirent.h>

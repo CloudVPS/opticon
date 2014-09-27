@@ -1,5 +1,5 @@
-#include <libopticonf/var.h>
-#include <libopticonf/parse.h>
+#include <libopticon/var.h>
+#include <libopticon/parse.h>
 #include <libopticon/datatypes.h>
 #include <libopticon/util.h>
 

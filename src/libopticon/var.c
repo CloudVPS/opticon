@@ -1,4 +1,4 @@
-#include <libopticonf/var.h>
+#include <libopticon/var.h>
 #include <string.h>
 #include <assert.h>
 

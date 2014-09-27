@@ -4,9 +4,9 @@
 #include <libopticon/ioport.h>
 #include <libopticon/pktwrap.h>
 #include <libopticon/util.h>
-#include <libopticonf/var.h>
-#include <libopticonf/parse.h>
-#include <libopticonf/react.h>
+#include <libopticon/var.h>
+#include <libopticon/parse.h>
+#include <libopticon/react.h>
 #include <libsvc/daemon.h>
 #include <libsvc/log.h>
 #include <libsvc/cliopt.h>

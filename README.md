@@ -35,10 +35,6 @@ samples.
 Infrastructure for building a system service: Process control, data transport,
 threading, and logging.
 
-**libopticonf**
-
-Code for handling configuration files and other JSON-like data.
-
 **opticon-db**
 
 Query and maintenance tool for the opticon database backend.
@@ -51,5 +47,33 @@ Monitoring tool that runs on the client machines and sends the probe data.
 
 Receiving daemon that collects metering data and writes it to a database, while
 also keeping track of alert-conditions.
+
+Configuring opticon-collector
+-----------------------------
+
+There are two levels of configuration at play for the collector daemon. The
+first level is its configuration file, which sets up some of the basics, and
+defines the default set of meters, and alert levels. The second level of
+configuration is the tenant database.
+
+### Creating a new tenant
+
+The *opticon-db* tool can be used to add tenants to the database. Use the
+following command to create a new tenant:
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+$ opticon-db tenant-create
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The tool will spit out the UUID for the newly created tenant, as well as the
+tenant AES256 key to be used in the configuration of this tenant’s
+*opticon-agent* instances.
+
+If you want to create a tenant with a predefined UUID, you can use the command
+line flag:
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+$ opticon-db --tenant 0296d893-8187-4f44-a31b-bf3b4c19fc10 tenant-create
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
  

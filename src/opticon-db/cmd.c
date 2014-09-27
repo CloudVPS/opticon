@@ -11,8 +11,8 @@
 #include <libopticon/codec_json.h>
 #include <libopticon/ioport_file.h>
 #include <libopticon/util.h>
-#include <libopticonf/var.h>
-#include <libopticonf/dump.h>
+#include <libopticon/var.h>
+#include <libopticon/dump.h>
 #include <libopticondb/db_local.h>
 
 #include "import.h"

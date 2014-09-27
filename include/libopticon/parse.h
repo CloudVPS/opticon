@@ -1,7 +1,7 @@
 #ifndef _PARSE_H
 #define _PARSE_H 1
 
-#include <libopticonf/var.h>
+#include <libopticon/var.h>
 
 /* ============================= FUNCTIONS ============================= */
 

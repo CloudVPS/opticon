@@ -1,4 +1,4 @@
-#include <libopticonf/dump.h>
+#include <libopticon/dump.h>
 #include <ctype.h>
 #include <string.h>
 #include <unistd.h>

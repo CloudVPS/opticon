@@ -1,4 +1,4 @@
-#include <libopticonf/react.h>
+#include <libopticon/react.h>
 #include <stdlib.h>
 #include <string.h>
 

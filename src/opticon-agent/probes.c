@@ -1,6 +1,6 @@
 #include <sys/utsname.h>
 #include <unistd.h>
-#include <libopticonf/var.h>
+#include <libopticon/var.h>
 #include "probes.h"
 
 /** Get the hostname. POSIX compliant */

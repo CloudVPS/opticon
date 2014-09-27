@@ -3,7 +3,7 @@
 
 #include <time.h>
 #include <libopticon/datatypes.h>
-#include <libopticonf/var.h>
+#include <libopticon/var.h>
 
 /* =============================== TYPES =============================== */
 

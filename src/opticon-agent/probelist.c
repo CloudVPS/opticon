@@ -1,4 +1,4 @@
-#include <libopticonf/parse.h>
+#include <libopticon/parse.h>
 #include <libsvc/log.h>
 #include "opticon-agent.h"
 #include "probes.h"

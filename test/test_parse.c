@@ -1,5 +1,5 @@
-#include <libopticonf/parse.h>
-#include <libopticonf/dump.h>
+#include <libopticon/parse.h>
+#include <libopticon/dump.h>
 #include <libsvc/log.h>
 #include <stdio.h>
 #include <string.h>

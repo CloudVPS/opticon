@@ -7,7 +7,7 @@
 #include <libopticondb/db.h>
 #include <libopticondb/db_local.h>
 #include <libopticon/util.h>
-#include <libopticonf/var.h>
+#include <libopticon/var.h>
 #include <assert.h>
 #include <stdio.h>
 #include <sys/stat.h>

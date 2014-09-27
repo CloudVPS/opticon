@@ -5,7 +5,7 @@
 #include <libopticon/codec.h>
 #include <libopticon/auth.h>
 #include <libopticon/pktwrap.h>
-#include <libopticonf/var.h>
+#include <libopticon/var.h>
 #include <libsvc/transport.h>
 #include <libsvc/thread.h>
 #include <libsvc/packetqueue.h>

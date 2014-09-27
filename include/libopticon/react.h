@@ -1,7 +1,7 @@
 #ifndef _REACT_H
 #define _REACT_H 1
 
-#include <libopticonf/var.h>
+#include <libopticon/var.h>
 
 /* =============================== TYPES =============================== */
 
