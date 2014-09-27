@@ -10,7 +10,7 @@ static const char *VALIDUNQUOTED = "abcdefghijklmnopqrstuvwxyz"
 
 static const char *VALIDUNQUOTEDV = "abcdefghijklmnopqrstuvwxyz"
                                     "ABCDEFGHIJKLMNOPQRSTUVWXUZ"
-                                    "0123456789-_./:";
+                                    "0123456789-_./:*%";
 
 static char LAST_PARSE_ERROR[4096];
 static int LAST_PARSE_LINE = 0;

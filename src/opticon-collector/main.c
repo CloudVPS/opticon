@@ -400,6 +400,9 @@ int conf_network (const char *id, var *v, updatetype tp) {
             APP.listenport = var_get_int_forkey (v, "port");
             APP.listenaddr = var_get_str_forkey (v, "address");
             log_info ("Listening on %s:%i", APP.listenaddr, APP.listenport);
+            if (strcmp (APP.listenaddr, "*") == 0) {
+                APP.listenaddr = "::";
+            }
             break;
         case UPDATE_NONE:
             break;
