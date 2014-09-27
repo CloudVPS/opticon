@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <sys/stat.h>
+#include <arpa/inet.h>
 
 /** Compare two UUIDs.
   * \param first First UUID.
@@ -204,4 +205,15 @@ char *load_file (const char *fn) {
     }
     free (res);
     return NULL;
+}
+
+void ip2str (struct sockaddr_storage *remote, char *addrbuf) {
+    if (remote->ss_family == AF_INET) {
+        struct sockaddr_in *in = (struct sockaddr_in *) remote;
+        inet_ntop (AF_INET, &in->sin_addr, addrbuf, 64);
+    }
+    else {
+        struct sockaddr_in6 *in = (struct sockaddr_in6 *) remote;
+        inet_ntop (AF_INET6, &in->sin6_addr, addrbuf, 64);
+    }
 }

@@ -187,14 +187,7 @@ void handle_auth_packet (ioport *pktbuf, uint32_t netid,
     authinfo *auth = ioport_unwrap_authdata (pktbuf, resolve_tenantkey);
     
     char addrbuf[64];
-    if (remote->ss_family == AF_INET) {
-        struct sockaddr_in *in = (struct sockaddr_in *) remote;
-        inet_ntop (AF_INET, &in->sin_addr, addrbuf, 64);
-    }
-    else {
-        struct sockaddr_in6 *in = (struct sockaddr_in6 *) remote;
-        inet_ntop (AF_INET6, &in->sin6_addr, addrbuf, 64);
-    }
+    ip2str (remote, addrbuf);
     
     /* No auth means discarded by the crypto/decoding layer */
     if (! auth) {
@@ -233,8 +226,19 @@ void handle_auth_packet (ioport *pktbuf, uint32_t netid,
                   addrbuf, auth->serial, s_tenantid, s_hostid);
     
         S = session_register (auth->tenantid, auth->hostid, netid,
-                              auth->sessionid, auth->sessionkey);
+                              auth->sessionid, auth->sessionkey,
+                              remote);
         if (! S) log_error ("Session is NULL");
+    }
+    
+    if (S) {
+        host *h = S->host;
+        char addrbuf[64];
+        ip2str (&S->remote, addrbuf);
+        meterid_t mid_agentip = makeid ("agent/ip", MTYPE_STR, 0);
+        meter *m_agentip = host_get_meter (h, mid_agentip);
+        meter_setcount (m_agentip, 0);
+        meter_set_str (m_agentip, 0, addrbuf);
     }
     
     /* Now's a good time to cut the dead wood */

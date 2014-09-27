@@ -98,6 +98,8 @@ ioport *ioport_wrap_authdata (authinfo *auth, uint32_t serial) {
     ioport *payload = ioport_create_buffer (NULL, 2048);
     ioport *res = ioport_create_buffer (NULL, 2048);
     time_t tnow = time (NULL);
+    char pad[64];
+    for (int i=0; i<64; ++i) pad[i] = rand() & 255;
     
     int success = 0;
     if (ioport_write (res, "o6a1", 4) &&
@@ -106,10 +108,12 @@ ioport *ioport_wrap_authdata (authinfo *auth, uint32_t serial) {
         ioport_write_u32 (payload, auth->sessionid) &&
         ioport_write_uuid (payload, auth->hostid) &&
         ioport_write (payload, (const char *) &auth->sessionkey,
-                      sizeof(aeskey))) {
-        if (ioport_encrypt (&auth->tenantkey, payload, res, tnow, serial)) {
-            success = 1;
-        }
+                      sizeof(aeskey)) && 
+        ioport_write (payload, pad, 64)) {
+            if (ioport_encrypt (&auth->tenantkey, payload, 
+                                res, tnow, serial)) {
+                success = 1;
+            }
     }
     
     ioport_close (payload);

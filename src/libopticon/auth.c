@@ -51,7 +51,7 @@ void session_link (session *s) {
   * stop it from expiring. */
 session *session_register (uuid tenantid, uuid hostid,
                            uint32_t addrpart, uint32_t sess_id,
-                           aeskey sess_key) {
+                           aeskey sess_key, struct sockaddr_storage *ss) {
     host *h = host_find (tenantid, hostid);
     session *s;
     if (! h) return NULL;
@@ -72,6 +72,7 @@ session *session_register (uuid tenantid, uuid hostid,
     s->sessid = sess_id;
     s->key = sess_key;
     s->lastcycle = time (NULL);
+    memcpy (&s->remote, ss, sizeof (struct sockaddr_storage));
     
     session_link (s);
     return s;
