@@ -28,6 +28,7 @@ int cmd_tenant_get_metadata (int argc, const char *argv[]);
 int cmd_tenant_set_metadata (int argc, const char *argv[]);
 int cmd_tenant_add_meter (int argc, const char *argv[]);
 int cmd_tenant_set_meter_watch (int argc, const char *argv[]);
+int cmd_tenant_delete_meter (int argc, const char *argv[]);
 int cmd_tenant_delete (int argc, const char *argv[]);
 int cmd_tenant_create (int argc, const char *argv[]);
 int cmd_host_list (int argc, const char *argv[]);

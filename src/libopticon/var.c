@@ -541,6 +541,27 @@ void var_set_str (var *v, const char *val) {
     }
 }
 
+/** Remove a named member from a dict */
+void var_delete_key (var *v, const char *k) {
+    if (v->type != VAR_DICT) return;
+    var *node = var_find_key (v, k);
+    if (! node) return;
+    if (node->prev) {
+        node->prev->next = node->next;
+    }
+    else {
+        v->value.arr.first = node->next;
+    }
+    if (node->next) {
+        node->next->prev = node->prev;
+    }
+    else {
+        v->value.arr.last = node->prev;
+    }
+    node->next = node->prev = NULL;
+    var_free (node);
+}
+
 /** Clear an array. Arrays are always reloaded in bulk (with all children
   * showing up with the last generation as the firstseen and lastmodified).
   * \param v The array to clear.

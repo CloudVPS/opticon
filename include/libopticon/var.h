@@ -80,6 +80,7 @@ void         var_set_str (var *, const char *);
 void         var_set_int_forkey (var *, const char *, uint64_t);
 void         var_set_double_forkey (var *, const char *, double);
 void         var_set_str_forkey (var *, const char *, const char *);
+void         var_delete_key (var *, const char *);
 void         var_clear_array (var *);
 void         var_add_double (var *, double);
 void         var_add_int (var *, uint64_t);

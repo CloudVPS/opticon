@@ -151,6 +151,36 @@ int cmd_tenant_add_meter (int argc, const char *argv[]) {
     return 0;
 }
 
+int cmd_tenant_delete_meter (int argc, const char *argv[]) {
+    uuid tenant;
+    if (OPTIONS.tenant[0] == 0) {
+        fprintf (stderr, "%% No tenantid provided\n");
+        return 1;
+    }
+    tenant = mkuuid (OPTIONS.tenant);
+    if (OPTIONS.meter[0] == 0) {
+        fprintf (stderr, "%% No meter provided\n");
+        return 1;
+    }
+    db *DB = localdb_create (OPTIONS.path);
+    if (! db_open (DB, tenant, NULL)) {
+        fprintf (stderr, "%% Could not open %s\n", OPTIONS.tenant);
+        db_free (DB);
+        return 1;
+    }
+    var *meta = db_get_metadata (DB);
+    if (! meta) {
+        db_free (DB);
+        return 1;
+    }
+    var *v_meter = var_get_dict_forkey (meta, "meter");
+    var_delete_key (v_meter, OPTIONS.meter);
+    db_set_metadata (DB, meta);
+    var_free (meta);
+    db_free (DB);
+    return 0;
+}    
+
 int cmd_tenant_set_meter_watch (int argc, const char *argv[]) {
     uuid tenant;
     if (OPTIONS.tenant[0] == 0) {
