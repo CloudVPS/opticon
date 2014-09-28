@@ -247,19 +247,6 @@ void handle_auth_packet (ioport *pktbuf, uint32_t netid,
 }
 
 void handle_host_metadata (host *H, var *meta) {
-    /* Mirror the reported hostname into metadata */
-    meterid_t mid_hostname = makeid ("hostname",MTYPE_STR,0);
-    if (host_has_meter (H, mid_hostname)) {
-        meter *m_hostname = host_get_meter (H, mid_hostname);
-        fstring host_hostname = meter_get_str (m_hostname, 0);
-        const char *meta_hostname = var_get_str_forkey (meta, "hostname");
-        if ((! meta_hostname) ||
-            (strcmp (meta_hostname, host_hostname.str) != 0)) {
-            var_set_str_forkey (meta, "hostname", host_hostname.str);
-            db_set_hostmeta (APP.db, H->uuid, meta);
-        }
-    }
-    
     /* layout of adjustment data:
        meter {
            pcpu {
