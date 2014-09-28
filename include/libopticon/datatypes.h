@@ -58,23 +58,6 @@ typedef struct meter_s {
     meterdata        d; /**< value */
 } meter;
 
-struct tenant_s; /* forward declaration */
-
-/** Structure representing a monitored host */
-typedef struct host_s {
-    struct host_s       *next; /**< List link */
-    struct host_s       *prev; /**< List link */
-    struct tenant_s     *tenant; /**< Parent link */
-    time_t               lastmodified; /**< timeout information */
-    uint32_t             lastserial; /**< last received serial */
-    uuid                 uuid; /**< uuid of the host */
-    double               badness; /**< accumulated badness */
-    status_t             status; /**< current status (if relevant */
-    meter               *first; /**< first connected meter */
-    meter               *last; /**< last connected meter */
-    pthread_rwlock_t     lock; /**< Threading infrastructure */
-} host;
-
 /** Distinguish different type of meterwatch matching */
 typedef enum watchtype_e {
     WATCH_FRAC_LT, /** Match on a fractional value being less than N */
@@ -84,11 +67,18 @@ typedef enum watchtype_e {
     WATCH_STR_MATCH /** Match on a specific string value */
 } watchtype;
 
+typedef enum watchadjusttype_e {
+    WATCHADJUST_NONE,
+    WATCHADJUST_FRAC,
+    WATCHADJUST_UINT,
+    WATCHADJUST_STR
+} watchadjusttype;
+
 typedef enum watchtrigger_e {
-    WATCH_NONE,
     WATCH_WARN,
     WATCH_ALERT,
-    WATCH_CRIT
+    WATCH_CRIT,
+    WATCH_NONE
 } watchtrigger;
 
 /** Storage for the match data of a meterwatch object */
@@ -97,6 +87,27 @@ typedef union {
     double           frac;
     fstring          str;
 } watchdata;
+
+/** Represents an adjustment to a meterwatch at a specific alert level */
+typedef struct adjustdata_s {
+    watchdata        data;
+    double           weight;
+} adjustdata;
+
+/** Represents a meterwatch adjustment at the host level */
+typedef struct watchadjust_s {
+    struct watchadjust_s    *next;
+    struct watchadjust_s    *prev;
+    watchadjusttype          type;
+    meterid_t                id;
+    adjustdata               adjust[WATCH_CRIT];
+} watchadjust;
+
+/** List header for a list of watchadjust objects */
+typedef struct adjustlist_s {
+    watchadjust         *first;
+    watchadjust         *last;
+} adjustlist;
 
 /** Definition of a match condition that indicates a problem
   * for a host.
@@ -117,6 +128,23 @@ typedef struct watchlist_s {
     meterwatch          *last;
     pthread_mutex_t      mutex;
 } watchlist;
+
+struct tenant_s; /* forward declaration */
+
+/** Structure representing a monitored host */
+typedef struct host_s {
+    struct host_s       *next; /**< List link */
+    struct host_s       *prev; /**< List link */
+    struct tenant_s     *tenant; /**< Parent link */
+    time_t               lastmodified; /**< timeout information */
+    uint32_t             lastserial; /**< last received serial */
+    uuid                 uuid; /**< uuid of the host */
+    double               badness; /**< accumulated badness */
+    status_t             status; /**< current status (if relevant */
+    meter               *first; /**< first connected meter */
+    meter               *last; /**< last connected meter */
+    pthread_rwlock_t     lock; /**< Threading infrastructure */
+} host;
 
 /** Structure representing a keystone tenant */
 typedef struct tenant_s {
@@ -187,5 +215,13 @@ void         watchlist_add_frac (watchlist *, meterid_t, watchtype,
 void         watchlist_add_str (watchlist *, meterid_t, watchtype,
                                 const char *, double, watchtrigger);
 void         watchlist_clear (watchlist *);
+
+void         adjustlist_init (adjustlist *);
+void         adjustlist_clear (adjustlist *);
+watchadjust *adjustlist_find (adjustlist *, meterid_t id);
+watchadjust *adjustlist_get (adjustlist *, meterid_t id);
+void         watchadjust_set_int (watchadjust *, watchtrigger, uint64_t);
+void         watchadjust_set_frac (watchadjust *, watchtrigger, double);
+void         watchadjust_set_str (watchadjust *, watchtrigger, const char *);
 
 #endif
