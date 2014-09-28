@@ -330,7 +330,7 @@ void handle_meter_packet (ioport *pktbuf, uint32_t netid) {
     pthread_rwlock_wrlock (&H->lock);
     
     /* Check if we need to sync up metadata */
-    if (tnow - H->lastmetasync > 60) {
+    if (tnow - H->lastmetasync > 300) {
         if (! db_open (APP.db, S->tenantid, NULL)) {
             log_error ("Could not load tenant for already open session");
         }
