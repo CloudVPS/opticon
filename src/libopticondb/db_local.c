@@ -736,6 +736,18 @@ var *localdb_get_hostmeta (db *d, uuid hostid) {
     return res;
 }
 
+/** Implementation for db_get_hostmeta_changed */
+time_t localdb_get_hostmeta_changed (db *d, uuid hostid) {
+    struct stat st;
+    localdb *self = (localdb *) d;
+    char uuidstr[40];
+    uuid2str (hostid, uuidstr);
+    char *metapath = (char *) malloc (strlen (self->path) + 64);
+    sprintf (metapath, "%s%s.metadata", self->path, uuidstr);
+    if (stat (metapath, &st) != 0) return 0;
+    return st.st_mtime;
+}
+
 /** Implementation for db_set_metadata */
 int localdb_set_hostmeta (db *d, uuid hostid, var *v) {
     localdb *self = (localdb *) d;
@@ -784,6 +796,7 @@ db *localdb_create (const char *prefix) {
     self->db.get_value_range_frac = localdb_get_value_range_frac;
     self->db.save_record = localdb_save_record;
     self->db.get_hostmeta = localdb_get_hostmeta;
+    self->db.get_hostmeta_changed = localdb_get_hostmeta_changed;
     self->db.set_hostmeta = localdb_set_hostmeta;
     self->db.get_usage = localdb_get_usage;
     self->db.list_hosts = localdb_list_hosts;

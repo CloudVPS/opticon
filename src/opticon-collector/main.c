@@ -246,6 +246,79 @@ void handle_auth_packet (ioport *pktbuf, uint32_t netid,
     free (auth);
 }
 
+void handle_host_metadata (host *H, var *meta) {
+    /* Mirror the reported hostname into metadata */
+    meterid_t mid_hostname = makeid ("hostname",MTYPE_STR,0);
+    if (host_has_meter (H, mid_hostname)) {
+        meter *m_hostname = host_get_meter (H, mid_hostname);
+        fstring host_hostname = meter_get_str (m_hostname, 0);
+        const char *meta_hostname = var_get_str_forkey (meta, "hostname");
+        if ((! meta_hostname) ||
+            (strcmp (meta_hostname, host_hostname.str) != 0)) {
+            var_set_str_forkey (meta, "hostname", host_hostname.str);
+            db_set_hostmeta (APP.db, H->uuid, meta);
+        }
+    }
+    
+    /* layout of adjustment data:
+       meter {
+           pcpu {
+               type: frac # int | frac | string
+               warning { val: 30.0, weight: 1.0 }
+               alert{ val: 50.0, weight: 1.0 }
+           }
+       }
+    */
+    
+    char *tstr;
+    var *v_meter = var_get_dict_forkey (meta, "meter");
+    int adjcount = var_get_count (v_meter);
+    if (adjcount) {
+        var *v_adjust = v_meter->value.arr.first;
+        while (v_adjust) {
+            const char *levels[3] = {"warning","alert","critical"};
+            watchadjusttype atype = WATCHADJUST_NONE;
+            const char *stype = var_get_str_forkey (v_adjust, "type");
+            if (strcmp (stype, "int") == 0) atype = WATCHADJUST_UINT;
+            else if (strcmp (stype, "frac") == 0) atype = WATCHADJUST_FRAC;
+            else if (strcmp (stype, "str") == 0) atype = WATCHADJUST_STR;
+            meterid_t mid_adjust = makeid (v_adjust->id, 0, 0);
+            watchadjust *adj = adjustlist_get (&H->adjust, mid_adjust);
+            adj->type = atype;
+            for (int i=0; i<3; ++i) {
+                var *v_level = var_get_dict_forkey (v_adjust, levels[i]);
+                switch (atype) {
+                    case WATCHADJUST_UINT:
+                        adj->adjust[i].data.u64 =
+                            var_get_int_forkey (v_level, "val");
+                        break;
+                    
+                    case WATCHADJUST_FRAC:
+                        adj->adjust[i].data.frac =
+                            var_get_double_forkey (v_level, "val");
+                        break;
+                    
+                    case WATCHADJUST_STR:
+                        tstr = adj->adjust[i].data.str.str;
+                        strncpy (tstr,
+                                 var_get_str_forkey(v_level, "val"), 127);
+                        tstr[127] = 0;
+                        break;
+                    
+                    default:
+                        adj->adjust[i].weight = 0.0;
+                        break;
+                }
+                if (atype != WATCHADJUST_NONE) {
+                    adj->adjust[i].weight =
+                        var_get_double_forkey (v_level, "weight");
+                }
+            }
+            v_adjust = v_adjust->next;
+        }
+    }
+}
+
 /** Handler for a meter packet */
 void handle_meter_packet (ioport *pktbuf, uint32_t netid) {
     session *S = NULL;
@@ -268,6 +341,25 @@ void handle_meter_packet (ioport *pktbuf, uint32_t netid) {
     /* Write the new meterdata into the host */
     host *H = S->host;
     pthread_rwlock_wrlock (&H->lock);
+    
+    /* Check if we need to sync up metadata */
+    if (tnow - H->lastmetasync > 60) {
+        if (! db_open (APP.db, S->tenantid, NULL)) {
+            log_error ("Could not load tenant for already open session");
+        }
+        else {
+            time_t changed = db_get_hostmeta_changed (APP.db, S->hostid);
+            if (changed > H->lastmetasync) {
+                log_debug ("Reloading metadata");
+                var *meta = db_get_hostmeta (APP.db, S->hostid);
+                handle_host_metadata (H, meta);
+                var_free (meta);
+            }
+            db_close (APP.db);
+        }
+        H->lastmetasync = tnow;
+    }
+    
     host_begin_update (H, tnow);
     if (codec_decode_host (APP.codec, unwrap, H)) {
         log_debug ("Update handled for session %08x-%08x",

@@ -81,6 +81,16 @@ var *db_get_hostmeta (db *d, uuid hostid) {
     return d->get_hostmeta (d, hostid);
 }
 
+/** Get the last time the host metadata was changed.
+  * \param d The database handle
+  * \pram hostid The host uuid
+  * \return A unix timestamp (or 0 on failure).
+  */
+time_t db_get_hostmeta_changed (db *d, uuid hostid) {
+    if (! d->opened) return 0;
+    return d->get_hostmeta_changed (d, hostid);
+}
+
 /** Set the metadata associated with a host.
   * \param d The database handle
   * \param hostid The host uuid

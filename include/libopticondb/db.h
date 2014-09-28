@@ -23,6 +23,7 @@ typedef double *(*get_vrangef_f)(struct db_s *, time_t, time_t, int,
                                  meterid_t, uint8_t, host *);
 typedef int (*save_record_f)(struct db_s *, time_t, host *);
 typedef var *(*get_hostmeta_f)(struct db_s *, uuid);
+typedef time_t (*get_hostmetach_f)(struct db_s *, uuid);
 typedef int (*set_hostmeta_f)(struct db_s *, uuid, var *);
 typedef int (*get_usage_f)(struct db_s *, usage_info *, uuid);
 typedef uuid *(*list_hosts_f)(struct db_s *, int *);
@@ -42,6 +43,7 @@ typedef struct db_s {
     get_vrangef_f    get_value_range_frac; /** Method */
     save_record_f    save_record; /** Method */
     get_hostmeta_f   get_hostmeta; /** Method */
+    get_hostmetach_f get_hostmeta_changed; /** Method */
     set_hostmeta_f   set_hostmeta; /** Method */
     get_usage_f      get_usage; /** Method */
     list_hosts_f     list_hosts; /** Method */
@@ -68,6 +70,7 @@ double      *db_get_value_range_frac (db *d, time_t start, time_t end,
                                       uint8_t arrayindex, host *host);
 int          db_save_record (db *d, time_t when, host *what);
 var         *db_get_hostmeta (db *d, uuid hostid);
+time_t       db_get_hostmeta_changed (db *d, uuid hostid);
 int          db_set_hostmeta (db *d, uuid hostid, var *data);
 int          db_get_usage (db *d, usage_info *into, uuid hostid);
 uuid        *db_list_hosts (db *d, int *outsz);
