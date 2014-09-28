@@ -71,6 +71,27 @@ int db_save_record (db *d, time_t when, host *what) {
     return d->save_record (d, when, what);
 }
 
+/** Get the metadata associated with a host.
+  * \param d The database handle
+  * \param hostid The host uuid
+  * \return A var object, or NULL on failure.
+  */
+var *db_get_hostmeta (db *d, uuid hostid) {
+    if (! d->opened) return NULL;
+    return d->get_hostmeta (d, hostid);
+}
+
+/** Set the metadata associated with a host.
+  * \param d The database handle
+  * \param hostid The host uuid
+  * \param v The new metadata
+  * \return 1 on success, 0 on failure.
+  */
+int db_set_hostmeta (db *d, uuid hostid, var *v) {
+    if (! d->opened) return 0;
+    return d->set_hostmeta (d, hostid, v);
+}
+
 /** Get usage information about a specific host */
 int db_get_usage (db *d, usage_info *into, uuid hostid) {
     return d->get_usage (d, into, hostid);
@@ -78,7 +99,7 @@ int db_get_usage (db *d, usage_info *into, uuid hostid) {
 
 /** List all hosts stored for the bound tenant.
   * \param d The database handle.
-  * \param int Pointer to int that will contain the count.
+  * \param outsz Pointer to int that will contain the count.
   * \return Array of uuids (caller should free() memory).
   */
 uuid *db_list_hosts (db *d, int *outsz) {

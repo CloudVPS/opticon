@@ -4,6 +4,7 @@
 #include <libopticon/util.h>
 #include <libopticon/parse.h>
 #include <libopticon/dump.h>
+#include <libopticon/log.h>
 #include <stdio.h>
 #include <sys/stat.h>
 #include <sys/file.h>
@@ -639,13 +640,13 @@ var *localdb_get_metadata (db *d) {
     strcpy (metapath, self->path);
     strcat (metapath, "tenant.metadata");
     if (stat (metapath, &st) != 0) {
-        printf ("Could not stat: %s\n", metapath);
+        log_debug ("Could not stat: %s\n", metapath);
         free (metapath);
         return NULL;
     }
     F = fopen (metapath, "r");
     if (! F) {
-        printf ("Could open stat: %s\n", metapath);
+        log_debug ("Could open stat: %s\n", metapath);
         free (metapath);
         return NULL;
     }
@@ -657,7 +658,7 @@ var *localdb_get_metadata (db *d) {
     fclose (F);
     var *res = var_alloc();
     if (! parse_json (res, data)) {
-        printf ("Parse error: %s\n", parse_error());
+        log_error ("Parse error: %s\n", parse_error());
         var_free (res);
         res = NULL;
     }
@@ -697,6 +698,78 @@ int localdb_set_metadata (db *d, var *v) {
     return res;
 }
 
+/** Implementation for db_get_hostmeta */
+var *localdb_get_hostmeta (db *d, uuid hostid) {
+    localdb *self = (localdb *) d;
+    char uuidstr[40];
+    struct stat st;
+    FILE *F;
+    
+    uuid2str (hostid, uuidstr);
+    char *metapath = (char *) malloc (strlen (self->path) + 64);
+    sprintf (metapath, "%s%s.metadata", self->path, uuidstr);
+    if (stat (metapath, &st) != 0) {
+        log_debug ("Could not stat: %s\n", metapath);
+        free (metapath);
+        return NULL;
+    }
+    F = fopen (metapath, "r");
+    if (! F) {
+        log_debug ("Could open stat: %s\n", metapath);
+        free (metapath);
+        return NULL;
+    }
+    flock (fileno (F), LOCK_SH);
+    char *data = (char *) malloc (st.st_size + 16);
+    fread (data, st.st_size, 1, F);
+    data[st.st_size] = 0;
+    flock (fileno (F), LOCK_UN);
+    fclose (F);
+    var *res = var_alloc();
+    if (! parse_json (res, data)) {
+        log_error ("Parse error: %s\n", parse_error());
+        var_free (res);
+        res = NULL;
+    }
+    free (metapath);
+    free (data);
+    return res;
+}
+
+/** Implementation for db_set_metadata */
+int localdb_set_hostmeta (db *d, uuid hostid, var *v) {
+    localdb *self = (localdb *) d;
+    int res = 0;
+    char uuidstr[40];
+    FILE *F;
+    uuid2str (hostid, uuidstr);
+
+    char *metapath = (char *) malloc (strlen (self->path) + 64);
+    char *tmppath = (char *) malloc (strlen (self->path) + 64);
+    sprintf (metapath, "%s%s.metadata", self->path, uuidstr);
+    sprintf (tmppath, ".%s%s.metadata.new", self->path, uuidstr);
+    F = fopen (tmppath, "w");
+    if (F) {
+        res = dump_var (v, F);
+        fclose (F);
+        if (res) {
+            F = fopen (metapath, "r");
+            if (F) flock (fileno (F), LOCK_EX);
+            if (rename (tmppath, metapath) != 0) res = 0;
+            if (F) {
+                flock (fileno (F), LOCK_UN);
+                fclose (F);
+            }
+        }
+        if (! res) unlink (tmppath);
+    }
+    free (metapath);
+    free (tmppath);
+    return res;
+}
+
+
+
 /** Allocate an unbound localdb object.
   * \param prefix The path prefix for local storage.
   * \return A database handle (or NULL).
@@ -710,6 +783,8 @@ db *localdb_create (const char *prefix) {
     self->db.get_value_range_int = localdb_get_value_range_int;
     self->db.get_value_range_frac = localdb_get_value_range_frac;
     self->db.save_record = localdb_save_record;
+    self->db.get_hostmeta = localdb_get_hostmeta;
+    self->db.set_hostmeta = localdb_set_hostmeta;
     self->db.get_usage = localdb_get_usage;
     self->db.list_hosts = localdb_list_hosts;
     self->db.get_metadata = localdb_get_metadata;
