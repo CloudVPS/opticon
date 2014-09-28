@@ -141,6 +141,7 @@ typedef struct host_s {
     uuid                 uuid; /**< uuid of the host */
     double               badness; /**< accumulated badness */
     status_t             status; /**< current status (if relevant */
+    adjustlist           adjust; /**< meterwatch adjustments */
     meter               *first; /**< first connected meter */
     meter               *last; /**< last connected meter */
     pthread_rwlock_t     lock; /**< Threading infrastructure */

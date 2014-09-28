@@ -17,6 +17,7 @@ host *host_alloc (void) {
     res->status = 0;
     res->lastserial = 0;
     res->badness = 0.0;
+    adjustlist_init (&res->adjust);
     pthread_rwlock_init (&res->lock, NULL);
     return res;
 }
@@ -81,6 +82,7 @@ void host_delete (host *h) {
         m = nm;
     }
     pthread_rwlock_destroy (&h->lock);
+    adjustlist_clear (&h->adjust);
     free (h);
 }
 
