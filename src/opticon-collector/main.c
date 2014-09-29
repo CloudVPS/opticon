@@ -26,15 +26,17 @@ aeskey *resolve_sessionkey (uint32_t netid, uint32_t sid, uint32_t serial,
                             void **blob) {
     session *S = session_find (netid, sid);
     if (! S) {
-        log_warn ("Session %08x-%08x not found", sid, netid);
+        log_warn ("Session <%08x-%08x> not found", sid, netid);
         return NULL;
     }
     if (S->lastserial >= serial) {
-        log_warn ("Rejecting old serial %i for session %08x-%08x", serial, sid, netid);
+        log_warn ("Rejecting old serial <%i> for session <%08x-%08x>",
+                  serial, sid, netid);
         return NULL;
     }
     if (S->host->lastserial >= serial) {
-        log_warn ("Rejecting old serial %i for session %08x-%08x", serial, sid, netid);
+        log_warn ("Rejecting old serial <%i> for session <%08x-%08x>",
+                  serial, sid, netid);
         return NULL;
     }
     S->host->lastserial = serial;
@@ -191,7 +193,7 @@ void handle_auth_packet (ioport *pktbuf, uint32_t netid,
     
     /* No auth means discarded by the crypto/decoding layer */
     if (! auth) {
-        log_warn ("Authentication failed on packet from %s", addrbuf);
+        log_warn ("Authentication failed on packet from >%s>", addrbuf);
         return;
     }
     
@@ -208,21 +210,21 @@ void handle_auth_packet (ioport *pktbuf, uint32_t netid,
     if (S) {
         /* Discard replays */
         if (S->lastserial < auth->serial) {
-            log_debug ("Renewing session %08x-%08x from %s serial %i "
-                       "tenant %s host %s", auth->sessionid, netid,
+            log_debug ("Renewing session <%08x-%08x> from <%s> serial <%i> "
+                       "tenant <%s> host <%s>", auth->sessionid, netid,
                       addrbuf, auth->serial, s_tenantid, s_hostid);
             S->key = auth->sessionkey;
             S->lastcycle = tnow;
             S->lastserial = auth->serial;
         }
         else {
-            log_debug ("Rejecting Duplicate serial %i on auth from %s",
+            log_debug ("Rejecting Duplicate serial <%i> on auth from <%s>",
                         auth->serial, addrbuf);
         }
     }
     else {
-        log_info ("New session %08x-%08x from %s serial %i "
-                  "tenant %s host %s", auth->sessionid, netid,
+        log_info ("New session <%08x-%08x> from <%s> serial <%i> "
+                  "tenant <%s> host <%s>", auth->sessionid, netid,
                   addrbuf, auth->serial, s_tenantid, s_hostid);
     
         S = session_register (auth->tenantid, auth->hostid, netid,
@@ -324,11 +326,11 @@ void handle_meter_packet (ioport *pktbuf, uint32_t netid) {
     unwrap = ioport_unwrap_meterdata (netid, pktbuf,
                                       resolve_sessionkey, (void**) &S);
     if (! unwrap) {
-        log_debug ("Error unwrapping packet from %08x: %08x", netid, unwrap_errno);
+        log_debug ("Error unwrapping packet from <%08x>: %08x", netid, unwrap_errno);
         return;
     }
     if (! S) {
-        log_debug ("Error unwrapping session from %08x", netid);
+        log_debug ("Error unwrapping session from <%08x>", netid);
         ioport_close (unwrap);
         return;
     }
@@ -357,7 +359,7 @@ void handle_meter_packet (ioport *pktbuf, uint32_t netid) {
     
     host_begin_update (H, tnow);
     if (codec_decode_host (APP.codec, unwrap, H)) {
-        log_debug ("Update handled for session %08x-%08x",
+        log_debug ("Update handled for session <%08x-%08x>",
                     S->sessid, S->addr);
     }
     

@@ -157,7 +157,7 @@ void watchthread_handle_host (host *host) {
     if ((tnow - host->lastmodified) > 80) {
         if (strcmp (ostatus.str, "STALE") != 0) {
             uuid2str (host->uuid, uuidstr);
-            log_info ("Status change host %s %s -> STALE", uuidstr, ostatus.str);
+            log_info ("Status change host <%s> %s -> STALE", uuidstr, ostatus.str);
         }
         meter_set_str (m_status, 0, "STALE");
     }
@@ -272,7 +272,7 @@ void watchthread_handle_host (host *host) {
     
         if (strcmp (nstatus, ostatus.str) != 0) {
             uuid2str (host->uuid, uuidstr);
-            log_info ("Status change host %s %s -> %s", uuidstr, ostatus.str, nstatus);
+            log_info ("Status change host <%s> %s -> %s", uuidstr, ostatus.str, nstatus);
         }
     
         meter_set_str (m_status, 0, nstatus);

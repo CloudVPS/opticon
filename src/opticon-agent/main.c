@@ -51,7 +51,7 @@ int daemon_main (int argc, const char *argv[]) {
             slowround = 1;
             uint32_t sid = APP.auth.sessionid;
             if (! sid) sid = gen_sessionid();
-            log_debug ("Authenticating session %08x", sid);
+            log_debug ("Authenticating session <%08x>", sid);
             APP.auth.sessionid = sid;
             APP.auth.serial = 0;
             APP.auth.tenantid = APP.tenantid;
