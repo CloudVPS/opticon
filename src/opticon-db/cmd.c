@@ -409,7 +409,8 @@ var *collect_meterdefs (uuid tenant, uuid host) {
         const char *origtype = var_get_str_forkey (cc, "type");
         if (strcmp (tstr, origtype) != 0) {
             fprintf (stderr, "%% Type %s set for watcher %s in host "
-                             "doesn't match definition\n", tstr, hc->id);
+                             "doesn't match definition %s\n", 
+                             tstr, hc->id, origtype);
             return NULL;
         }
         

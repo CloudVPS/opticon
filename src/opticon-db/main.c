@@ -30,13 +30,24 @@ STRINGOPT(host)
 FLAGOPT(json)
 STRINGOPT(name)
 STRINGOPT(meter)
-STRINGOPT(type)
 STRINGOPT(description)
 STRINGOPT(unit)
 STRINGOPT(level)
 STRINGOPT(match)
 STRINGOPT(value)
 STRINGOPT(weight)
+
+/** Handle --type */
+int set_type (const char *o, const char *v) {
+    if ( (strcmp (v, "integer") == 0) ||
+         (strcmp (v, "frac") == 0) ||
+         (strcmp (v, "string") == 0) ) {
+        OPTIONS.type = v;
+        return 1;
+    }
+    fprintf (stderr, "%% Illegal type: %s\n", v);
+    return 0;
+}
 
 /** Handle --time */
 int set_time (const char *o, const char *v) {
@@ -124,7 +135,7 @@ cliopt CLIOPT[] = {
     {"--json","-j",OPT_FLAG,NULL,set_json},
     {"--name","-n",OPT_VALUE,"",set_name},
     {"--meter","-m",OPT_VALUE,"",set_meter},
-    {"--type","-Y",OPT_VALUE,"int",set_type},
+    {"--type","-Y",OPT_VALUE,"integer",set_type},
     {"--description","-D",OPT_VALUE,"",set_description},
     {"--unit","-U",OPT_VALUE,"",set_unit},
     {"--level","-L",OPT_VALUE,"alert",set_level},
@@ -177,12 +188,17 @@ void usage (const char *cmdname) {
          "                           --level <warning|alert|critical>\n"
          "                           --match <gt|lt|eq> --value <value>\n"
          "                          [--weight <weight>]\n"
+         "        tenant-delete-watcher --tenant <uuid> --meter <meterid>\n"
+         "                              --level <warning|alert|critical>\n"
          "        tenant-create [--tenant <uuid>] [--key <base64>] [--name <name>]\n"
          "        tenant-delete --tenant <uuid>\n"
          "        host-list --tenant <uuid>\n"
-         "        host-set-watcher --tenant <uuid> --host <uuid> --meter <meterid>\n"
-         "                         --type <TYPE> --value <value> [--weight <weight>]\n"
          "        host-watcher-list --tenant <uuid> --host <uuid>\n"
+         "        host-set-watcher --tenant <uuid> --host <uuid> --meter <meterid>\n"
+         "                         --level <warning|alert|critical>\n"
+         "                         --type <TYPE> --value <value> [--weight <weight>]\n"
+         "        host-delete-watcher --tenant <uuid> --host <uuid> --meter <meterid>\n"
+         "                            --level <warning|alert|critical>\n"
          "        host-add-record --tenant <uuid> --host <host> <FILENAME>\n"
          "        host-get-record --tenant <uuid> --host <host> [--time <TIMESPEC>]\n"
          "\n"
