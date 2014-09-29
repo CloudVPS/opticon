@@ -32,7 +32,7 @@ int main (int argc, const char *argv[]) {
     pid_t p;
     FILE *f;
     
-    assert (daemonize ("./.tmp.pid", argc, argv, daemonfunc));
+    assert (daemonize ("./.tmp.pid", argc, argv, daemonfunc, 0));
     log_info ("Giving the daemon some time");
     sleep (2);
     

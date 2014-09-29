@@ -23,11 +23,13 @@ int daemon_main (int argc, const char *argv[]) {
     const char *buf;
     size_t sz;
 
-    if (strcmp (APP.logpath, "@syslog") == 0) {
-        log_open_syslog ("opticon-collector", APP.loglevel);
-    }
-    else {
-        log_open_file (APP.logpath, APP.loglevel);
+    if (! APP.foreground) {
+        if (strcmp (APP.logpath, "@syslog") == 0) {
+            log_open_syslog ("opticon-collector", APP.loglevel);
+        }
+        else {
+            log_open_file (APP.logpath, APP.loglevel);
+        }
     }
     
     probelist_start (&APP.probes);
@@ -354,7 +356,7 @@ int main (int _argc, const char *_argv[]) {
         return 1;
     }
     
-    if (! daemonize (APP.pidfile, argc, argv, daemon_main)) {
+    if (! daemonize (APP.pidfile, argc, argv, daemon_main, APP.foreground)) {
         log_error ("Error spawning");
         return 1;
     }
