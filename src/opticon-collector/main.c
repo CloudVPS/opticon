@@ -173,7 +173,7 @@ aeskey *resolve_tenantkey (uuid tenantid, uint32_t serial) {
 
     /* If there's meter data defined in the tenant metadata,
        put it in the tenant's watchlist */    
-    var *v_meters = var_get_dict_forkey (meta, "meters");
+    var *v_meters = var_get_dict_forkey (meta, "meter");
     if (v_meters) watchlist_populate (&T->watch, v_meters);
     
     db_close (APP.db);
@@ -216,8 +216,8 @@ void handle_auth_packet (ioport *pktbuf, uint32_t netid,
             S->lastserial = auth->serial;
         }
         else {
-            log_warn ("Duplicate serial on auth from %s: %i >= %i",
-                      addrbuf, S->lastserial, auth->serial);
+            log_debug ("Rejecting Duplicate serial %i on auth from %s",
+                        auth->serial, addrbuf);
         }
     }
     else {
@@ -272,6 +272,7 @@ void handle_host_metadata (host *H, var *meta) {
             const char *levels[3] = {"warning","alert","critical"};
             watchadjusttype atype = WATCHADJUST_NONE;
             const char *stype = var_get_str_forkey (v_adjust, "type");
+            if (! stype) break;
             if (strcmp (stype, "int") == 0) atype = WATCHADJUST_UINT;
             else if (strcmp (stype, "frac") == 0) atype = WATCHADJUST_FRAC;
             else if (strcmp (stype, "str") == 0) atype = WATCHADJUST_STR;
@@ -282,28 +283,29 @@ void handle_host_metadata (host *H, var *meta) {
                 var *v_level = var_get_dict_forkey (v_adjust, levels[i]);
                 switch (atype) {
                     case WATCHADJUST_UINT:
-                        adj->adjust[i].data.u64 =
+                        /* +1 needed to skip WATCHADJUST_NONE */
+                        adj->adjust[i+1].data.u64 =
                             var_get_int_forkey (v_level, "val");
                         break;
                     
                     case WATCHADJUST_FRAC:
-                        adj->adjust[i].data.frac =
+                        adj->adjust[i+1].data.frac =
                             var_get_double_forkey (v_level, "val");
                         break;
                     
                     case WATCHADJUST_STR:
-                        tstr = adj->adjust[i].data.str.str;
+                        tstr = adj->adjust[i+1].data.str.str;
                         strncpy (tstr,
                                  var_get_str_forkey(v_level, "val"), 127);
                         tstr[127] = 0;
                         break;
                     
                     default:
-                        adj->adjust[i].weight = 0.0;
+                        adj->adjust[i+1].weight = 0.0;
                         break;
                 }
                 if (atype != WATCHADJUST_NONE) {
-                    adj->adjust[i].weight =
+                    adj->adjust[i+1].weight =
                         var_get_double_forkey (v_level, "weight");
                 }
             }
@@ -322,11 +324,11 @@ void handle_meter_packet (ioport *pktbuf, uint32_t netid) {
     unwrap = ioport_unwrap_meterdata (netid, pktbuf,
                                       resolve_sessionkey, (void**) &S);
     if (! unwrap) {
-        log_warn ("Error unwrapping packet from %08x: %08x", netid, unwrap_errno);
+        log_debug ("Error unwrapping packet from %08x: %08x", netid, unwrap_errno);
         return;
     }
     if (! S) {
-        log_warn ("Error unwrapping session from %08x", netid);
+        log_debug ("Error unwrapping session from %08x", netid);
         ioport_close (unwrap);
         return;
     }

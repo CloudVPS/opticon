@@ -77,10 +77,10 @@ typedef enum watchadjusttype_e {
 
 /** Trigger level for a watch or adjustment */
 typedef enum watchtrigger_e {
+    WATCH_NONE,
     WATCH_WARN,
     WATCH_ALERT,
-    WATCH_CRIT,
-    WATCH_NONE
+    WATCH_CRIT
 } watchtrigger;
 
 /** Storage for the match data of a meterwatch object */

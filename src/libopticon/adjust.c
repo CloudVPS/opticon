@@ -1,4 +1,6 @@
 #include <libopticon/datatypes.h>
+#include <libopticon/util.h>
+#include <libopticon/log.h>
 #include <unistd.h>
 #include <stdlib.h>
 
@@ -51,6 +53,7 @@ watchadjust *adjustlist_get (adjustlist *self, meterid_t id) {
     
     w = (watchadjust *) calloc (1, sizeof (watchadjust));
     w->type = WATCHADJUST_NONE;
+    w->id = (id & MMASK_NAME);
     
     if (self->last) {
         w->prev = self->last;

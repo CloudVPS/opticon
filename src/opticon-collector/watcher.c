@@ -40,43 +40,83 @@ watchlist WATCHERS;
   * \param w The meterwatch definition to use.
   * \return A badness number, accumulated for all array nodes.
   */
-double calculate_badness (meter *m, meterwatch *w, watchtrigger *maxtrig) {
+double calculate_badness (meter *m, meterwatch *w, 
+                          watchadjust *adj, watchtrigger *maxtrig) {
     double res = 0.0;
+    double weight = 1.0;
+    double fracadj;
+    uint64_t intadj;
+    const char *stradj;
     fstring tstr;
     
     for (int i=0; i<((m->count)?m->count:1); ++i) {
         switch (w->tp) {
             case WATCH_FRAC_GT:
-                if (meter_get_frac (m, i) > w->dat.frac) {
+                fracadj = w->dat.frac;
+                if (adj && adj->type == WATCHADJUST_FRAC) {
+                    if (adj->adjust[w->trigger].weight > 0.0001) {
+                        fracadj = adj->adjust[w->trigger].data.frac;
+                        weight = adj->adjust[w->trigger].weight;
+                    }
+                }
+                if (meter_get_frac (m, i) > fracadj) {
                     res += w->badness;
                     if (w->trigger > *maxtrig) *maxtrig = w->trigger;
                 }
                 break;
             
             case WATCH_FRAC_LT:
-                if (meter_get_frac (m, i) < w->dat.frac) {
+                fracadj = w->dat.frac;
+                if (adj && adj->type == WATCHADJUST_FRAC) {
+                    if (adj->adjust[w->trigger].weight > 0.0001) {
+                        fracadj = adj->adjust[w->trigger].data.frac;
+                        weight = adj->adjust[w->trigger].weight;
+                    }
+                }
+                if (meter_get_frac (m, i) < fracadj) {
                     res += w->badness;
                     if (w->trigger > *maxtrig) *maxtrig = w->trigger;
                 }
                 break;
 
             case WATCH_UINT_GT:
-                if (meter_get_uint (m, i) > w->dat.u64) {
+                intadj = w->dat.u64;
+                if (adj && adj->type == WATCHADJUST_UINT) {
+                    if (adj->adjust[w->trigger].weight > 0.0001) {
+                        intadj = adj->adjust[w->trigger].data.u64;
+                        weight = adj->adjust[w->trigger].weight;
+                    }
+                }
+                if (meter_get_uint (m, i) > intadj) {
                     res += w->badness;
                     if (w->trigger > *maxtrig) *maxtrig = w->trigger;
                 }
                 break;
             
             case WATCH_UINT_LT:
-                if (meter_get_uint (m, i) < w->dat.u64) {
+                intadj = w->dat.u64;
+                if (adj && adj->type == WATCHADJUST_UINT) {
+                    if (adj->adjust[w->trigger].weight > 0.0001) {
+                        intadj = adj->adjust[w->trigger].data.u64;
+                        weight = adj->adjust[w->trigger].weight;
+                    }
+                }
+                if (meter_get_uint (m, i) < intadj) {
                     res += w->badness;
                     if (w->trigger > *maxtrig) *maxtrig = w->trigger;
                 }
                 break;
             
             case WATCH_STR_MATCH:
+                stradj = w->dat.str.str;
+                if (adj && adj->type == WATCHADJUST_STR) {
+                    if (adj->adjust[w->trigger].weight > 0.0001) {
+                        stradj = adj->adjust[w->trigger].data.str.str;
+                        weight = adj->adjust[w->trigger].weight;
+                    }
+                }
                 tstr = meter_get_str (m, i);
-                if (strcmp (tstr.str, w->dat.str.str) == 0) {
+                if (strcmp (tstr.str, stradj) == 0) {
                     res += w->badness;
                     if (w->trigger > *maxtrig) *maxtrig = w->trigger;
                 }
@@ -99,6 +139,7 @@ void watchthread_handle_host (host *host) {
     time_t tnow = time (NULL);
     meter *m = host->first;
     meterwatch *w;
+    watchadjust *adj = NULL;
     watchtrigger maxtrigger = WATCH_NONE;
     char label[16];
     char uuidstr[40];
@@ -126,13 +167,16 @@ void watchthread_handle_host (host *host) {
         while (m) {
             m->badness = 0.0;
             int handled = 0;
-        
+            
+            /* Get host-level adjustments in place */
+            adj = adjustlist_find (&host->adjust, m->id);
+            
             /* First go over the tenant-defined watchers */
             pthread_mutex_lock (&host->tenant->watch.mutex);
             w = host->tenant->watch.first;
             while (w) {
                 if ((w->id & MMASK_NAME) == (m->id & MMASK_NAME)) {
-                    m->badness += calculate_badness (m, w, &maxtrigger);
+                    m->badness += calculate_badness (m, w, adj, &maxtrigger);
                     handled = 1;
                 }
                 w = w->next;
@@ -144,22 +188,12 @@ void watchthread_handle_host (host *host) {
             if (! handled) {
                 pthread_mutex_lock (&APP.watch.mutex);
                 w = APP.watch.first;
-                /* First go over the tenant-defined watchers */
-                w = host->tenant->watch.first;
+
                 while (w) {
                     if ((w->id & MMASK_NAME) == (m->id & MMASK_NAME)) {
-                        m->badness += calculate_badness (m, w, &maxtrigger);
+                        m->badness += calculate_badness (m, w, adj, 
+                                                         &maxtrigger);
                         handled = 1;
-                    }
-                    w = w->next;
-                }
-       
-                /* If the tenant didn't have anything suitable, go over the
-                   global watchlist */
-                if (! handled) w = APP.watch.first;
-                while (w) {
-                    if ((w->id & MMASK_NAME) == (m->id & MMASK_NAME)) {
-                        m->badness += calculate_badness (m, w, &maxtrigger);
                     }
                     w = w->next;
                 }
