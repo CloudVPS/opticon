@@ -81,7 +81,7 @@ void watchdog_main (int argc, const char *argv[], main_f call) {
   * \return 0 on failure, 1 on success (caller should exit).
   */
 int daemonize (const char *pidfilepath, int argc,
-               const char *argv[], main_f call) {
+               const char *argv[], main_f call, int foreground) {
     pid_t pwatchdog;
     pid_t pwrapper;
     uid_t svcuid;
@@ -90,7 +90,7 @@ int daemonize (const char *pidfilepath, int argc,
     FILE *pidfile;
     char pidbuf[128];
     
-    if ((argc>1) && (strcmp (argv[1], "--foreground") == 0)) {
+    if (foreground) {
         (void) call (argc, argv);
         return 1;
     }
