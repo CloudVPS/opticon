@@ -67,6 +67,7 @@ typedef enum watchtype_e {
     WATCH_STR_MATCH /** Match on a specific string value */
 } watchtype;
 
+/** Data type indicator for a host-bound watch adjustment */
 typedef enum watchadjusttype_e {
     WATCHADJUST_NONE,
     WATCHADJUST_FRAC,
@@ -74,6 +75,7 @@ typedef enum watchadjusttype_e {
     WATCHADJUST_STR
 } watchadjusttype;
 
+/** Trigger level for a watch or adjustment */
 typedef enum watchtrigger_e {
     WATCH_WARN,
     WATCH_ALERT,
@@ -222,8 +224,5 @@ void         adjustlist_init (adjustlist *);
 void         adjustlist_clear (adjustlist *);
 watchadjust *adjustlist_find (adjustlist *, meterid_t id);
 watchadjust *adjustlist_get (adjustlist *, meterid_t id);
-void         watchadjust_set_int (watchadjust *, watchtrigger, uint64_t);
-void         watchadjust_set_frac (watchadjust *, watchtrigger, double);
-void         watchadjust_set_str (watchadjust *, watchtrigger, const char *);
 
 #endif

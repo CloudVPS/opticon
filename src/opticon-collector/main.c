@@ -14,8 +14,8 @@
 #include <arpa/inet.h>
 #include <syslog.h>
 
-/** Looks up a session by netid and sessionid. If it's a valid session,
-  * returns its current AES session key.
+/** Look up a session by netid and sessionid. If it's a valid session,
+  * return its current AES session key.
   * \param netid The host's netid (32 bit ip-derived).
   * \param sid The session-id.
   * \param serial Serial-number of packet being handled.
@@ -128,7 +128,7 @@ void watchlist_populate (watchlist *w, var *v_meters) {
     pthread_mutex_unlock (&w->mutex);
 }
 
-/** Looks up a tenant in memory and in the database, does the necessary
+/** Look up a tenant in memory and in the database, do the necessary
   * bookkeeping, then returns the AES key for that tenant.
   * \param tenantid The tenant UUID.
   * \param serial Serial number of the auth packet we're dealing with.
@@ -246,6 +246,12 @@ void handle_auth_packet (ioport *pktbuf, uint32_t netid,
     free (auth);
 }
 
+/** Goes over fresh host metadata to pick up any parts relevant
+  * to the operation of opticon-collector. At this moment,
+  * this is just the meterwatch adjustments.
+  * \param H The host we're dealing with
+  * \param meta The fresh metadata
+  */
 void handle_host_metadata (host *H, var *meta) {
     /* layout of adjustment data:
        meter {
@@ -358,6 +364,8 @@ void handle_meter_packet (ioport *pktbuf, uint32_t netid) {
     ioport_close (unwrap);
 }
 
+/** Thread runner for handling configuration reload requests.
+  * This is done to keep the signal handler path clean. */
 void conf_reloader_run (thread *t) {
     conf_reloader *self = (conf_reloader *) t;
     while (1) {
@@ -372,6 +380,7 @@ void conf_reloader_run (thread *t) {
     }
 }
 
+/** Create the configuration reloader thread */
 conf_reloader *conf_reloader_create (void) {
     conf_reloader *self = (conf_reloader *) malloc (sizeof (conf_reloader));
     self->cond = conditional_create();
@@ -379,10 +388,12 @@ conf_reloader *conf_reloader_create (void) {
     return self;
 }
 
+/** Signal the configuration reloader thread to do a little jig */
 void conf_reloader_reload (conf_reloader *self) {
     conditional_signal (self->cond);
 }
 
+/** Signal handler for SIGHUP */
 void daemon_sighup_handler (int sig) {
     conf_reloader_reload (APP.reloader);
     signal (SIGHUP, daemon_sighup_handler);

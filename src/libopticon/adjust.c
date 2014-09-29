@@ -2,10 +2,18 @@
 #include <unistd.h>
 #include <stdlib.h>
 
+/** Initialize memory structure. Since it's a list header embedded
+  * inside other structures, its allocation is considered Not Our
+  * Problem™.
+  * \param self The adjustlist to initialize.
+  */
 void adjustlist_init (adjustlist *self) {
     self->first = self->last = NULL;
 }
 
+/** Clear up an adjustlist, deallocating all watchadjust members.
+  * \param self The adjustlist to clear.
+  */
 void adjustlist_clear (adjustlist *self) { 
     watchadjust *w, *nw;
     w = self->first;
@@ -17,6 +25,11 @@ void adjustlist_clear (adjustlist *self) {
     self->first = self->last = NULL;
 }
 
+/** Look up a watchadjust by its meterid.
+  * \param self The adjustlist
+  * \param id The id to look up
+  * \return The matching watchadjust, or NULL.
+  */
 watchadjust *adjustlist_find (adjustlist *self, meterid_t id) {
     watchadjust *w;
     w = self->first;
@@ -27,6 +40,11 @@ watchadjust *adjustlist_find (adjustlist *self, meterid_t id) {
     return NULL;
 }
 
+/** Look up or create a watchadjust by its meterid.
+  * \param self The adjustlist
+  * \param id The id to look up
+  * \return The new or existing watchadjust.
+  */
 watchadjust *adjustlist_get (adjustlist *self, meterid_t id) {
     watchadjust *w = adjustlist_find (self, id);
     if (w) return w;
@@ -43,23 +61,4 @@ watchadjust *adjustlist_get (adjustlist *self, meterid_t id) {
         self->first = self->last = w;
     }
     return w;
-}
-
-void watchadjust_set_int (watchadjust *self, watchtrigger tr, 
-                          uint64_t val) {
-    if (tr >= WATCH_NONE) return;
-    self->adjust[tr].data.u64 = val;
-}
-
-void watchadjust_set_frac (watchadjust *self, watchtrigger tr,
-                           double val) {
-    if (tr >= WATCH_NONE) return;
-    self->adjust[tr].data.frac = val;
-}
-
-void watchadjust_set_str (watchadjust *self, watchtrigger tr,
-                          const char *val) {
-    if (tr >= WATCH_NONE) return;
-    strncpy (self->adjust[tr].data.str.str, val, 127);
-    self->adjust[tr].data.str.str[127] = 0;
 }
