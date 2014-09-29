@@ -23,13 +23,11 @@ int daemon_main (int argc, const char *argv[]) {
     const char *buf;
     size_t sz;
 
-    if (! APP.foreground) {
-        if (strcmp (APP.logpath, "@syslog") == 0) {
-            log_open_syslog ("opticon-collector", APP.loglevel);
-        }
-        else {
-            log_open_file (APP.logpath, APP.loglevel);
-        }
+    if (strcmp (APP.logpath, "@syslog") == 0) {
+        log_open_syslog ("opticon-collector", APP.loglevel);
+    }
+    else {
+        log_open_file (APP.logpath, APP.loglevel);
     }
     
     probelist_start (&APP.probes);

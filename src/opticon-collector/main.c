@@ -401,13 +401,11 @@ void daemon_sighup_handler (int sig) {
 
 /** Main loop. Waits for a packet, then handles it. */
 int daemon_main (int argc, const char *argv[]) {
-    if (! APP.foreground) {
-        if (strcmp (APP.logpath, "@syslog") == 0) {
-            log_open_syslog ("opticon-collector", APP.loglevel);
-        }
-        else {
-            log_open_file (APP.logpath, APP.loglevel);
-        }
+    if (strcmp (APP.logpath, "@syslog") == 0) {
+        log_open_syslog ("opticon-collector", APP.loglevel);
+    }
+    else {
+        log_open_file (APP.logpath, APP.loglevel);
     }
 
     log_info ("--- Opticon-collector ready for action ---");
