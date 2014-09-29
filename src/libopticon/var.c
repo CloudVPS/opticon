@@ -52,6 +52,8 @@ void var_link (var *self, var *parent) {
             parent->value.arr.first = NULL;
             parent->value.arr.last = NULL;
             parent->value.arr.count = 0;
+            parent->value.arr.cachepos = -1;
+            parent->value.arr.cachenode = NULL;
         }
         if (parent->type != VAR_DICT) return;
     }
@@ -66,6 +68,66 @@ void var_link (var *self, var *parent) {
         parent->value.arr.first = parent->value.arr.last = self;
     }
     parent->value.arr.count++;
+}
+
+void var_copy (var *self, var *orig) {
+    if (self->type == VAR_STR) {
+        free (self->value.sval);
+        self->value.sval = NULL;
+    }
+    
+    if (self->type == VAR_ARRAY || self->type == VAR_DICT) {
+        var *c = self->value.arr.first;
+        var *nc;
+        
+        while (c) {
+            nc = c->next;
+            var_free (c);
+            c = nc;
+        }
+        self->value.arr.first = self->value.arr.last = NULL;
+    }
+
+    self->type = VAR_NULL;
+    
+    switch (orig->type) {
+        case VAR_NULL:
+            break;
+        
+        case VAR_INT:
+            var_set_int (self, var_get_int (orig));
+            break;
+        
+        case VAR_DOUBLE:
+            var_set_double (self, var_get_double (orig));
+            break;
+        
+        case VAR_STR:
+            var_set_str (self, var_get_str (orig));
+            break;
+        
+        case VAR_ARRAY:
+            self->type = VAR_ARRAY;
+            for (int i=0; i<var_get_count(orig); ++i) {
+                var *crsr = var_find_index (orig, i);
+                var *nvar = var_alloc();
+                nvar->id[0] = 0;
+                var_copy (nvar, crsr);
+                var_link (nvar, self);
+            }
+            break;
+        
+        case VAR_DICT:
+            self->type = VAR_DICT;
+            for (int i=0; i<var_get_count(orig); ++i) {
+                var *crsr = var_find_index (orig, i);
+                var *nvar = var_alloc();
+                strcpy (nvar->id, crsr->id);
+                var_copy (nvar, crsr);
+                var_link (nvar, self);
+            }
+            break;
+    }
 }
 
 /** Unlink a var object from its parent structure. Deallocate all
@@ -474,7 +536,7 @@ void var_set_double_forkey (var *self, const char *key, double val) {
 void var_set_int (var *v, uint64_t val) {
     int is_orig = 0;
     
-    v->generation = v->root->generation;
+    if (v->root) v->generation = v->root->generation;
     if (v->type == VAR_NULL) {
         v->type = VAR_INT;
         v->lastmodified = v->generation;
@@ -493,7 +555,7 @@ void var_set_int (var *v, uint64_t val) {
 void var_set_double (var *v, double val) {
     int is_orig = 0;
     
-    v->generation = v->root->generation;
+    if (v->root) v->generation = v->root->generation;
     if (v->type == VAR_NULL) {
         v->type = VAR_DOUBLE;
         v->lastmodified = v->generation;

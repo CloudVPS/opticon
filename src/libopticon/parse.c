@@ -6,7 +6,7 @@
 
 static const char *VALIDUNQUOTED = "abcdefghijklmnopqrstuvwxyz"
                                    "ABCDEFGHIJKLMNOPQRSTUVWXUZ"
-                                   "0123456789-_.*";
+                                   "0123456789-_.*/";
 
 static const char *VALIDUNQUOTEDV = "abcdefghijklmnopqrstuvwxyz"
                                     "ABCDEFGHIJKLMNOPQRSTUVWXUZ"
@@ -187,7 +187,7 @@ int parse_json_level (var *v, const char **buf, parse_state st) {
                     st = PSTATE_DICT_VALUE_QUOTED;
                 }
                 else {
-                    if (! strchr (VALIDUNQUOTED, *c)) {
+                    if (! strchr (VALIDUNQUOTEDV, *c)) {
                         sprintf (LAST_PARSE_ERROR, "Invalid character for "
                                  "value: '%c'", *c);
                         return 0;

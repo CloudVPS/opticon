@@ -640,13 +640,11 @@ var *localdb_get_metadata (db *d) {
     strcpy (metapath, self->path);
     strcat (metapath, "tenant.metadata");
     if (stat (metapath, &st) != 0) {
-        log_debug ("Could not stat: %s\n", metapath);
         free (metapath);
         return NULL;
     }
     F = fopen (metapath, "r");
     if (! F) {
-        log_debug ("Could open stat: %s\n", metapath);
         free (metapath);
         return NULL;
     }
@@ -709,7 +707,6 @@ var *localdb_get_hostmeta (db *d, uuid hostid) {
     char *metapath = (char *) malloc (strlen (self->path) + 64);
     sprintf (metapath, "%s%s.metadata", self->path, uuidstr);
     if (stat (metapath, &st) != 0) {
-        log_debug ("Could not stat: %s\n", metapath);
         free (metapath);
         return NULL;
     }
@@ -759,7 +756,7 @@ int localdb_set_hostmeta (db *d, uuid hostid, var *v) {
     char *metapath = (char *) malloc (strlen (self->path) + 64);
     char *tmppath = (char *) malloc (strlen (self->path) + 64);
     sprintf (metapath, "%s%s.metadata", self->path, uuidstr);
-    sprintf (tmppath, ".%s%s.metadata.new", self->path, uuidstr);
+    sprintf (tmppath, "%s%s.metadata.new", self->path, uuidstr);
     F = fopen (tmppath, "w");
     if (F) {
         res = dump_var (v, F);
@@ -767,7 +764,9 @@ int localdb_set_hostmeta (db *d, uuid hostid, var *v) {
         if (res) {
             F = fopen (metapath, "r");
             if (F) flock (fileno (F), LOCK_EX);
-            if (rename (tmppath, metapath) != 0) res = 0;
+            if (rename (tmppath, metapath) != 0) {
+                res = 0;
+            }
             if (F) {
                 flock (fileno (F), LOCK_UN);
                 fclose (F);

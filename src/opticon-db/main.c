@@ -142,11 +142,16 @@ clicmd CLICMD[] = {
     {"tenant-get-metadata",cmd_tenant_get_metadata},
     {"tenant-set-metadata",cmd_tenant_set_metadata},
     {"tenant-add-meter",cmd_tenant_add_meter},
-    {"tenant-set-meter-watch",cmd_tenant_set_meter_watch},
     {"tenant-delete-meter",cmd_tenant_delete_meter},
+    {"tenant-set-watcher",cmd_tenant_set_watcher},
+    {"tenant-delete-watcher",cmd_tenant_delete_watcher},
+    {"tenant-watcher-list",cmd_host_list_watchers},
     {"host-list",cmd_host_list},
-    {"add-record",cmd_add_record},
-    {"get-record",cmd_get_record},
+    {"host-set-watcher",cmd_host_set_watcher},
+    {"host-delete-watcher",cmd_host_delete_watcher},
+    {"host-watcher-list",cmd_host_list_watchers},
+    {"host-add-record",cmd_add_record},
+    {"host-get-record",cmd_get_record},
     {NULL,NULL}
 };
 
@@ -166,16 +171,20 @@ void usage (const char *cmdname) {
          "        tenant-set-metadata --tenant <uuid> <key> <value>\n"
          "        tenant-add-meter --tenant <uuid> --meter <meterid> [--type <TYPE>]\n"
          "                        [--description <description>] [--unit <unitstr>]\n"
-         "        tenant-set-meter-watch --tenant <uuid> --meter <meterid>\n"
-         "                               --level <warning|alert|critical>\n"
-         "                               --match <gt|lt|eq> --value <value>\n"
-         "                              [--weight <weight>]\n"
          "        tenant-delete-meter --tenant <uuid> --meter <meterid>\n"
+         "        tenant-watcher-list --tenant <uuid\n"
+         "        tenant-set-watcher --tenant <uuid> --meter <meterid>\n"
+         "                           --level <warning|alert|critical>\n"
+         "                           --match <gt|lt|eq> --value <value>\n"
+         "                          [--weight <weight>]\n"
          "        tenant-create [--tenant <uuid>] [--key <base64>] [--name <name>]\n"
          "        tenant-delete --tenant <uuid>\n"
          "        host-list --tenant <uuid>\n"
-         "        add-record --tenant <uuid> --host <host> <FILENAME>\n"
-         "        get-record --tenant <uuid> --host <host> [--time <TIMESPEC>]\n"
+         "        host-set-watcher --tenant <uuid> --host <uuid> --meter <meterid>\n"
+         "                         --type <TYPE> --value <value> [--weight <weight>]\n"
+         "        host-watcher-list --tenant <uuid> --host <uuid>\n"
+         "        host-add-record --tenant <uuid> --host <host> <FILENAME>\n"
+         "        host-get-record --tenant <uuid> --host <host> [--time <TIMESPEC>]\n"
          "\n"
          "  TIMESPEC examples:\n"
          "        2014-01-04T13:37\n"

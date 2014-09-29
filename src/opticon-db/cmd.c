@@ -13,6 +13,7 @@
 #include <libopticon/util.h>
 #include <libopticon/var.h>
 #include <libopticon/dump.h>
+#include <libopticon/defaultmeters.h>
 #include <libopticondb/db_local.h>
 
 #include "import.h"
@@ -181,7 +182,7 @@ int cmd_tenant_delete_meter (int argc, const char *argv[]) {
     return 0;
 }    
 
-int cmd_tenant_set_meter_watch (int argc, const char *argv[]) {
+int cmd_tenant_set_watcher (int argc, const char *argv[]) {
     uuid tenant;
     if (OPTIONS.tenant[0] == 0) {
         fprintf (stderr, "%% No tenantid provided\n");
@@ -231,6 +232,279 @@ int cmd_tenant_set_meter_watch (int argc, const char *argv[]) {
     db_set_metadata (DB, meta);
     var_free (meta);
     db_free (DB);
+    return 0;
+}
+
+int cmd_tenant_delete_watcher (int argc, const char *argv[]) {
+    uuid tenant;
+    if (OPTIONS.tenant[0] == 0) {
+        fprintf (stderr, "%% No tenantid provided\n");
+        return 1;
+    }
+    tenant = mkuuid (OPTIONS.tenant);
+    if (OPTIONS.meter[0] == 0) {
+        fprintf (stderr, "%% No meter provided\n");
+        return 1;
+    }
+    db *DB = localdb_create (OPTIONS.path);
+    if (! db_open (DB, tenant, NULL)) {
+        fprintf (stderr, "%% Could not open %s\n", OPTIONS.tenant);
+        db_free (DB);
+        return 1;
+    }
+    var *meta = db_get_metadata (DB);
+    var *v_meter = var_get_dict_forkey (meta, "meter");
+    var *v_mdef = var_get_dict_forkey (v_meter, OPTIONS.meter);
+    var_delete_key (v_mdef, OPTIONS.level);
+    db_set_metadata (DB, meta);
+    var_free (meta);
+    db_free (DB);
+    return 0;    
+}
+
+int cmd_host_set_watcher (int argc, const char *argv[]) {
+    uuid tenant;
+    uuid host;
+    if (OPTIONS.tenant[0] == 0) {
+        fprintf (stderr, "%% No tenantid provided\n");
+        return 1;
+    }
+    tenant = mkuuid (OPTIONS.tenant);
+    if (OPTIONS.host[0] == 0) {
+        fprintf (stderr, "%% No host provided\n");
+        return 1;
+    }
+    host = mkuuid (OPTIONS.host);
+    if (OPTIONS.meter[0] == 0) {
+        fprintf (stderr, "%% No meter provided\n");
+        return 1;
+    }
+    if (OPTIONS.type[0] == 0) {
+        fprintf (stderr, "%% No type provided\n");
+        return 1;
+    }
+    if (OPTIONS.value[0] == 0) {
+        fprintf (stderr, "%% No value provided\n");
+        return 1;
+    }
+    db *DB = localdb_create (OPTIONS.path);
+    if (! db_open (DB, tenant, NULL)) {
+        fprintf (stderr, "%% Could not open %s\n", OPTIONS.tenant);
+        db_free (DB);
+        return 1;
+    }
+
+    var *meta = db_get_hostmeta (DB, host);
+    if (! meta) meta = var_alloc();
+    var *v_meter = var_get_dict_forkey (meta, "meter");
+    var *v_thismeter = var_get_dict_forkey (v_meter, OPTIONS.meter);
+    var_set_str_forkey (v_thismeter, "type", OPTIONS.type);
+    var *v_thislevel = var_get_dict_forkey (v_thismeter, OPTIONS.level);
+    var_set_double_forkey (v_thislevel, "weight", atof(OPTIONS.weight));
+    if (strcmp (OPTIONS.type, "int") == 0) {
+        var_set_int_forkey (v_thislevel, "val",
+                            strtoull (OPTIONS.value, NULL, 10));
+    }
+    else if (strcmp (OPTIONS.type, "frac") == 0) {
+        var_set_double_forkey (v_thislevel, "val", atof (OPTIONS.value));
+    }
+    else var_set_str_forkey (v_thislevel, "val", OPTIONS.value);
+    db_set_hostmeta (DB, host, meta);
+    db_free (DB);
+    return 0;
+}
+
+int cmd_host_delete_watcher (int argc, const char *argv[]) {
+    uuid tenant;
+    uuid host;
+    if (OPTIONS.tenant[0] == 0) {
+        fprintf (stderr, "%% No tenantid provided\n");
+        return 1;
+    }
+    tenant = mkuuid (OPTIONS.tenant);
+    if (OPTIONS.host[0] == 0) {
+        fprintf (stderr, "%% No host provided\n");
+        return 1;
+    }
+    host = mkuuid (OPTIONS.host);
+    if (OPTIONS.meter[0] == 0) {
+        fprintf (stderr, "%% No meter provided\n");
+        return 1;
+    }
+
+    db *DB = localdb_create (OPTIONS.path);
+    if (! db_open (DB, tenant, NULL)) {
+        fprintf (stderr, "%% Could not open %s\n", OPTIONS.tenant);
+        db_free (DB);
+        return 1;
+    }
+
+    var *meta = db_get_hostmeta (DB, host);
+    if (! meta) meta = var_alloc();
+    var *v_meter = var_get_dict_forkey (meta, "meter");
+    var *v_thismeter = var_get_dict_forkey (v_meter, OPTIONS.meter);
+    var_delete_key (v_thismeter, OPTIONS.level);
+    db_set_hostmeta (DB, host, meta);
+    db_free (DB);
+    return 0;
+}
+
+var *collect_meterdefs (uuid tenant, uuid host) {
+    db *DB = localdb_create (OPTIONS.path);
+    if (! db_open (DB, tenant, NULL)) {
+        fprintf (stderr, "%% Could not open %s\n", OPTIONS.tenant);
+        db_free (DB);
+        return NULL;
+    }
+    
+    const char *triggers[3] = {"warning","alert","critical"};
+    
+    var *tenantmeta = db_get_metadata (DB);
+    if (!tenantmeta) tenantmeta = var_alloc();
+    var *hostmeta = db_get_hostmeta (DB, host);
+    if (!hostmeta) hostmeta = var_alloc();
+    
+    var *conf = var_alloc();
+    var *cmeters = var_get_dict_forkey (conf, "meter");
+    var_copy (cmeters, get_default_meterdef());
+    var *tmeters = var_get_dict_forkey (tenantmeta, "meter");
+    var *hmeters = var_get_dict_forkey (hostmeta, "meter");
+    const char *tstr;
+    uint64_t tint;
+    double tfrac;
+    var *tvar;
+    
+    var *tc = tmeters->value.arr.first;
+    while (tc) {
+        var *cc = var_get_dict_forkey (cmeters, tc->id);
+        tstr = var_get_str_forkey (tc, "type");
+        if (tstr) var_set_str_forkey (cc, "type", tstr);
+        tstr = var_get_str_forkey (tc, "description");
+        if (tstr) var_set_str_forkey (cc, "description", tstr);
+        tstr = var_get_str_forkey (tc, "unit");
+        if (tstr) var_set_str_forkey (cc, "unit", tstr);
+        
+        for (int tr=0; tr<3; ++tr) {
+            tvar = var_find_key (tc, triggers[tr]);
+            if (tvar) {
+                var *ctrig = var_get_dict_forkey (cc, triggers[tr]);
+                var_copy (ctrig, tvar);
+                var_set_str_forkey (ctrig, "origin", "tenant");
+            }
+        }
+        tc = tc->next;
+    }
+    var *hc = NULL;
+    if (host.msb || host.lsb) {
+        hc = hmeters->value.arr.first;
+    }
+    while (hc) {
+        var *cc = var_get_dict_forkey (cmeters, hc->id);
+        tstr = var_get_str_forkey (hc, "type");
+        if (! tstr) {
+            fprintf (stderr, "%% No type set for meter %s in "
+                             "host watchers\n", hc->id);
+            return NULL;
+        }
+        const char *origtype = var_get_str_forkey (cc, "type");
+        if (strcmp (tstr, origtype) != 0) {
+            fprintf (stderr, "%% Type %s set for watcher %s in host "
+                             "doesn't match definition\n", tstr, hc->id);
+            return NULL;
+        }
+        
+        for (int tr=0; tr<3; ++tr) {
+            tvar = var_find_key (hc, triggers[tr]);
+            if (tvar) {
+                var *cdef = var_find_key (cc, triggers[tr]);
+                var *val = var_find_key (tvar, "val");
+                var *cval = var_find_key (cdef, "val");
+                if (! cval) {
+                    fprintf (stderr, "%% Ill-defined value in cdef "
+                                     "of %s at %s\n", hc->id, triggers[tr]);
+                    return NULL;
+                }
+                if (val) {
+                    var_copy (cval, val);
+                }
+                var_set_str_forkey (cdef, "origin", "host");
+                var_set_double_forkey (cdef, "weight",
+                            var_get_double_forkey (tvar, "weight"));
+            }
+        }
+        
+        hc = hc->next;
+    }
+    var_free (tenantmeta);
+    var_free (hostmeta);
+    return conf;
+}
+
+void print_data (const char *meterid, const char *trig, var *v) {
+    const char *origin = var_get_str_forkey (v, "origin");
+    if (! origin) origin = "default";
+    char valst[64];
+    var *val = var_find_key (v, "val");
+    if (! val) return;
+    
+    switch (val->type) {
+        case VAR_INT:
+            sprintf (valst, "%llu", var_get_int (val));
+            break;
+        
+        case VAR_DOUBLE:
+            sprintf (valst, "%.2f", var_get_double (val));
+            break;
+        
+        case VAR_STR:
+            strncpy (valst, var_get_str (val), 63);
+            valst[63] = 0;
+            break;
+        
+        default:
+            strcpy (valst, "<error %i>");
+            break;
+    }
+    
+    printf ("%-8s %-12s %-9s %-6s %21s %18.1f\n", origin, meterid,
+            trig, var_get_str_forkey (v, "cmp"), valst,
+            var_get_double_forkey (v, "weight"));
+}
+
+int cmd_host_list_watchers (int argc, const char *argv[]) {
+    uuid tenant;
+    uuid host;
+    if (OPTIONS.tenant[0] == 0) {
+        fprintf (stderr, "%% No tenantid provided\n");
+        return 1;
+    }
+    tenant = mkuuid (OPTIONS.tenant);
+    if (OPTIONS.host[0] == 0) {
+        memset (&host, 0, sizeof (host));
+    }
+    else host = mkuuid (OPTIONS.host);
+    
+    const char *triggers[3] = {"warning","alert","critical"};
+    
+    var *mdef = collect_meterdefs (tenant, host);
+    if (mdef) {
+        printf ("From     Meter        Trigger   Match                  "
+                "Value             Weight\n"
+                "-------------------------------------------------------"
+                "------------------------\n");
+                
+        var *mmet = var_get_dict_forkey (mdef, "meter");
+        var *crsr = mmet->value.arr.first;
+        while (crsr) {
+            const char *val_meter = crsr->id;
+            for (int i=0; i<3; ++i) {
+                var *attrig = var_find_key (crsr, triggers[i]);
+                if (! attrig) continue;
+                print_data (crsr->id, triggers[i], attrig);
+            }
+            crsr = crsr->next;
+        }
+    }
     return 0;
 }
 

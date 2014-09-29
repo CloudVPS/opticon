@@ -11,6 +11,7 @@
 #include <libopticon/log.h>
 #include <libopticon/cliopt.h>
 #include <libopticon/transport_udp.h>
+#include <libopticon/defaultmeters.h>
 #include <arpa/inet.h>
 #include <syslog.h>
 
@@ -104,9 +105,9 @@ void watchlist_populate (watchlist *w, var *v_meters) {
             const char *type = var_get_str_forkey (mdef, "type");
             if (type && (v_warn || v_alert)) {
                 metertype_t tp;
-                if (strcmp (type, "int") == 0) tp = MTYPE_INT;
+                if (memcmp (type, "int", 3) == 0) tp = MTYPE_INT;
                 else if (strcmp (type, "frac") == 0) tp = MTYPE_FRAC;
-                else if (strcmp (type, "string") == 0) tp = MTYPE_STR;
+                else if (memcmp (type, "str", 3) == 0) tp = MTYPE_STR;
                 else {
                     log_error ("fixme");
                     /* FIXME, LOG AND ABORT */
@@ -275,9 +276,9 @@ void handle_host_metadata (host *H, var *meta) {
             watchadjusttype atype = WATCHADJUST_NONE;
             const char *stype = var_get_str_forkey (v_adjust, "type");
             if (! stype) break;
-            if (strcmp (stype, "int") == 0) atype = WATCHADJUST_UINT;
+            if (memcmp (stype, "int", 3) == 0) atype = WATCHADJUST_UINT;
             else if (strcmp (stype, "frac") == 0) atype = WATCHADJUST_FRAC;
-            else if (strcmp (stype, "str") == 0) atype = WATCHADJUST_STR;
+            else if (memcmp (stype, "str", 3) == 0) atype = WATCHADJUST_STR;
             meterid_t mid_adjust = makeid (v_adjust->id, 0, 0);
             watchadjust *adj = adjustlist_get (&H->adjust, mid_adjust);
             adj->type = atype;
@@ -553,6 +554,13 @@ int main (int _argc, const char *_argv[]) {
     APP.codec = codec_create_pkt();
 
     APP.conf = var_alloc();
+    
+    /* Preload the default meter set */
+    var *defmeters = get_default_meterdef();
+    sprintf (defmeters->id, "meter");
+    var_link (defmeters, APP.conf);
+    
+    /* Now load the main config in the same var space */
     if (! load_json (APP.conf, APP.confpath)) {
         log_error ("Error loading %s: %s\n",
                    APP.confpath, parse_error());
