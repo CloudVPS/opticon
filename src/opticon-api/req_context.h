@@ -64,12 +64,11 @@ typedef struct req_matchlist_s {
 
 extern req_matchlist REQ_MATCHES;
 
-int          err_server_error (req_context *, req_arg *, var *, int *);
-
 req_arg     *req_arg_alloc (void);
 void         req_arg_clear (req_arg *);
 void         req_arg_free (req_arg *);
 void         req_arg_add (req_arg *, const char *);
+void         req_arg_remove_top (req_arg *);
 
 void         req_matchlist_init (req_matchlist *);
 void         req_matchlist_add (req_matchlist *, const char *,

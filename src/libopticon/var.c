@@ -86,9 +86,12 @@ void var_copy (var *self, var *orig) {
             c = nc;
         }
         self->value.arr.first = self->value.arr.last = NULL;
+        self->value.arr.cachepos = -1;
+        self->value.arr.cachenode = NULL;
     }
 
     self->type = VAR_NULL;
+    var *crsr;
     
     switch (orig->type) {
         case VAR_NULL:
@@ -108,23 +111,31 @@ void var_copy (var *self, var *orig) {
         
         case VAR_ARRAY:
             self->type = VAR_ARRAY;
-            for (int i=0; i<var_get_count(orig); ++i) {
-                var *crsr = var_find_index (orig, i);
+            self->value.arr.first = self->value.arr.last = NULL;
+            self->value.arr.cachepos = -1;
+            self->value.arr.cachenode = NULL;
+            crsr = orig->value.arr.first;
+            while (crsr) {
                 var *nvar = var_alloc();
                 nvar->id[0] = 0;
                 var_copy (nvar, crsr);
                 var_link (nvar, self);
+                crsr = crsr->next;
             }
             break;
         
         case VAR_DICT:
             self->type = VAR_DICT;
-            for (int i=0; i<var_get_count(orig); ++i) {
-                var *crsr = var_find_index (orig, i);
+            self->value.arr.first = self->value.arr.last = NULL;
+            self->value.arr.cachepos = -1;
+            self->value.arr.cachenode = NULL;
+            crsr = orig->value.arr.first;
+            while (crsr) {
                 var *nvar = var_alloc();
                 strcpy (nvar->id, crsr->id);
                 var_copy (nvar, crsr);
                 var_link (nvar, self);
+                crsr = crsr->next;
             }
             break;
     }
@@ -657,7 +668,16 @@ void var_delete_key (var *v, const char *k) {
     else {
         v->value.arr.last = node->prev;
     }
+    
+    if (node->parent) {
+        node->parent->value.arr.count--;
+        node->value.arr.cachepos = -1;
+        node->value.arr.cachenode = NULL;
+        node->parent = NULL;
+    }
+    
     node->next = node->prev = NULL;
+    node->root = node->parent = NULL;
     var_free (node);
 }
 

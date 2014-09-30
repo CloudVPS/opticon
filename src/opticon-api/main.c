@@ -5,6 +5,8 @@
 #include <libopticon/datatypes.h>
 #include <microhttpd.h>
 #include "req_context.h"
+#include "cmd.h"
+#include "options.h"
 
 req_matchlist REQ_MATCHES;
 
@@ -50,37 +52,6 @@ int answer_to_connection (void *cls, struct MHD_Connection *connection,
     return MHD_YES;
 }
 
-int cmd_list_tenants (req_context *ctx, req_arg *a, var *out, int *status) {
-    var_set_str_forkey (out, "hello", "world");
-    *status = 200;
-    return 1;    
-}
-
-int err_unauthorized (req_context *ctx, req_arg *a, var *out, int *status) {
-    var_set_str_forkey (out, "error", "Unauthorized access");
-    *status = 401;
-    return 1;    
-}
-
-int err_not_allowed (req_context *ctx, req_arg *a, var *out, int *status) {
-    var_set_str_forkey (out, "error", "Not allowed");
-    *status = 403;
-    return 1;    
-}
-
-int err_not_found (req_context *ctx, req_arg *a, var *out, int *status) {
-    var_set_str_forkey (out, "error", "Resource not found");
-    *status = 404;
-    return 1;
-}
-
-int err_method_not_allowed (req_context *ctx, req_arg *a,
-                            var *out, int *status) {
-    var_set_str_forkey (out, "error", "Method not allowed");
-    *status = 405;
-    return 1;
-}
-
 int flt_check_validuser (req_context *ctx, req_arg *a,
                          var *out, int *status) {
     if (! uuidvalid (ctx->opticon_token)) {
@@ -96,17 +67,8 @@ int flt_check_admin (req_context *ctx, req_arg *a, var *out, int *status) {
     return 0;
 }
 
-int cmd_hoer (req_context *ctx, req_arg *a, var *out, int *status) {
-    char buf[1024];
-    snprintf (buf, 1023, "%s is a whore", a->argv[0]);
-    var_set_str_forkey (out, "truth", buf);
-    *status = 200;
-    return 1;
-}
-
 int flt_check_tenant (req_context *ctx, req_arg *a, var *out, int *status) {
     if (a->argc<1) return err_server_error (ctx, a, out, status);
-    printf ("flt_check argv[0]=%s\n", a->argv[0]);
     ctx->tenantid = mkuuid (a->argv[0]);
     if (! uuidvalid (ctx->tenantid)) { 
         return err_server_error (ctx, a, out, status);
@@ -114,56 +76,68 @@ int flt_check_tenant (req_context *ctx, req_arg *a, var *out, int *status) {
     return 0;
 }
 
-int cmd_tenant_get (req_context *ctx, req_arg *a, var *out, int *status) {
-    var_set_uuid_forkey (out, "tenant",ctx->tenantid);
-    *status = 200;
-    return 1;
+int flt_check_host (req_context *ctx, req_arg *a, var *out, int *status) {
+    if (a->argc<2) return err_server_error (ctx, a, out, status);
+    ctx->hostid = mkuuid (a->argv[1]);
+    if (! uuidvalid (ctx->hostid)) { 
+        return err_server_error (ctx, a, out, status);
+    }
+    return 0;
 }
 
 void setup_matches (void) {
     #define _P_(xx,yy,zz) req_matchlist_add(&REQ_MATCHES,xx,yy,zz)
 
-    _P_ ("*",                       REQ_ANY,    flt_check_validuser);
-    _P_ ("/",                       REQ_GET,    flt_check_admin);
-    _P_ ("/",                       REQ_GET,    cmd_list_tenants);
-    _P_ ("/hoer/%",                 REQ_GET,    cmd_hoer);
-    _P_ ("/",                       REQ_ANY,    err_method_not_allowed);
-    _P_ ("/%U*",                    REQ_ANY,    flt_check_tenant);
-    _P_ ("/%U",                     REQ_GET,    cmd_tenant_get);
-/*  _P_ ("/%U",                     REQ_POST,   cmd_tenant_create);
-    _P_ ("/%U",                     REQ_PUT,    cmd_tenant_update);
-    _P_ ("/%U",                     REQ_DELETE, cmd_tenant_delete);
-    _P_ ("/%U/meta",                REQ_GET,    cmd_tenant_get_meta);
-    _P_ ("/%U/meta",                REQ_UPDATE, cmd_tenant_set_meta);
-    _P_ ("/%U/meta",                REQ_ANY,    err_method_notimpl_;
-    _P_ ("/%U/meter",               REQ_GET,    cmd_tenant_list_meters);
-    _P_ ("/%U/meter/%s",            REQ_UPDATE, cmd_tenant_set_meter);
-    _P_ ("/%U/meter/%s",            REQ_DELETE, cmd_tenant_delete_meter);
-    _P_ ("/%U/watcher",             REQ_GET,    cmd_tenant_list_watchers);
-    _P_ ("/%U/watcher/%s",          REQ_UPDATE, cmd_tenant_set_watcher);
-    _P_ ("/%U/watcher/%s",          REQ_DELETE, cmd_tenant_delete_watcher);
-    _P_ ("/%U/host",                REQ_GET,    cmd_tenant_list_hosts);
-    _P_ ("/%U/host",                REQ_ANY,    err_method_notimpl);
-    _P_ ("/%U/host/%U*",            REQ_ANY,    flt_check_host);
-    _P_ ("/%U/host/%U",             REQ_GET,    cmd_host_get);
-    _P_ ("/%U/host/%U",             REQ_ANY,    err_method_notimpl);
-    _P_ ("/%U/host/%U/watcher",     REQ_GET,    cmd__host_list_watchers);
-    _P_ ("/%U/host/%U/watcher",     REQ_ANY,    err_method_notimpl);
-    _P_ ("/%U/host/%U/watcher/%s",  REQ_UPDATE, cmd_host_set_watcher);
-    _P_ ("/%U/host/%U/watcher/%s",  REQ_DELETE, cmd_host_delete_watcher);
-    _P_ ("/%U/host/%U/range/%T/%T", REQ_GET,    cmd_host_get_range);
-    _P_ ("/%U/host/%U/time/%T",     REQ_GET,    cmd_host_get_time);*/
-    _P_ ("*",                       REQ_GET,    err_not_found);
-    _P_ ("*",                       REQ_ANY,    err_method_not_allowed);
+    _P_ ("*",                         REQ_ANY,    flt_check_validuser);
+    _P_ ("/",                         REQ_GET,    flt_check_admin);
+    _P_ ("/",                         REQ_GET,    cmd_list_tenants);
+    _P_ ("/",                         REQ_ANY,    err_method_not_allowed);
+    _P_ ("/%U*",                      REQ_ANY,    flt_check_tenant);
+    _P_ ("/%U",                       REQ_GET,    cmd_tenant_get);
+    _P_ ("/%U",                       REQ_POST,   cmd_tenant_create);
+    _P_ ("/%U",                       REQ_PUT,    cmd_tenant_update);
+    _P_ ("/%U",                       REQ_DELETE, cmd_tenant_delete);
+    _P_ ("/%U/meta",                  REQ_GET,    cmd_tenant_get_meta);
+    _P_ ("/%U/meta",                  REQ_UPDATE, cmd_tenant_set_meta);
+    _P_ ("/%U/meta",                  REQ_ANY,    err_method_not_allowed);
+    _P_ ("/%U/meter",                 REQ_GET,    cmd_tenant_list_meters);
+    _P_ ("/%U/meter/%s",              REQ_UPDATE, cmd_tenant_set_meter);
+    _P_ ("/%U/meter/%s/%s",           REQ_UPDATE, cmd_tenant_set_meter);
+    _P_ ("/%U/meter/%s",              REQ_DELETE, cmd_tenant_delete_meter);
+    _P_ ("/%U/meter/%s/%s",           REQ_DELETE, cmd_tenant_delete_meter);
+    _P_ ("/%U/watcher",               REQ_GET,    cmd_tenant_list_watchers);
+    _P_ ("/%U/watcher/%s",            REQ_UPDATE, cmd_tenant_set_watcher);
+    _P_ ("/%U/watcher/%s/%s",         REQ_UPDATE, cmd_tenant_set_watcher);
+    _P_ ("/%U/watcher/%s",            REQ_DELETE, cmd_tenant_delete_watcher);
+    _P_ ("/%U/watcher/%s/%s",         REQ_DELETE, cmd_tenant_delete_watcher);
+    _P_ ("/%U/host",                  REQ_GET,    cmd_tenant_list_hosts);
+    _P_ ("/%U/host",                  REQ_ANY,    err_method_not_allowed);
+    _P_ ("/%U/host/%U*",              REQ_ANY,    flt_check_host);
+    _P_ ("/%U/host/%U",               REQ_GET,    cmd_host_get);
+    _P_ ("/%U/host/%U",               REQ_ANY,    err_method_not_allowed);
+    _P_ ("/%U/host/%U/watcher",       REQ_GET,    cmd_host_list_watchers);
+    _P_ ("/%U/host/%U/watcher",       REQ_ANY,    err_method_not_allowed);
+    _P_ ("/%U/host/%U/watcher/%s",    REQ_UPDATE, cmd_host_set_watcher);
+    _P_ ("/%U/host/%U/watcher/%s/%s", REQ_UPDATE, cmd_host_set_watcher);
+    _P_ ("/%U/host/%U/watcher/%s",    REQ_DELETE, cmd_host_delete_watcher);
+    _P_ ("/%U/host/%U/watcher/%s/%s", REQ_DELETE, cmd_host_delete_watcher);
+    _P_ ("/%U/host/%U/range/%T/%T",   REQ_GET,    cmd_host_get_range);
+    _P_ ("/%U/host/%U/time/%T",       REQ_GET,    cmd_host_get_time);
+    _P_ ("*",                         REQ_GET,    err_not_found);
+    _P_ ("*",                         REQ_ANY,    err_method_not_allowed);
     #undef _P_
 }
 
+apioptions OPTIONS;
+
 int main() {
+    OPTIONS.dbpath = "/Users/pi/var";
+    OPTIONS.port = 8888;
     setup_matches();
     struct MHD_Daemon *daemon;
     unsigned int flags = MHD_USE_THREAD_PER_CONNECTION |
                          MHD_USE_IPv6;
-    daemon = MHD_start_daemon (flags, 8888, NULL, NULL,
+    daemon = MHD_start_daemon (flags, OPTIONS.port, NULL, NULL,
                                &answer_to_connection, NULL,
                                MHD_OPTION_CONNECTION_LIMIT,
                                (unsigned int) 256,

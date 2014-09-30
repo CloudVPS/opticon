@@ -38,6 +38,23 @@ void req_arg_add (req_arg *self, const char *a) {
     req_arg_add_nocopy (self, strdup (a));
 }
 
+/** Remove the top element of an argument list.
+  * \param self The list
+  */
+void req_arg_remove_top (req_arg *self) {
+    if (self->argc < 1) return;
+    if (self->argc == 1) {
+        free (self->argv[0]);
+        self->argc = 0;
+        self->argv = NULL;
+        return;
+    }
+    
+    size_t sz = (self->argc-1) * sizeof (char *);
+    memmove (self->argv+1, self->argv, sz);
+    self->argc--;
+}
+
 /** Clear an argument list */
 void req_arg_clear (req_arg *self) {
     for (int i=0; i<self->argc; ++i) free (self->argv[i]);
