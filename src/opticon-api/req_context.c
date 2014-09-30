@@ -87,10 +87,13 @@ void req_matchlist_add (req_matchlist *self, const char *s,
 int req_match_check (req_match *self, const char *url, req_arg *arg) {
     req_arg_clear (arg);
     
+    printf ("match %s\n", self->matchstr);
+    
     const char *curl = url;
     const char *curl_start = url;
     const char *cmatch = self->matchstr;
     while (*curl) {
+        printf ("matchround '%c' '%c'\n", *curl, *cmatch);
         /* complete wildcard, always matches */
         if (*cmatch == '*' && cmatch[1] == 0) return 1;
         /* '*' wildcard, just skip over to the next matching char */
@@ -175,13 +178,17 @@ void req_matchlist_dispatch (req_matchlist *self, const char *url,
                              struct MHD_Connection *connection) {
                              
     req_arg *targ = req_arg_alloc();
+    printf ("dispatch url: %s\n", url);
 
     /* Iterate over the list */
     req_match *crsr = self->first;
     while (crsr) {
+        printf ("ctxmethod %i methodmask %i\n", ctx->method, crsr->method_mask);
         if (ctx->method & crsr->method_mask) {
             if (req_match_check (crsr, url, targ)) {
+                printf ("calling\n");
                 if (crsr->func (ctx, connection, targ)) {
+                    printf ("buck stops\n");
                     req_arg_free (targ);
                     return;
                 }

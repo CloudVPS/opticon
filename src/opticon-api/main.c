@@ -1,35 +1,18 @@
 #include <sys/types.h>
 #include <sys/select.h>
 #include <sys/socket.h>
+#include <libopticon/util.h>
+#include <libopticon/datatypes.h>
 #include <microhttpd.h>
 #include "req_context.h"
 
-void generate_error_response (struct MHD_Connection *connection,
-                              int statuscode, const char *txt) {
-    const char *errtxt = txt;
-    struct MHD_Response *response;
-    char buf[256];
-    if (! errtxt) {
-        errtxt = "An unkown error occured";
-        switch (statuscode) {
-            case 401:
-                errtxt = "Authentication token needed";
-                break;
-        
-            case 403:
-                errtxt = "Insufficient access privileges";
-                break;
-        
-            case 500:
-                errtxt = "Internal server error";
-                break;
-        }
-    }
-     
-    sprintf (buf, "{\"error\":\"%s\"}", errtxt);
-    response = MHD_create_response_from_data (strlen (buf), buf);
-    MHD_queue_response (connection, statuscode, response);
-    MHD_destroy_response (response);       
+req_matchlist REQ_MATCHES;
+
+int enumerate_header (void *cls, enum MHD_ValueKind kind,
+                      const char *key, const char *value) {
+    req_context *ctx = (req_context *) cls;
+    req_context_set_header (ctx, key, value);
+    return MHD_YES;
 }
 
 int answer_to_connection (void *cls, struct MHD_Connection *connection,
@@ -56,22 +39,91 @@ int answer_to_connection (void *cls, struct MHD_Connection *connection,
         return MHD_YES;
     }
     
+    MHD_get_connection_values (connection, MHD_HEADER_KIND,
+                               enumerate_header, ctx);
+    
     /* Parse post data */
     req_context_parse_body (ctx);
     
-    req_matchlist_dispatch (REQ_MATCHES, url, ctx, connection);
+    req_matchlist_dispatch (&REQ_MATCHES, url, ctx, connection);
     req_context_free (ctx);
     *con_cls = NULL;
     return MHD_YES;
 }
 
+int cmd_list_tenants (req_context *ctx, struct MHD_Connection *conn,
+                      req_arg *a) {
+    const char *buf = "{\"hello\":\"World\"}";
+    struct MHD_Response *response;
+    response = MHD_create_response_from_data (strlen (buf), (void*) buf, 1, 1);
+    MHD_queue_response (conn, 200, response);
+    MHD_destroy_response (response);
+    return 1;    
+}
+
+int err_unauthorized (req_context *ctx, struct MHD_Connection *conn,
+                      req_arg *a) {
+    const char *buf = "{\"error\":\"Unauthorized Access\"}";
+    struct MHD_Response *response;
+    response = MHD_create_response_from_data (strlen (buf), (void*) buf, 1, 1);
+    MHD_queue_response (conn, 401, response);
+    MHD_destroy_response (response);
+    return 1;    
+}
+
+int err_not_allowed (req_context *ctx, struct MHD_Connection *conn,
+                     req_arg *a) {
+    const char *buf = "{\"error\":\"Not allowed\"}";
+    struct MHD_Response *response;
+    response = MHD_create_response_from_data (strlen (buf), (void*) buf, 1, 1);
+    MHD_queue_response (conn, 403, response);
+    MHD_destroy_response (response);
+    return 1;    
+}
+
+int err_not_found (req_context *ctx, struct MHD_Connection *conn,
+                   req_arg *a) {
+    const char *buf = "{\"error\":\"Resource not found\"}";
+    struct MHD_Response *response;
+    response = MHD_create_response_from_data (strlen (buf), (void*) buf, 1, 1);
+    MHD_queue_response (conn, 404, response);
+    MHD_destroy_response (response);
+    return 1;    
+}
+
+int err_method_not_allowed (req_context *ctx, struct MHD_Connection *conn,
+                            req_arg *a) {
+    const char *buf = "{\"error\":\"Method not allowed\"}";
+    struct MHD_Response *response;
+    response = MHD_create_response_from_data (strlen (buf), (void*) buf, 1, 1);
+    MHD_queue_response (conn, 405, response);
+    MHD_destroy_response (response);
+    return 1;    
+}
+
+int flt_check_validuser (req_context *ctx, struct MHD_Connection *conn,
+                         req_arg *a) {
+    if (! uuidvalid (ctx->opticon_token)) {
+        return err_unauthorized (ctx, conn, a);
+    }
+    return 0;
+}
+
+int flt_check_admin (req_context *ctx, struct MHD_Connection *conn,
+                         req_arg *a) {
+    if (! uuidvalid (ctx->opticon_token)) {
+        return err_not_allowed (ctx, conn, a);
+    }
+    return 0;
+}
+
 void setup_matches (void) {
-    #define _P_(xx,yy,zz) req_matchlist_add(REQ_MATCHES,xx,yy,zz)
+    #define _P_(xx,yy,zz) req_matchlist_add(&REQ_MATCHES,xx,yy,zz)
     #define REQ_UPDATE (REQ_POST|REQ_PUT)
-    _P_ ("*",                       REQ_ANY     flt_check_validuser);
+    _P_ ("*",                       REQ_ANY,    flt_check_validuser);
     _P_ ("/",                       REQ_GET,    flt_check_admin);
     _P_ ("/",                       REQ_GET,    cmd_list_tenants);
-    _P_ ("/",                       REQ_ANY,    err_method_notimpl);
+/*    _P_ ("/",                       REQ_ANY,    err_method_notimpl);
     _P_ ("/%U",                     REQ_ANY,    flt_check_tenant
     _P_ ("/%U",                     REQ_GET,    cmd_tenant_get);
     _P_ ("/%U",                     REQ_POST,   cmd_tenant_create);
@@ -95,8 +147,17 @@ void setup_matches (void) {
     _P_ ("/%U/host/%U/watcher/%s",  REQ_UPDATE, cmd_host_set_watcher);
     _P_ ("/%U/host/%U/watcher/%s",  REQ_DELETE, cmd_host_delete_watcher);
     _P_ ("/%U/host/%U/range/%T/%T", REQ_GET,    cmd_host_get_range);
-    _P_ ("/%U/host/%U/time/%T",     REQ_GET,    cmd_host_get_time);
+    _P_ ("/%U/host/%U/time/%T",     REQ_GET,    cmd_host_get_time);*/
     _P_ ("*",                       REQ_GET,    err_not_found);
-    _P_ ("*",                       REQ_ANY,    err_method_notimpl);
+    _P_ ("*",                       REQ_ANY,    err_method_not_allowed);
     #undef _P_
+}
+
+int main() {
+    setup_matches();
+    struct MHD_Daemon *daemon;
+    daemon = MHD_start_daemon (MHD_USE_SELECT_INTERNALLY, 8888,
+                               NULL, NULL, &answer_to_connection,
+                               NULL, MHD_OPTION_END);
+    while (1) sleep (60);
 }

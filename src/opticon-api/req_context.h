@@ -23,8 +23,6 @@ typedef enum {
 typedef struct req_context_s {
     var         *headers; /**< HTTP headers */
     var         *bodyjson; /**< Parsed JSON */
-    var         *response; /**< Prepared JSON response */
-    int          status; /**< HTTP response code */
     req_method   method; /**< HTTP request method */
     char        *url; /**< Requested URL */
     char        *ctype; /**< Content type */
@@ -45,7 +43,7 @@ typedef struct req_arg_s {
 } req_arg;
 
 /** Handler function for a specified URL path */
-typedef int (*path_f)(req_context *, struct MHD_Connection *, req_arg *);
+typedef int (*path_f)(req_context *, req_arg *, var *resp, int *st);
 
 /** Path match definition*/
 typedef struct req_match_s {
