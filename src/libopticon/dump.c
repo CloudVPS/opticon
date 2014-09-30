@@ -1,4 +1,6 @@
 #include <libopticon/dump.h>
+#include <libopticon/ioport.h>
+#include <libopticon/ioport_file.h>
 #include <ctype.h>
 #include <string.h>
 #include <unistd.h>
@@ -30,7 +32,7 @@ char *dump_escape (const char *str) {
   * \param _indent The desired indentation level.
   * \return 1 on success, 0 on failure.
   */
-int dump_var2 (var *v, FILE *into, int _indent) {
+int dump_var2 (var *v, ioport *into, int _indent) {
     char *tstr;
     int first=1;
     int indent = _indent;
@@ -41,46 +43,46 @@ int dump_var2 (var *v, FILE *into, int _indent) {
         while (crsr) {
             if (first) first=0;
             else {
-                fprintf (into, ",\n");
+                ioport_printf (into, ",\n");
             }
-            if (indent) fprintf (into, "%s", SPC+(128-indent));
+            if (indent) ioport_printf (into, "%s", SPC+(128-indent));
             
             if (v->type == VAR_DICT) {
                 tstr = dump_escape (crsr->id);
-                fprintf (into, "\"%s\": ", tstr);
+                ioport_printf (into, "\"%s\": ", tstr);
                 free (tstr);
             }
             switch (crsr->type) {
                 case VAR_NULL:
-                    fprintf (into, "\"\"");
+                    ioport_printf (into, "\"\"");
                     break;
                 
                 case VAR_INT:
-                    fprintf (into, "%llu", crsr->value.ival);
+                    ioport_printf (into, "%llu", crsr->value.ival);
                     break;
                     
                 case VAR_DOUBLE:
-                    fprintf (into, "%f", crsr->value.dval);
+                    ioport_printf (into, "%f", crsr->value.dval);
                     break;
                 
                 case VAR_STR:
                     tstr = dump_escape (crsr->value.sval);
-                    fprintf (into, "\"%s\"", tstr);
+                    ioport_printf (into, "\"%s\"", tstr);
                     free (tstr);
                     break;
                 
                 case VAR_DICT:
-                    fprintf (into, "{\n");
+                    ioport_printf (into, "{\n");
                     if (! dump_var2 (crsr, into, indent+4)) return 0;
-                    if (indent) fprintf (into, "%s", SPC+(128-indent));
-                    fprintf (into, "}");
+                    if (indent) ioport_printf (into, "%s", SPC+(128-indent));
+                    ioport_printf (into, "}");
                     break;
                     
                 case VAR_ARRAY:
-                    fprintf (into, "[\n");
+                    ioport_printf (into, "[\n");
                     if (! dump_var2 (crsr, into, indent+4)) return 0;
-                    if (indent) fprintf (into, "%s", SPC+(128-indent));
-                    fprintf (into, "]");
+                    if (indent) ioport_printf (into, "%s", SPC+(128-indent));
+                    ioport_printf (into, "]");
                     break;
                     
                 default:
@@ -88,7 +90,7 @@ int dump_var2 (var *v, FILE *into, int _indent) {
             }
             crsr = crsr->next;
         }
-        if (! first) fprintf (into, "\n");
+        if (! first) ioport_printf (into, "\n");
         return 1;
     }
     return 0;
@@ -100,5 +102,9 @@ int dump_var2 (var *v, FILE *into, int _indent) {
   * \return 1 on success, 0 on failure.
   */
 int dump_var (var *v, FILE *into) {
-    return dump_var2 (v, into, 0);
+    int res = 0;
+    ioport *io = ioport_create_filewriter (into);
+    res = dump_var2 (v, io, 0);
+    ioport_close (io);
+    return res;
 }
