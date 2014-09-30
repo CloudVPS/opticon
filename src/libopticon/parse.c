@@ -48,6 +48,7 @@ int parse_json_level (var *v, const char **buf, parse_state st) {
     while (*c) {    
         switch (st) {
             case PSTATE_DICT_WAITKEY:
+                if (*c == '{') break;
                 if (*c == '#') {
                     stnext = st;
                     st = PSTATE_COMMENT;

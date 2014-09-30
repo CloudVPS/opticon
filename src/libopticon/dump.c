@@ -108,3 +108,7 @@ int dump_var (var *v, FILE *into) {
     ioport_close (io);
     return res;
 }
+
+int write_var (var *v, ioport *into) {
+    return dump_var2 (v, into, 0);
+}

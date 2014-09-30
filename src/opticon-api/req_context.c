@@ -4,6 +4,8 @@
 #include <assert.h>
 #include <libopticon/util.h>
 #include <libopticon/parse.h>
+#include <libopticon/ioport_buffer.h>
+#include <libopticon/dump.h>
 #include "req_context.h"
 
 /** Allocate a request argument list */
@@ -156,15 +158,26 @@ int req_match_check (req_match *self, const char *url, req_arg *arg) {
     return 1;
 }
 
-/** Path handler for a generic server error (500) */
-int err_server_error (req_context *ctx, struct MHD_Connection *conn,
-                      req_arg *arg) {
-    const char *buf = "{\"error\":\"Internal Server Error\"}";
+int err_server_error (req_context *ctx, req_arg *arg,
+                      var *out, int *status) {
+    var_set_str_forkey (out, "error", "Internal Server Error");
+    *status = 500;
+    return 1;
+}
+
+void req_write_response (struct MHD_Connection *conn,
+                         var *res, int status) {
+    ioport *out = ioport_create_buffer (NULL, 4096);
+    ioport_write (out, "{", 1);
+    write_var (res, out);
+    ioport_write (out, "}\n", 2);
+    void *buf = (void *) ioport_get_buffer (out);
+    size_t buflen = ioport_read_available (out);
     struct MHD_Response *response;
-    response = MHD_create_response_from_data (strlen (buf), (void*) buf, 1, 1);
-    MHD_queue_response (conn, 500, response);
+    response = MHD_create_response_from_data (buflen, buf, 1, 1);
+    MHD_queue_response (conn, status, response);
     MHD_destroy_response (response);
-    return 1;    
+    ioport_close (out);
 }
 
 /** Take a request context and connection and shop it around inside
@@ -175,7 +188,7 @@ int err_server_error (req_context *ctx, struct MHD_Connection *conn,
   * \param connection The microhttp connection */
 void req_matchlist_dispatch (req_matchlist *self, const char *url,
                              req_context *ctx,
-                             struct MHD_Connection *connection) {
+                             struct MHD_Connection *conn) {
                              
     req_arg *targ = req_arg_alloc();
     printf ("dispatch url: %s\n", url);
@@ -187,8 +200,9 @@ void req_matchlist_dispatch (req_matchlist *self, const char *url,
         if (ctx->method & crsr->method_mask) {
             if (req_match_check (crsr, url, targ)) {
                 printf ("calling\n");
-                if (crsr->func (ctx, connection, targ)) {
+                if (crsr->func (ctx, targ, ctx->response, &ctx->status)) {
                     printf ("buck stops\n");
+                    req_write_response (conn, ctx->response, ctx->status);
                     req_arg_free (targ);
                     return;
                 }
@@ -198,7 +212,8 @@ void req_matchlist_dispatch (req_matchlist *self, const char *url,
     }
 
     /* No matches, bail out */    
-    err_server_error (ctx, connection, targ);
+    err_server_error (ctx, targ, ctx->response, &ctx->status);
+    req_write_response (conn, ctx->response, ctx->status);
     req_arg_free (targ);
 }
 

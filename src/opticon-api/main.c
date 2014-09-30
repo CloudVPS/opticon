@@ -21,7 +21,6 @@ int answer_to_connection (void *cls, struct MHD_Connection *connection,
                           const char *upload_data,
                           size_t *upload_data_size,
                           void **con_cls) {
-    
     /* Set up a context if we're at the first callback */
     req_context *ctx = *con_cls;
     if (ctx == NULL) {
@@ -51,68 +50,48 @@ int answer_to_connection (void *cls, struct MHD_Connection *connection,
     return MHD_YES;
 }
 
-int cmd_list_tenants (req_context *ctx, struct MHD_Connection *conn,
-                      req_arg *a) {
-    const char *buf = "{\"hello\":\"World\"}";
-    struct MHD_Response *response;
-    response = MHD_create_response_from_data (strlen (buf), (void*) buf, 1, 1);
-    MHD_queue_response (conn, 200, response);
-    MHD_destroy_response (response);
+int cmd_list_tenants (req_context *ctx, req_arg *a, var *out, int *status) {
+    var_set_str_forkey (out, "hello", "world");
+    *status = 200;
     return 1;    
 }
 
-int err_unauthorized (req_context *ctx, struct MHD_Connection *conn,
-                      req_arg *a) {
-    const char *buf = "{\"error\":\"Unauthorized Access\"}";
-    struct MHD_Response *response;
-    response = MHD_create_response_from_data (strlen (buf), (void*) buf, 1, 1);
-    MHD_queue_response (conn, 401, response);
-    MHD_destroy_response (response);
+int err_unauthorized (req_context *ctx, req_arg *a, var *out, int *status) {
+    var_set_str_forkey (out, "error", "Unauthorized access");
+    *status = 401;
     return 1;    
 }
 
-int err_not_allowed (req_context *ctx, struct MHD_Connection *conn,
-                     req_arg *a) {
-    const char *buf = "{\"error\":\"Not allowed\"}";
-    struct MHD_Response *response;
-    response = MHD_create_response_from_data (strlen (buf), (void*) buf, 1, 1);
-    MHD_queue_response (conn, 403, response);
-    MHD_destroy_response (response);
+int err_not_allowed (req_context *ctx, req_arg *a, var *out, int *status) {
+    var_set_str_forkey (out, "error", "Not allowed");
+    *status = 403;
     return 1;    
 }
 
-int err_not_found (req_context *ctx, struct MHD_Connection *conn,
-                   req_arg *a) {
-    const char *buf = "{\"error\":\"Resource not found\"}";
-    struct MHD_Response *response;
-    response = MHD_create_response_from_data (strlen (buf), (void*) buf, 1, 1);
-    MHD_queue_response (conn, 404, response);
-    MHD_destroy_response (response);
-    return 1;    
+int err_not_found (req_context *ctx, req_arg *a, var *out, int *status) {
+    var_set_str_forkey (out, "error", "Resource not found");
+    *status = 404;
+    return 1;
 }
 
-int err_method_not_allowed (req_context *ctx, struct MHD_Connection *conn,
-                            req_arg *a) {
-    const char *buf = "{\"error\":\"Method not allowed\"}";
-    struct MHD_Response *response;
-    response = MHD_create_response_from_data (strlen (buf), (void*) buf, 1, 1);
-    MHD_queue_response (conn, 405, response);
-    MHD_destroy_response (response);
-    return 1;    
+int err_method_not_allowed (req_context *ctx, req_arg *a,
+                            var *out, int *status) {
+    var_set_str_forkey (out, "error", "Method not allowed");
+    *status = 405;
+    return 1;
 }
 
-int flt_check_validuser (req_context *ctx, struct MHD_Connection *conn,
-                         req_arg *a) {
+int flt_check_validuser (req_context *ctx, req_arg *a,
+                         var *out, int *status) {
     if (! uuidvalid (ctx->opticon_token)) {
-        return err_unauthorized (ctx, conn, a);
+        return err_unauthorized (ctx, a, out, status);
     }
     return 0;
 }
 
-int flt_check_admin (req_context *ctx, struct MHD_Connection *conn,
-                         req_arg *a) {
+int flt_check_admin (req_context *ctx, req_arg *a, var *out, int *status) {
     if (! uuidvalid (ctx->opticon_token)) {
-        return err_not_allowed (ctx, conn, a);
+        return err_not_allowed (ctx, a, out, status);
     }
     return 0;
 }

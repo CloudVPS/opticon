@@ -23,6 +23,8 @@ typedef enum {
 typedef struct req_context_s {
     var         *headers; /**< HTTP headers */
     var         *bodyjson; /**< Parsed JSON */
+    var         *response; /**< Prepared JSON response */
+    int          status; /**< HTTP response code */
     req_method   method; /**< HTTP request method */
     char        *url; /**< Requested URL */
     char        *ctype; /**< Content type */
@@ -62,8 +64,7 @@ typedef struct req_matchlist_s {
 
 extern req_matchlist REQ_MATCHES;
 
-int          err_server_error (req_context *, struct MHD_Connection *,
-                               req_arg *);
+int          err_server_error (req_context *, req_arg *, var *, int *);
 
 req_arg     *req_arg_alloc (void);
 void         req_arg_clear (req_arg *);
