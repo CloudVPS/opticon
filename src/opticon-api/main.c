@@ -4,14 +4,6 @@
 #include <microhttpd.h>
 #include "req_context.h"
 
-int authenticate_context (req_context *ctx) {
-    return 1;
-}
-
-int authorize_context (req_context *ctx, auth_level level) {
-    return 1;
-}
-
 void generate_error_response (struct MHD_Connection *connection,
                               int statuscode, const char *txt) {
     const char *errtxt = txt;
@@ -67,74 +59,44 @@ int answer_to_connection (void *cls, struct MHD_Connection *connection,
     /* Parse post data */
     req_context_parse_body (ctx);
     
-    /* Validate the token */
-    if (! authenticate_context (ctx)) {
-        generate_error_response (connection, 401);
-        req_context_free (ctx);
-        *con_cls = NULL;
-        return MHD_YES;
-    }
-    
-    /* Make sure the token has access to the tenant */
-    if (! authorize_context (ctx, AUTH_USER)) {
-        generate_error_response (connection, 403);
-        req_context_free (ctx);
-        *con_cls = NULL;
-        return MHD_YES;
-    }
-    
-    /* [/v1.0]/ */
-    if (! uuidvalid (ctx->tenantid)) {
-        if (! authorize_context (ctx, AUTH_ADMIN)) {
-            generate_error_response (connection, 403);
-            req_context_free (ctx);
-            *con_cls = NULL;
-            return MHD_YES;
-        }
-        
-        cmd_list_tenants (ctx, connection);
-        req_context_free (ctx);
-        *con_cls = NULL;
-        return MHD_YES;
-    }
-    
-    /* [/v1.0]/$TENANT[/$CMD[/$ARG]] */
-    if (! uuidvalid (ctx->hostid)) {
-        /* [/v1.0]/$TENANT */
-        if ((! ctx->command) || (! ctx->command[0])) {
-            cmd_tenant (ctx, connection);
-            req_context_free (ctx);
-            *con_cls = NULL;
-            return MHD_YES;
-        }
-        
-        /* [/v1.0]/$TENANT/hosts */
-        if (strcmp (ctx->command, "hosts") == 0) {
-            cmd_hosts_overview (ctx, connection);
-            cmd_tenant (ctx, connection);
-            req_context_free (ctx);
-            *con_cls = NULL;
-            return MHD_YES;
-        }
-        
-        /* [/v1.0]/$TENANT/meter[/$METER[/$CMD]] */
-        if (strcmp (ctx->command, "meter") == 0) {
-            cmd_tenant_meter (ctx, connection);
-            req_context_free (ctx);
-            *con_cls = NULL;
-            return MHD_YES;
-        }
-        /* [/v1.0]/$TENANT/watcher[/$METER[/$LEVEL]] */
-        if (strcmp (ctx->command, "meter") == 0) {
-            cmd_tenant_meter (ctx, connection);
-            req_context_free (ctx);
-            *con_cls = NULL;
-            return MHD_YES;
-        }
-        
-        generate_error_respones (connection, 500);
-        req_context_free (ctx);
-        *con_cls = NULL;
-        return MHD_YES;
-    }
+    req_matchlist_dispatch (REQ_MATCHES, url, ctx, connection);
+    req_context_free (ctx);
+    *con_cls = NULL;
+    return MHD_YES;
+}
+
+void setup_matches (void) {
+    #define _P_(xx,yy,zz) req_matchlist_add(REQ_MATCHES,xx,yy,zz)
+    #define REQ_UPDATE (REQ_POST|REQ_PUT)
+    _P_ ("*",                       REQ_ANY     flt_check_validuser);
+    _P_ ("/",                       REQ_GET,    flt_check_admin);
+    _P_ ("/",                       REQ_GET,    cmd_list_tenants);
+    _P_ ("/",                       REQ_ANY,    err_method_notimpl);
+    _P_ ("/%U",                     REQ_ANY,    flt_check_tenant
+    _P_ ("/%U",                     REQ_GET,    cmd_tenant_get);
+    _P_ ("/%U",                     REQ_POST,   cmd_tenant_create);
+    _P_ ("/%U",                     REQ_PUT,    cmd_tenant_update);
+    _P_ ("/%U",                     REQ_DELETE, cmd_tenant_delete);
+    _P_ ("/%U/meta",                REQ_GET,    cmd_tenant_get_meta);
+    _P_ ("/%U/meta",                REQ_UPDATE, cmd_tenant_set_meta);
+    _P_ ("/%U/meta",                REQ_ANY,    err_method_notimpl_;
+    _P_ ("/%U/meter",               REQ_GET,    cmd_tenant_list_meters);
+    _P_ ("/%U/meter/%s",            REQ_UPDATE, cmd_tenant_set_meter);
+    _P_ ("/%U/meter/%s",            REQ_DELETE, cmd_tenant_delete_meter);
+    _P_ ("/%U/watcher",             REQ_GET,    cmd_tenant_list_watchers);
+    _P_ ("/%U/watcher/%s",          REQ_UPDATE, cmd_tenant_set_watcher);
+    _P_ ("/%U/watcher/%s",          REQ_DELETE, cmd_tenant_delete_watcher);
+    _P_ ("/%U/host",                REQ_GET,    cmd_tenant_list_hosts);
+    _P_ ("/%U/host",                REQ_ANY,    err_method_notimpl);
+    _P_ ("/%U/host/%U",             REQ_GET,    cmd_host_get);
+    _P_ ("/%U/host/%U",             REQ_ANY,    err_method_notimpl);
+    _P_ ("/%U/host/%U/watcher",     REQ_GET,    cmd__host_list_watchers);
+    _P_ ("/%U/host/%U/watcher",     REQ_ANY,    err_method_notimpl);
+    _P_ ("/%U/host/%U/watcher/%s",  REQ_UPDATE, cmd_host_set_watcher);
+    _P_ ("/%U/host/%U/watcher/%s",  REQ_DELETE, cmd_host_delete_watcher);
+    _P_ ("/%U/host/%U/range/%T/%T", REQ_GET,    cmd_host_get_range);
+    _P_ ("/%U/host/%U/time/%T",     REQ_GET,    cmd_host_get_time);
+    _P_ ("*",                       REQ_GET,    err_not_found);
+    _P_ ("*",                       REQ_ANY,    err_method_notimpl);
+    #undef _P_
 }
