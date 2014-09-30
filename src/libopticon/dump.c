@@ -32,7 +32,7 @@ char *dump_escape (const char *str) {
   * \param _indent The desired indentation level.
   * \return 1 on success, 0 on failure.
   */
-int dump_var2 (var *v, ioport *into, int _indent) {
+int write_var_indented (var *v, ioport *into, int _indent) {
     char *tstr;
     int first=1;
     int indent = _indent;
@@ -73,14 +73,14 @@ int dump_var2 (var *v, ioport *into, int _indent) {
                 
                 case VAR_DICT:
                     ioport_printf (into, "{\n");
-                    if (! dump_var2 (crsr, into, indent+4)) return 0;
+                    if (! write_var_indented (crsr, into, indent+4)) return 0;
                     if (indent) ioport_printf (into, "%s", SPC+(128-indent));
                     ioport_printf (into, "}");
                     break;
                     
                 case VAR_ARRAY:
                     ioport_printf (into, "[\n");
-                    if (! dump_var2 (crsr, into, indent+4)) return 0;
+                    if (! write_var_indented (crsr, into, indent+4)) return 0;
                     if (indent) ioport_printf (into, "%s", SPC+(128-indent));
                     ioport_printf (into, "]");
                     break;
@@ -104,11 +104,11 @@ int dump_var2 (var *v, ioport *into, int _indent) {
 int dump_var (var *v, FILE *into) {
     int res = 0;
     ioport *io = ioport_create_filewriter (into);
-    res = dump_var2 (v, io, 0);
+    res = write_var_indented (v, io, 0);
     ioport_close (io);
     return res;
 }
 
 int write_var (var *v, ioport *into) {
-    return dump_var2 (v, into, 0);
+    return write_var_indented (v, into, 0);
 }

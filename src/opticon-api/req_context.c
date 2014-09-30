@@ -89,13 +89,10 @@ void req_matchlist_add (req_matchlist *self, const char *s,
 int req_match_check (req_match *self, const char *url, req_arg *arg) {
     req_arg_clear (arg);
     
-    printf ("match %s\n", self->matchstr);
-    
     const char *curl = url;
     const char *curl_start = url;
     const char *cmatch = self->matchstr;
     while (*curl) {
-        printf ("matchround '%c' '%c'\n", *curl, *cmatch);
         /* complete wildcard, always matches */
         if (*cmatch == '*' && cmatch[1] == 0) return 1;
         /* '*' wildcard, just skip over to the next matching char */
@@ -115,6 +112,8 @@ int req_match_check (req_match *self, const char *url, req_arg *arg) {
             assert (strchr ("sUT", matchtp));
             curl_start = curl;
             cmatch++;
+            
+            if (*curl == 0) return 0;
             
             /* Skip over the url until the next slash or the end */
             while (*curl && *curl != '/') {
@@ -155,6 +154,7 @@ int req_match_check (req_match *self, const char *url, req_arg *arg) {
         curl++;
         cmatch++;
     }
+    if (*cmatch) return 0;
     return 1;
 }
 
@@ -168,8 +168,8 @@ int err_server_error (req_context *ctx, req_arg *arg,
 void req_write_response (struct MHD_Connection *conn,
                          var *res, int status) {
     ioport *out = ioport_create_buffer (NULL, 4096);
-    ioport_write (out, "{", 1);
-    write_var (res, out);
+    ioport_write (out, "{\n", 2);
+    write_var_indented (res, out, 4);
     ioport_write (out, "}\n", 2);
     void *buf = (void *) ioport_get_buffer (out);
     size_t buflen = ioport_read_available (out);
@@ -191,17 +191,13 @@ void req_matchlist_dispatch (req_matchlist *self, const char *url,
                              struct MHD_Connection *conn) {
                              
     req_arg *targ = req_arg_alloc();
-    printf ("dispatch url: %s\n", url);
 
     /* Iterate over the list */
     req_match *crsr = self->first;
     while (crsr) {
-        printf ("ctxmethod %i methodmask %i\n", ctx->method, crsr->method_mask);
         if (ctx->method & crsr->method_mask) {
             if (req_match_check (crsr, url, targ)) {
-                printf ("calling\n");
                 if (crsr->func (ctx, targ, ctx->response, &ctx->status)) {
-                    printf ("buck stops\n");
                     req_write_response (conn, ctx->response, ctx->status);
                     req_arg_free (targ);
                     return;

@@ -7,5 +7,6 @@
 
 int dump_var (var *, FILE *);
 int write_var (var *, ioport *);
+int write_var_indented (var *, ioport *, int);
 
 #endif

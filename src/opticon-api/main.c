@@ -96,12 +96,21 @@ int flt_check_admin (req_context *ctx, req_arg *a, var *out, int *status) {
     return 0;
 }
 
+int cmd_hoer (req_context *ctx, req_arg *a, var *out, int *status) {
+    char buf[1024];
+    snprintf (buf, 1023, "%s is a whore", a->argv[0]);
+    var_set_str_forkey (out, "truth", buf);
+    *status = 200;
+    return 1;
+}
+
 void setup_matches (void) {
     #define _P_(xx,yy,zz) req_matchlist_add(&REQ_MATCHES,xx,yy,zz)
-    #define REQ_UPDATE (REQ_POST|REQ_PUT)
+
     _P_ ("*",                       REQ_ANY,    flt_check_validuser);
     _P_ ("/",                       REQ_GET,    flt_check_admin);
     _P_ ("/",                       REQ_GET,    cmd_list_tenants);
+    _P_ ("/hoer/%",                 REQ_GET,    cmd_hoer);
 /*    _P_ ("/",                       REQ_ANY,    err_method_notimpl);
     _P_ ("/%U",                     REQ_ANY,    flt_check_tenant
     _P_ ("/%U",                     REQ_GET,    cmd_tenant_get);
