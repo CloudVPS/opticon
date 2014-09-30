@@ -10,9 +10,12 @@ req_context *req_context_alloc (void) {
         self->headers = var_alloc();
         self->bodyjson = var_alloc();
         self->response = var_alloc();
+        self->auth_data = var_alloc();
         self->status = 500;
         self->url = NULL;
         self->cmd = NULL;
+        self->arg = NULL;
+        self->ctype = NULL;
         self->body = NULL;
         self->bodysz = self->bodyalloc = 0;
         memset (&self->tenantid, 0, sizeof (uuid));
@@ -27,6 +30,7 @@ void req_context_free (req_context *self) {
     var_free (self->headers);
     var_free (self->bodyjson);
     var_free (self->response);
+    var_free (self->auth_data);
     if (self->url) {
         free (self->url);
         if (self->cmd) free (self->cmd);
@@ -56,13 +60,16 @@ void req_context_set_header (req_context *self, const char *hdrname,
     else if (strcmp (canon, "X-Opticon-Token") == 0) {
         self->opticon_token = mkuuid (hdrval);
     }
+    else if (strcmp (canon, "Content-Type") == 0) {
+        self->ctype = strdup (hdrval);
+    }
     
     free (canon);
 }
 
 int req_context_parse_body (req_context *self) {
-    if (! self->body) return 0;
-    self->body[self->bodysz] = 0;
+    if (! self->body) return 1;
+    if (strcasecmp (self->ctype, "application/json") != 0) return 0;
     return parse_json (self->bodyjson, self->body);
 }
 
@@ -110,21 +117,48 @@ void req_context_set_url (req_context *self, const char *url) {
                     }
                 }
                 break;
-            
             case 1:
+                if (self->cmd) free (self->cmd);
+                self->cmd = strdup (token);
+                if (strcmp (token, "hosts") == 0) {
+                    logicalpos = 2;
+                }
+                else {
+                    logicalpos = 4;
+                }
+                break;
+            
+            case 2:
                  if (strlen (token) == 36) {
                     self->hostid = mkuuid (token);
-                 }
-                 else {
-                    if (self->cmd) free (self->cmd);
-                    self->cmd = strdup (token);
                     logicalpos++;
                  }
                  break;
+            
+            case 3:
+                    if (self->cmd) free (self->cmd);
+                    self->cmd = strdup (token);
+                    logicalpos++;
+                 break;
+            
+            case 4:
+                if (self->arg) free (self->arg);
+                self->arg = strdup (token);
+                logicalpos++;
+                break;
             
             default:
                 break;
         }
     }
     free (tofree);
+}
+
+void req_context_set_method (req_context *self, const char *mth) {
+    req_method m = REQ_OTHER;
+    if (strcasecmp (mth, "get") == 0) m = REQ_GET;
+    else if (strcasecmp (mth, "post") == 0) m = REQ_POST;
+    else if (strcastcmp (mth, "put") == 0) m = REQ_PUT;
+    else if (strcasecmp (mth, "delete") == 0) m = REQ_DELETE;
+    self->method = m;
 }

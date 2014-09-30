@@ -60,6 +60,17 @@ uuid uuidgen (void) {
     return res;
 }
 
+/** Generate a nil uuid */
+uuid uuidnil (void) {
+    int res = {0,0};
+    return res;
+}
+
+/** Check whether a uuid is nil */
+int uuidvalid (uuid u) {
+    return (u.msb && u.lsb);
+}
+
 /* 5 bit character mapping for ids */
 const char *IDTABLE = " abcdefghijklmnopqrstuvwxyz.-_/@";
 uint64_t ASCIITABLE[] = {

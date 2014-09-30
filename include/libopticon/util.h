@@ -12,6 +12,8 @@
 int          uuidcmp (uuid first, uuid second);
 uuid         mkuuid (const char *str);
 uuid         uuidgen (void);
+uuid         uuidnil (void);
+int          uuidvalid (uuid);
 void         uuid2str (uuid u, char *into);
 void         id2str (meterid_t id, char *into);
 void         nodeid2str (meterid_t id, char *into);
