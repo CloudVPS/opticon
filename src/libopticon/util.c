@@ -62,7 +62,7 @@ uuid uuidgen (void) {
 
 /** Generate a nil uuid */
 uuid uuidnil (void) {
-    int res = {0,0};
+    uuid res = {0,0};
     return res;
 }
 
