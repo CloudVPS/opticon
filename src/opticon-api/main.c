@@ -104,6 +104,22 @@ int cmd_hoer (req_context *ctx, req_arg *a, var *out, int *status) {
     return 1;
 }
 
+int flt_check_tenant (req_context *ctx, req_arg *a, var *out, int *status) {
+    if (a->argc<1) return err_server_error (ctx, a, out, status);
+    printf ("flt_check argv[0]=%s\n", a->argv[0]);
+    ctx->tenantid = mkuuid (a->argv[0]);
+    if (! uuidvalid (ctx->tenantid)) { 
+        return err_server_error (ctx, a, out, status);
+    }
+    return 0;
+}
+
+int cmd_tenant_get (req_context *ctx, req_arg *a, var *out, int *status) {
+    var_set_uuid_forkey (out, "tenant",ctx->tenantid);
+    *status = 200;
+    return 1;
+}
+
 void setup_matches (void) {
     #define _P_(xx,yy,zz) req_matchlist_add(&REQ_MATCHES,xx,yy,zz)
 
@@ -111,10 +127,10 @@ void setup_matches (void) {
     _P_ ("/",                       REQ_GET,    flt_check_admin);
     _P_ ("/",                       REQ_GET,    cmd_list_tenants);
     _P_ ("/hoer/%",                 REQ_GET,    cmd_hoer);
-/*    _P_ ("/",                       REQ_ANY,    err_method_notimpl);
-    _P_ ("/%U",                     REQ_ANY,    flt_check_tenant
+    _P_ ("/",                       REQ_ANY,    err_method_not_allowed);
+    _P_ ("/%U*",                    REQ_ANY,    flt_check_tenant);
     _P_ ("/%U",                     REQ_GET,    cmd_tenant_get);
-    _P_ ("/%U",                     REQ_POST,   cmd_tenant_create);
+/*  _P_ ("/%U",                     REQ_POST,   cmd_tenant_create);
     _P_ ("/%U",                     REQ_PUT,    cmd_tenant_update);
     _P_ ("/%U",                     REQ_DELETE, cmd_tenant_delete);
     _P_ ("/%U/meta",                REQ_GET,    cmd_tenant_get_meta);
@@ -128,6 +144,7 @@ void setup_matches (void) {
     _P_ ("/%U/watcher/%s",          REQ_DELETE, cmd_tenant_delete_watcher);
     _P_ ("/%U/host",                REQ_GET,    cmd_tenant_list_hosts);
     _P_ ("/%U/host",                REQ_ANY,    err_method_notimpl);
+    _P_ ("/%U/host/%U*",            REQ_ANY,    flt_check_host);
     _P_ ("/%U/host/%U",             REQ_GET,    cmd_host_get);
     _P_ ("/%U/host/%U",             REQ_ANY,    err_method_notimpl);
     _P_ ("/%U/host/%U/watcher",     REQ_GET,    cmd__host_list_watchers);
@@ -144,8 +161,14 @@ void setup_matches (void) {
 int main() {
     setup_matches();
     struct MHD_Daemon *daemon;
-    daemon = MHD_start_daemon (MHD_USE_SELECT_INTERNALLY, 8888,
-                               NULL, NULL, &answer_to_connection,
-                               NULL, MHD_OPTION_END);
+    unsigned int flags = MHD_USE_THREAD_PER_CONNECTION |
+                         MHD_USE_IPv6;
+    daemon = MHD_start_daemon (flags, 8888, NULL, NULL,
+                               &answer_to_connection, NULL,
+                               MHD_OPTION_CONNECTION_LIMIT,
+                               (unsigned int) 256,
+                               MHD_OPTION_PER_IP_CONNECTION_LIMIT, 
+                               (unsigned int) 64,
+                               MHD_OPTION_END);
     while (1) sleep (60);
 }

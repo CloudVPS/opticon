@@ -148,13 +148,23 @@ int req_match_check (req_match *self, const char *url, req_arg *arg) {
             memcpy (elm, curl_start, elmsize);
             elm[elmsize] = 0;
             req_arg_add_nocopy (arg, elm); /*req_arg will free() elm*/
+            cmatch++;
         }
-        if (*cmatch != *curl) return 0;
+        
+        if (*cmatch == '*') {
+            if (! *curl) return 1;
+            continue;
+        }
+        if (*cmatch != *curl) {
+            return 0;
+        }
         if (! *curl) return 1;
         curl++;
         cmatch++;
     }
-    if (*cmatch) return 0;
+    if (*cmatch) {
+        return 0;
+    }
     return 1;
 }
 
