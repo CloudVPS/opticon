@@ -28,7 +28,7 @@ OBJS_LIBOPTICON = adjust.o aes.o host.o tenant.o \
 				  dump.o var.o react.o parse.o \
 				  cliopt.o daemon.o log.o thread.o transport.o \
 				  transport_udp.o packetqueue.o \
-				  defaultmeters.o
+				  defaultmeters.o uuid.o
 all: ../../lib/libopticon.a
 
 ../../lib/libopticon.a: $(OBJS_LIBOPTICON)

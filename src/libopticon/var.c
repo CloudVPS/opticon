@@ -287,6 +287,10 @@ const char *var_get_str_forkey (var *self, const char *key) {
     return res->value.sval;
 }
 
+uuid var_get_uuid_forkey (var *self, const char *key) {
+    return mkuuid (var_get_str_forkey (self, key));
+}
+
 /** Return the number of children of a keyed child-array or child-dict of
   * a dict variable.
   * \param self The parent dict
@@ -318,6 +322,11 @@ double var_get_double (var *self) {
 const char *var_get_str (var *self) {
     if (self->type == VAR_STR) return self->value.sval;
     return NULL;
+}
+
+/** Parse the string value of a var object as a uuid */
+uuid var_get_uuid (var *self) {
+    return mkuuid (var_get_str (self));
 }
 
 /** Lookup a var inside a parent by its array index. Uses smart caching
@@ -440,6 +449,17 @@ const char *var_get_str_atindex (var *self, int idx) {
     if (! res) return 0;
     if (res->type != VAR_STR) return NULL;
     return res->value.sval;
+}
+
+/** Get a uuid parsed from the string value of a var inside an array var.
+  * \param self The array
+  * \param idx The array index (negative for measuring from the end).
+  * \return The uuid (or the nil uuid).
+  */
+uuid var_get_uuid_atindex (var *self, int idx) {
+    var *res = var_find_index (self, idx);
+    if (! res) return uuidnil();
+    return var_get_uuid (res);
 }
 
 /** Increase the generation counter of a variable space. When a new versin
@@ -582,6 +602,23 @@ void var_set_str_forkey (var *self, const char *key, const char *val) {
     var_set_str (v, val);
 }
 
+/** Set the string value of a dict-var sub-var from a uuid.
+  * \param self The dict.
+  * \param key The key within the dict.
+  * \param val The value to set.
+  */
+void var_set_uuid_forkey (var *self, const char *key, uuid val) {
+    var *v = var_get_or_make (self, key, VAR_STR);
+    if (! v) return;
+    var_set_uuid (v, val);
+}
+
+void var_set_uuid (var *v, uuid u) {
+    char buf[40];
+    uuid2str (u, buf);
+    var_set_str (v, buf);
+}
+
 /** Set the direct string value of a var */
 void var_set_str (var *v, const char *val) {
     int is_orig = 0;
@@ -666,6 +703,16 @@ void var_add_double (var *self, double nval) {
     nvar->id[0] = 0;
     nvar->value.dval = nval;
     var_link (nvar, self);
+}
+
+/** Add a string value to an array as a printed uuid.
+  * \param self The array
+  * \param u The uuid
+  */
+void var_add_uuid (var *self, uuid u) {
+    char buf[40];
+    uuid2str (u, buf);
+    var_add_str (self, buf);
 }
 
 /** Add a string value to an array var.

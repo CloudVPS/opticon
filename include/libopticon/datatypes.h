@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <pthread.h>
+#include <libopticon/uuid.h>
 
 /* =============================== TYPES =============================== */
 
@@ -29,9 +30,6 @@ typedef uint32_t        status_t;
 
 #define SZ_EMPTY_VAL    0x000000000000001e
 #define SZ_EMPTY_ARRAY  0x000000000000001f
-
-/** UUIDs are normally passed by value */
-typedef struct { uint64_t msb; uint64_t lsb; } uuid;
 
 typedef struct { char str[128]; } fstring;
 

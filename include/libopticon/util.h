@@ -3,18 +3,13 @@
 
 #include <libopticon/datatypes.h>
 #include <libopticon/ioport.h>
+#include <libopticon/uuid.h>
 #include <stdlib.h>
 #include <stddef.h>
 #include <sys/socket.h>
 
 /* ============================= FUNCTIONS ============================= */
 
-int          uuidcmp (uuid first, uuid second);
-uuid         mkuuid (const char *str);
-uuid         uuidgen (void);
-uuid         uuidnil (void);
-int          uuidvalid (uuid);
-void         uuid2str (uuid u, char *into);
 void         id2str (meterid_t id, char *into);
 void         nodeid2str (meterid_t id, char *into);
 uint64_t     idhaspath (meterid_t);

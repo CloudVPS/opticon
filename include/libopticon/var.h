@@ -3,6 +3,7 @@
 
 #include <sys/types.h>
 #include <stdlib.h>
+#include <libopticon/uuid.h>
 
 /* =============================== TYPES =============================== */
 
@@ -62,30 +63,36 @@ int          var_get_count (var *);
 uint64_t     var_get_int (var *);
 double       var_get_double (var *);
 const char  *var_get_str (var *);
+uuid         var_get_uuid (var *);
 var         *var_get_dict_forkey (var *, const char *);
 var         *var_get_array_forkey (var *, const char *);
 uint64_t     var_get_int_forkey (var *, const char *);
 double       var_get_double_forkey (var *, const char *);
 const char  *var_get_str_forkey (var *, const char *);
+uuid         var_get_uuid_forkey (var *, const char *);
 var         *var_get_dict_atindex (var *, int);
 var         *var_get_array_atindex (var *, int);
 uint64_t     var_get_int_atindex (var *, int);
 double       var_get_double_atindex (var *, int);
 const char  *var_get_str_atindex (var *, int);
+uuid         var_get_uuid_atindex (var *, int);
 
 void         var_new_generation (var *);
 void         var_clean_generation (var *);
 void         var_set_int (var *, uint64_t);
 void         var_set_double (var *, double);
 void         var_set_str (var *, const char *);
+void         var_set_uuid (var *, uuid);
 void         var_set_int_forkey (var *, const char *, uint64_t);
 void         var_set_double_forkey (var *, const char *, double);
 void         var_set_str_forkey (var *, const char *, const char *);
+void         var_set_uuid_forkey (var *, const char *, uuid);
 void         var_delete_key (var *, const char *);
 void         var_clear_array (var *);
 void         var_add_double (var *, double);
 void         var_add_int (var *, uint64_t);
 void         var_add_str (var *, const char *);
+void         var_add_uuid (var *, uuid);
 var         *var_add_array (var *);
 var         *var_add_dict (var *);
 
