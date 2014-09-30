@@ -15,7 +15,11 @@ int buffer_read (ioport *io, char *into, size_t sz) {
 /** Write method of the buffer ioport */
 int buffer_write (ioport *io, const char *dat, size_t sz) {
     bufferstorage *S = (bufferstorage *) io->storage;
-    if (S->pos + sz > S->bufsz) return 0;
+    if (S->pos + sz > S->bufsz) {
+        if (! S->owned) return 0;
+        while (S->pos + sz > S->bufsz) S->bufsz += 4096;
+        S->buf = (char *) realloc (S->buf, S->bufsz);
+    }
     if (S->buf + S->pos != dat) {
         if ((S->buf+S->pos) != dat) memcpy (S->buf + S->pos, dat, sz);
     }

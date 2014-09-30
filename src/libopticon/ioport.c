@@ -1,6 +1,7 @@
 #include <libopticon/ioport.h>
 #include <math.h>
 #include <arpa/inet.h>
+#include <stdarg.h>
 
 /** Get the amount of available buffer space for writing into an
   * ioport. 
@@ -20,6 +21,18 @@ int ioport_write (ioport *io, const void *data, size_t sz) {
         if (! ioport_flush_bits (io)) return 0;
     }
     return io->write (io, (const char *) data, sz);
+}
+
+/** Write formatted ascii to the port */
+int ioport_printf (ioport *io, const char *fmt, ...) {
+    char buffer[4096];
+    buffer[0] = 0;
+    va_list ap;
+    va_start (ap, fmt);
+    vsnprintf (buffer, 4096, fmt, ap);
+    va_end (ap);
+    buffer[4095] = 0;
+    return ioport_write (io, buffer, strlen (buffer));
 }
 
 /** Write a single byte to an ioport.
