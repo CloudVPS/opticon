@@ -7,7 +7,7 @@
 #include <libopticon/log.h>
 #include "req_context.h"
 
-var *collect_meterdefs (uuid tenant, uuid host);
+var *collect_meterdefs (uuid tenant, uuid host, int watchonly);
 int err_server_error (req_context *, req_arg *, var *, int *);
 int err_unauthorized (req_context *, req_arg *, var *, int *);
 int err_not_allowed (req_context *, req_arg *, var *, int *);

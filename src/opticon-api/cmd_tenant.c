@@ -10,7 +10,7 @@
 #include "cmd.h"
 #include "options.h"
 
-var *collect_meterdefs (uuid tenant, uuid host) {
+var *collect_meterdefs (uuid tenant, uuid host, int watchonly) {
     char tenantstr[40];
     uuid2str (tenant, tenantstr);
     char hoststr[40];
@@ -31,7 +31,7 @@ var *collect_meterdefs (uuid tenant, uuid host) {
     if (!hostmeta) hostmeta = var_alloc();
     
     var *conf = var_alloc();
-    var *cmeters = var_get_dict_forkey (conf, "meter");
+    var *cmeters = var_get_dict_forkey (conf, watchonly?"watcher":"meter");
     var_copy (cmeters, get_default_meterdef());
     var *tmeters = var_get_dict_forkey (tenantmeta, "meter");
     var *hmeters = var_get_dict_forkey (hostmeta, "meter");
@@ -108,6 +108,25 @@ var *collect_meterdefs (uuid tenant, uuid host) {
     }
     var_free (tenantmeta);
     var_free (hostmeta);
+    
+    if (watchonly) {
+        var *crsr = cmeters->value.arr.first;
+        var *ncrsr;
+        while (crsr) {
+            ncrsr = crsr->next;
+            if ( (! var_find_key (crsr, "warning")) &&
+                 (! var_find_key (crsr, "alert")) &&
+                 (! var_find_key (crsr, "critical")) ) {
+                var_delete_key (cmeters, crsr->id);
+            }
+            else {
+                var_delete_key (crsr, "description");
+                var_delete_key (crsr, "unit");
+            }
+            crsr = ncrsr;
+        }
+    }
+    
     return conf;
 }
 
@@ -403,11 +422,10 @@ int cmd_tenant_delete_meter (req_context *ctx, req_arg *a,
 /** GET /$TENANT/watcher */
 int cmd_tenant_list_watchers (req_context *ctx, req_arg *a, 
                             var *env, int *status) {
-    var *res = collect_meterdefs (ctx->tenantid, uuidnil());
+    var *res = collect_meterdefs (ctx->tenantid, uuidnil(), 1);
     if (! res) { return err_not_found (ctx, a, env, status); }
     
-    var *env_watcher = var_get_dict_forkey (env, "watcher");
-    var_copy (env_watcher, res);
+    var_copy (env, res);
     var_free (res);
     *status = 200;
     return 1;
