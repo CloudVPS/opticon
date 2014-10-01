@@ -15,6 +15,7 @@
   * \param tenant The tenant uuid
   * \param host The host uuid (can be uuidnil())
   * \param watchonly If 1, collect watcher data, not meter data
+  * \return var object ready for transmission.
   */
 var *collect_meterdefs (uuid tenant, uuid host, int watchonly) {
     char tenantstr[40];
