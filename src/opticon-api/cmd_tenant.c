@@ -471,15 +471,107 @@ int cmd_tenant_list_watchers (req_context *ctx, req_arg *a,
 
 int cmd_tenant_set_watcher (req_context *ctx, req_arg *a, 
                             var *env, int *status) {
-    return err_server_error (ctx, a, env, status);
+    if (a->argc < 2) return err_server_error (ctx, a, env, status);
+
+    char meterid[16];
+    if (! set_meterid (meterid, a)) err_bad_request (ctx, a, env, status);
+    
+    db *DB = localdb_create (OPTIONS.dbpath);
+    if (! db_open (DB, ctx->tenantid, NULL)) {
+        db_free (DB);
+        return err_not_found (ctx, a, env, status);
+    }
+    var *dbmeta = db_get_metadata (DB);
+    var *dbmeta_meters = var_get_dict_forkey (dbmeta, "meter");
+    var *dbmeta_meter = var_get_dict_forkey (dbmeta_meters, meterid);
+    var *ctxwatcher = var_get_dict_forkey (ctx->bodyjson, "watcher");
+    
+    var *tv;
+
+    tv = var_find_key (ctxwatcher, "warning");
+    if (tv) var_copy (var_get_dict_forkey (dbmeta_meter, "warning"), tv);
+    tv = var_find_key (ctxwatcher, "alert");
+    if (tv) var_copy (var_get_dict_forkey (dbmeta_meter, "alert"), tv);
+    tv = var_find_key (ctxwatcher, "critical");
+    if (tv) var_copy (var_get_dict_forkey (dbmeta_meter, "critial"), tv);
+    
+    db_set_metadata (DB, dbmeta);
+    var *env_watcher = var_get_dict_forkey (env, "watcher");
+    var_copy (env_watcher, ctxwatcher);
+    var_free (dbmeta);
+    db_free (DB);
+    *status = 200;
+    return 1;
 }
 
 int cmd_tenant_delete_watcher (req_context *ctx, req_arg *a, 
                                var *env, int *status) {
-    return err_server_error (ctx, a, env, status);
+    if (a->argc < 2) return err_server_error (ctx, a, env, status);
+
+    char meterid[16];
+    if (! set_meterid (meterid, a)) err_bad_request (ctx, a, env, status);
+    
+    db *DB = localdb_create (OPTIONS.dbpath);
+    if (! db_open (DB, ctx->tenantid, NULL)) {
+        db_free (DB);
+        return err_not_found (ctx, a, env, status);
+    }
+    var *dbmeta = db_get_metadata (DB);
+    var *dbmeta_meters = var_get_dict_forkey (dbmeta, "meter");
+    var *dbmeta_meter = var_get_dict_forkey (dbmeta_meters, meterid);
+    var_delete_key (dbmeta_meter, "warning");
+    var_delete_key (dbmeta_meter, "alert");
+    var_delete_key (dbmeta_meter, "critical");
+    db_set_metadata (DB, dbmeta);
+    var *env_watcher = var_get_dict_forkey (env, "watcher");
+    var_set_str_forkey (env_watcher, "deleted", meterid);
+    var_free (dbmeta);
+    db_free (DB);
+    *status = 200;
+    return 1;
+}
+
+/** Format a timestamp for output */
+static char *timfmt (time_t w, int json) {
+    struct tm tm;
+    if (json) gmtime_r (&w, &tm);
+    else localtime_r (&w, &tm);
+    char *res = (char *) malloc (24);
+    strftime (res, 23, json ? "%FT%H:%M:%S" : "%F %H:%M", &tm);
+    return res;
 }
 
 int cmd_tenant_list_hosts (req_context *ctx, req_arg *a, 
                             var *env, int *status) {
-    return err_server_error (ctx, a, env, status);
+    db *DB = localdb_create (OPTIONS.dbpath);
+    if (! db_open (DB, ctx->tenantid, NULL)) {
+        db_free (DB);
+        return err_not_found (ctx, a, env, status);
+    }
+    
+    var *env_hosts = var_get_array_forkey (env, "host");
+    
+    char uuidstr[40];
+    char *str_early;
+    char *str_late;
+    
+    usage_info usage;
+    int count;
+    uuid *list = db_list_hosts (DB, &count);
+    for (int i=0; i<count; ++i) {
+        uuid2str (list[i], uuidstr);
+        db_get_usage (DB, &usage, list[i]);
+        str_early = timfmt (usage.earliest, 1);
+        str_late = timfmt (usage.last, 1);
+        var *crsr = var_add_dict (env_hosts);
+        var_set_str_forkey (crsr, "id", uuidstr);
+        var_set_int_forkey (crsr, "usage", usage.bytes);
+        var_set_str_forkey (crsr, "start", str_early);
+        var_set_str_forkey (crsr, "end", str_late);
+        free (str_early);
+        free (str_late);
+    }
+    free (list);
+    *status = 200;
+    return 1;
 }
