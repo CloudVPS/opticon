@@ -14,8 +14,8 @@ endif
 LIBS = ../../lib/libopticon.a ../../lib/libopticondb.a
 
 ifeq (darwin,$(OSNAME))
-  CFLAGS+=-I/usr/local/include
-  LIBS+=/usr/local/lib/libmicrohttpd.a
+  CFLAGS+=-I/usr/local/include -I/opt/local/include
+  LIBS+=/usr/local/lib/libmicrohttpd.a /opt/local/lib/libcurl.a
 endif
 
 CFLAGS+=-DOSNAME=$(OSNAME) -DOSREL=$(OSREL) -DOSRELMAJOR=$(OSRELMAJOR)

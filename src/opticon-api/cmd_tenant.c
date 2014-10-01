@@ -263,7 +263,7 @@ int cmd_tenant_update (req_context *ctx, req_arg *a, var *env, int *status) {
 
     const char *sname = var_get_str_forkey (vopts, "name");
     
-    if (sname && (! ctx->isadmin)) {
+    if (sname && (ctx->userlevel != AUTH_ADMIN)) {
         return err_not_allowed (ctx, a, env, status);
     }
     

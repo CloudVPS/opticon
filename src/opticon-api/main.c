@@ -10,6 +10,7 @@
 
 req_matchlist REQ_MATCHES;
 
+/** MHD callback function for setting the context headers */
 int enumerate_header (void *cls, enum MHD_ValueKind kind,
                       const char *key, const char *value) {
     req_context *ctx = (req_context *) cls;
@@ -17,6 +18,7 @@ int enumerate_header (void *cls, enum MHD_ValueKind kind,
     return MHD_YES;
 }
 
+/** MHD callback function for handling a connection */
 int answer_to_connection (void *cls, struct MHD_Connection *connection,
                           const char *url,
                           const char *method, const char *version,
@@ -52,25 +54,34 @@ int answer_to_connection (void *cls, struct MHD_Connection *connection,
     return MHD_YES;
 }
 
+/** Filter that croaks when no valid token was set */
 int flt_check_validuser (req_context *ctx, req_arg *a,
                          var *out, int *status) {
     if (! uuidvalid (ctx->opticon_token)) {
         return err_unauthorized (ctx, a, out, status);
     }
-    ctx->isadmin = 1;
+    ctx->userlevel = AUTH_ADMIN;
     return 0;
 }
 
+/** Filter that croaks when no valid token was set, or the user behind
+  * said token is a filthy peasant.
+  */
 int flt_check_admin (req_context *ctx, req_arg *a, var *out, int *status) {
     if (! uuidvalid (ctx->opticon_token)) {
         return err_not_allowed (ctx, a, out, status);
     }
-    if (! ctx->isadmin) {
+    if (! ctx->userlevel != AUTH_ADMIN) {
         return err_not_allowed (ctx, a, out, status);
     }
     return 0;
 }
 
+/** Filter that extracts the tenantid argumnt from the url, and croaks
+  * when it is invalid. FIXME: Should also croak when the user has
+  * no access to the tenant, on account of being a filthy peasant with
+  * the wrong UUID.
+  */
 int flt_check_tenant (req_context *ctx, req_arg *a, var *out, int *status) {
     if (a->argc<1) return err_server_error (ctx, a, out, status);
     ctx->tenantid = mkuuid (a->argv[0]);
@@ -80,6 +91,7 @@ int flt_check_tenant (req_context *ctx, req_arg *a, var *out, int *status) {
     return 0;
 }
 
+/** Filter that extracts the host uuid argument from a url. */
 int flt_check_host (req_context *ctx, req_arg *a, var *out, int *status) {
     if (a->argc<2) return err_server_error (ctx, a, out, status);
     ctx->hostid = mkuuid (a->argv[1]);
@@ -89,6 +101,7 @@ int flt_check_host (req_context *ctx, req_arg *a, var *out, int *status) {
     return 0;
 }
 
+/** Set up all the url routing */
 void setup_matches (void) {
     #define _P_(xx,yy,zz) req_matchlist_add(&REQ_MATCHES,xx,yy,zz)
 
