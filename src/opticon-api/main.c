@@ -107,6 +107,7 @@ int flt_check_host (req_context *ctx, req_arg *a, var *out, int *status) {
 /** Set up all the url routing */
 void setup_matches (void) {
     #define _P_(xx,yy,zz) req_matchlist_add(&REQ_MATCHES,xx,yy,zz)
+    #define _T_(xx,yy,zz) req_matchlist_add_text(&REQ_MATCHES,xx,yy,zz)
 
     _P_ ("*",                         REQ_ANY,    flt_check_validuser);
     _P_ ("/",                         REQ_GET,    flt_check_admin);
@@ -133,7 +134,7 @@ void setup_matches (void) {
     _P_ ("/%U/host",                  REQ_GET,    cmd_tenant_list_hosts);
     _P_ ("/%U/host",                  REQ_ANY,    err_method_not_allowed);
     _P_ ("/%U/host/%U*",              REQ_ANY,    flt_check_host);
-    _P_ ("/%U/host/%U",               REQ_GET,    cmd_host_get);
+    _T_ ("/%U/host/%U",               REQ_GET,    cmd_host_get);
     _P_ ("/%U/host/%U",               REQ_ANY,    err_method_not_allowed);
     _P_ ("/%U/host/%U/watcher",       REQ_GET,    cmd_host_list_watchers);
     _P_ ("/%U/host/%U/watcher",       REQ_ANY,    err_method_not_allowed);
@@ -142,10 +143,11 @@ void setup_matches (void) {
     _P_ ("/%U/host/%U/watcher/%s",    REQ_DELETE, cmd_host_delete_watcher);
     _P_ ("/%U/host/%U/watcher/%s/%s", REQ_DELETE, cmd_host_delete_watcher);
     _P_ ("/%U/host/%U/range/%T/%T",   REQ_GET,    cmd_host_get_range);
-    _P_ ("/%U/host/%U/time/%T",       REQ_GET,    cmd_host_get_time);
+    _T_ ("/%U/host/%U/time/%T",       REQ_GET,    cmd_host_get_time);
     _P_ ("*",                         REQ_GET,    err_not_found);
     _P_ ("*",                         REQ_ANY,    err_method_not_allowed);
     #undef _P_
+    #undef _T_
 }
 
 apioptions OPTIONS;

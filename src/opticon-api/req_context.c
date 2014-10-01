@@ -86,6 +86,33 @@ void req_matchlist_add (req_matchlist *self, const char *s,
     m->matchstr = s;
     m->method_mask = mmask;
     m->func = f;
+    m->textfunc = NULL;
+    
+    if (self->first) {
+        m->prev = self->last;
+        self->last->next = m;
+        self->last = m;
+    }
+    else {
+        self->first = self->last = m;
+    }
+}
+
+/** Add a match definition to a matchlist with a text-based
+  * handler function.
+  * \param self The list
+  * \param s The match definition
+  * \param mmask The mask of methods caught
+  * \param f The function to call
+  */
+void req_matchlist_add_text (req_matchlist *self, const char *s,
+                             req_method mmask, path_text_f f) {
+    req_match *m = (req_match *) malloc (sizeof (req_match));
+    m->next = m->prev = NULL;
+    m->matchstr = s;
+    m->method_mask = mmask;
+    m->func = NULL;
+    m->textfunc = f;
     
     if (self->first) {
         m->prev = self->last;
@@ -193,18 +220,20 @@ int err_server_error (req_context *ctx, req_arg *arg,
 }
 
 void req_write_response (struct MHD_Connection *conn,
-                         var *res, int status) {
-    ioport *out = ioport_create_buffer (NULL, 4096);
-    ioport_write (out, "{\n", 2);
-    write_var_indented (res, out, 4);
-    ioport_write (out, "}\n", 2);
+                         var *res, int status, ioport *out, int txt) {
+    /* if no text data was sent into the ioport, encode the
+     * response */
+    if (! txt) {
+        ioport_write (out, "{\n", 2);
+        write_var_indented (res, out, 4);
+        ioport_write (out, "}\n", 2);
+    }
     void *buf = (void *) ioport_get_buffer (out);
     size_t buflen = ioport_read_available (out);
     struct MHD_Response *response;
     response = MHD_create_response_from_data (buflen, buf, 1, 1);
     MHD_queue_response (conn, status, response);
     MHD_destroy_response (response);
-    ioport_close (out);
 }
 
 /** Take a request context and connection and shop it around inside
@@ -217,6 +246,7 @@ void req_matchlist_dispatch (req_matchlist *self, const char *url,
                              req_context *ctx,
                              struct MHD_Connection *conn) {
                              
+    ioport *out = ioport_create_buffer (NULL, 4096);                         
     req_arg *targ = req_arg_alloc();
 
     /* Iterate over the list */
@@ -224,10 +254,24 @@ void req_matchlist_dispatch (req_matchlist *self, const char *url,
     while (crsr) {
         if (ctx->method & crsr->method_mask) {
             if (req_match_check (crsr, url, targ)) {
-                if (crsr->func (ctx, targ, ctx->response, &ctx->status)) {
-                    req_write_response (conn, ctx->response, ctx->status);
-                    req_arg_free (targ);
-                    return;
+                if (crsr->func) {
+                    if (crsr->func (ctx, targ, ctx->response,
+                                              &ctx->status)) {
+                        req_write_response (conn, ctx->response,
+                                            ctx->status, out, 0);
+                        req_arg_free (targ);
+                        ioport_close (out);
+                        return;
+                    }
+                }
+                else if (crsr->textfunc) {
+                    if (crsr->textfunc (ctx, targ, out, &ctx->status)) {
+                        req_write_response (conn, ctx->response,
+                                            ctx->status, out, 1);
+                        req_arg_free (targ);
+                        ioport_close (out);
+                        return;
+                    }
                 }
             }
         }
@@ -236,8 +280,9 @@ void req_matchlist_dispatch (req_matchlist *self, const char *url,
 
     /* No matches, bail out */    
     err_server_error (ctx, targ, ctx->response, &ctx->status);
-    req_write_response (conn, ctx->response, ctx->status);
+    req_write_response (conn, ctx->response, ctx->status, out, 0);
     req_arg_free (targ);
+    ioport_close (out);
 }
 
 /** Allocate a request context object */

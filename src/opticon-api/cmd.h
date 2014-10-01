@@ -29,12 +29,12 @@ int cmd_tenant_list_watchers (req_context *, req_arg *, var *, int *);
 int cmd_tenant_set_watcher (req_context *, req_arg *, var *, int *);
 int cmd_tenant_delete_watcher (req_context *, req_arg *, var *, int *);
 int cmd_tenant_list_hosts (req_context *, req_arg *, var *, int *);
-int cmd_host_get (req_context *, req_arg *, var *, int *);
+int cmd_host_get (req_context *, req_arg *, ioport *, int *);
 int cmd_host_list_watchers (req_context *, req_arg *, var *, int *);
 int cmd_host_set_watcher (req_context *, req_arg *, var *, int *);
 int cmd_host_delete_watcher (req_context *, req_arg *, var *, int *);
 int cmd_host_get_range (req_context *, req_arg *, var *, int *);
-int cmd_host_get_time (req_context *, req_arg *, var *, int *);
+int cmd_host_get_time (req_context *, req_arg *, ioport *, int *);
 
 #endif
 

@@ -47,6 +47,7 @@ typedef struct req_arg_s {
 
 /** Handler function for a specified URL path */
 typedef int (*path_f)(req_context *, req_arg *, var *resp, int *st);
+typedef int (*path_text_f)(req_context *, req_arg *, ioport *resp, int *st);
 
 /** Path match definition*/
 typedef struct req_match_s {
@@ -55,6 +56,7 @@ typedef struct req_match_s {
     const char          *matchstr; /**< Match definition. */
     req_method           method_mask; /**< Methods affected */
     path_f               func; /**< Handler function */
+    path_text_f          textfunc; /**< Alternative handler function */
 } req_match;
 
 /** List header */
@@ -74,6 +76,8 @@ void         req_arg_remove_top (req_arg *);
 void         req_matchlist_init (req_matchlist *);
 void         req_matchlist_add (req_matchlist *, const char *,
                                 req_method, path_f);
+void         req_matchlist_add_text (req_matchlist *, const char *,
+                                     req_method, path_text_f);
 void         req_matchlist_dispatch (req_matchlist *, const char *url,
                                      req_context *ctx,
                                      struct MHD_Connection *conn);
