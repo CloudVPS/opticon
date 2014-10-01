@@ -20,10 +20,15 @@ probe *probe_alloc (void) {
   * stdout of the callde program. */
 var *runprobe_exec (probe *self) {
     char buffer[4096];
+    buffer[0] = 0;
     FILE *proc = popen (self->call, "r");
     if (! proc) return NULL;
     while (!feof (proc)) {
-        if (fread (buffer, 4096, 1, proc) < 4096) break;
+        size_t res = fread (buffer, 4096, 1, proc);
+        if (res < 4096) {
+            buffer[0] = res;
+            break;
+        }
     }
     pclose (proc);
     var *res = var_alloc();
