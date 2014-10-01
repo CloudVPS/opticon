@@ -171,7 +171,6 @@ clicmd CLICMD[] = {
     {"host-set-watcher",cmd_host_set_watcher},
     {"host-delete-watcher",cmd_host_delete_watcher},
     {"host-watcher-list",cmd_host_list_watchers},
-    {"host-add-record",cmd_add_record},
     {"host-get-record",cmd_get_record},
     {NULL,NULL}
 };
@@ -209,7 +208,6 @@ void usage (const char *cmdname) {
          "                              --type <TYPE> --value <value> [--weight <weight>]\n"
          "        host-delete-watcher   --tenant <uuid> --host <uuid> --meter <meterid>\n"
          "                              --level <warning|alert|critical>\n"
-         "        host-add-record       --tenant <uuid> --host <host> <FILENAME>\n"
          "        host-get-record       --tenant <uuid> --host <host> [--time <TIMESPEC>]\n"
          "\n"
          "  TYPE:\n"

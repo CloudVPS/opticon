@@ -582,131 +582,49 @@ static char *timfmt (time_t w, int json) {
 
 /** The host-list command */
 int cmd_host_list (int argc, const char *argv[]) {
-    uuid tenant;
-    char *str_early;
-    char *str_late;
-    const char *unit = "KB";
-    char uuidstr[40];
     if (OPTIONS.tenant[0] == 0) {
         fprintf (stderr, "%% No tenantid provided\n");
         return 1;
     }
 
-    tenant = mkuuid (OPTIONS.tenant);
-    db *DB = localdb_create (OPTIONS.path);
-    if (! db_open (DB, tenant, NULL)) {
-        fprintf (stderr, "%% Could not open %s\n", OPTIONS.tenant);
-        db_free (DB);
-        return 1;
-    }
-
-    if (OPTIONS.json) {
-        printf ("\"hosts\":{\n");
-    }
-    else {
+    const char *unit;
+    
+    var *apires = api_get ("/%s/host", OPTIONS.tenant);
+    var *v_hosts = var_get_array_forkey (apires, "host");
+    if (var_get_count (v_hosts)) {
         printf ("UUID                                    Size "
                 "First record      Last record\n");
         printf ("---------------------------------------------"
                 "----------------------------------\n");
-    }
-    
-    usage_info usage;
-    int count;
-    uuid *list = db_list_hosts (DB, &count);
-    for (int i=0; i<count; ++i) {
-        uuid2str (list[i], uuidstr);
-        db_get_usage (DB, &usage, list[i]);
-        str_early = timfmt (usage.earliest, OPTIONS.json);
-        str_late = timfmt (usage.last, OPTIONS.json);
-        if (OPTIONS.json) {
-            printf ("    \"%s\":{\n", uuidstr);
-            printf ("        \"usage\":%llu,\n", usage.bytes);
-            printf ("        \"start\":\"%s\",\n", str_early);
-            printf ("        \"end\":\"%s\"\n", str_late);
-            if ((i+1) < count) {
-                printf ("    },\n");
-            }
-            else {
-                printf ("    }\n");
-            }
-        }
-        else {
+        var *crsr = v_hosts->value.arr.first;
+        
+        while (crsr) {
+            uint64_t usage = var_get_int_forkey (crsr, "usage");
             unit = "KB";
-            usage.bytes = usage.bytes / 1024;
-            if (usage.bytes > 2048) {
+            usage = usage / 1024;
+            if (usage > 2048) {
                 unit = "MB";
-                usage.bytes = usage.bytes / 1024;
+                usage = usage / 1024;
             }
-            printf ("%s %4llu %s %s  %s\n", uuidstr, usage.bytes, unit,
-                    str_early, str_late);
+            
+            char start[24];
+            char end[24];
+            
+            strncpy (start, var_get_str_forkey (crsr, "start"), 23);
+            strncpy (end, var_get_str_forkey (crsr, "end"), 23);
+            start[16] = 0;
+            end[16] = 0;
+            start[10] = ' ';
+            end[10] = ' ';
+
+            printf ("%s %4llu %s %s  %s\n",
+                    var_get_str_forkey (crsr, "id"),
+                    usage, unit, start, end);
+            crsr = crsr->next;
         }
-        free (str_early);
-        free (str_late);
-    }
-    if (OPTIONS.json) printf ("}\n");
-    db_free (DB);
-    free (list);
-    return 0;
-}
-
-/** The add-record command */
-int cmd_add_record (int argc, const char *argv[]) {
-    uuid tenantid, hostid;
-    
-    if (OPTIONS.tenant[0] == 0) {
-        fprintf (stderr, "%% No tenantid provided\n");
-        return 1;
-    }
-    
-    tenantid = mkuuid (OPTIONS.tenant);
-
-    if (OPTIONS.host[0] == 0) {
-        fprintf (stderr, "%% No hostid provided\n");
-        return 1;
-    }
-    
-    hostid = mkuuid (OPTIONS.host);
-    
-    if (argc < 3) {
-        fprintf (stderr, "%% No filename provided\n");
-        return 1;
-    }
-    
-    host *H = host_alloc();
-    H->uuid = hostid;
-    char *json = load_file (argv[2]);
-    if (! json) {
-        fprintf (stderr, "%% Could not load %s\n", argv[2]);
-        return 1;
-    }
-    
-    if (! import_json (H, json)) {
-        free (json);
-        host_delete (H);
-        return 1;
-    }
-    
-    db *DB = localdb_create (OPTIONS.path);
-    if (! db_open (DB, tenantid, NULL)) {
-        fprintf (stderr, "%% Could not open database for "
-                 "tenant %s\n", OPTIONS.tenant);
-        free (json);
-        host_delete (H);
-        db_free (DB);
-        return 1;
-    }
-    
-    if (! db_save_record (DB, time(NULL), H)) {
-        fprintf (stderr, "%% Error saving record\n");
-        free (json);
-        host_delete (H);
-        db_free (DB);
-        return 1;
     }
 
-    free (json);    
-    host_delete (H);
-    db_free (DB);
+    var_free (apires);
     return 0;
 }
 
