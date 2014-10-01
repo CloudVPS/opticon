@@ -62,7 +62,10 @@ uint32_t hash_token (const char *str) {
   * \param self The node to clear
   */
 void tcache_node_clear (tcache_node *self, int dofree) {
-    if (dofree && self->tenantlist) free (self->tenantlist);
+    if (dofree) {
+        if (self->tenantlist) free (self->tenantlist);
+        if (self->tenantnames) var_free (self->tenantnames);
+    }
     self->token[0] = 0;
     self->hashcode = 0;
     self->lastref = 0;
@@ -70,7 +73,7 @@ void tcache_node_clear (tcache_node *self, int dofree) {
     self->tenantlist = NULL;
     self->tenantcount = 0;
     self->userlevel = AUTH_GUEST;
-    self->name[0] = 0;
+    self->tenantnames = NULL;
 }
 
 /** Initialize the global TOKENCACHE */
@@ -198,9 +201,10 @@ void tokencache_store_invalid (const char *token) {
     into->token[1023] = 0;
     into->userlevel = AUTH_GUEST;
     if (into->tenantlist) free (into->tenantlist);
+    if (into->tenantnames) var_free (into->tenantnames);
     into->tenantlist = NULL;
     into->tenantcount = 0;
-    into->name[0] = 0;
+    into->tenantnames = NULL;
     into->ctime = into->lastref = tnow;
     
     pthread_rwlock_unlock (&TOKENCACHE.lock);
@@ -214,7 +218,7 @@ void tokencache_store_invalid (const char *token) {
   */
 void tokencache_store_valid (const char *token, uuid *tenantlist,
                              int tenantcount,
-                             auth_level userlevel, const char *name) {
+                             auth_level userlevel, var *names) {
     int i;
     tcache_node *crsr;
     tcache_node *into = NULL;
@@ -253,8 +257,8 @@ void tokencache_store_valid (const char *token, uuid *tenantlist,
     into->tenantlist = (uuid *) malloc (tenantcount * sizeof (uuid));
     memcpy (into->tenantlist, tenantlist, tenantcount * sizeof (uuid));
     
-    strncpy (into->name, name, 255);
-    into->name[255] = 0;
+    if (! into->tenantnames) into->tenantnames = var_alloc();
+    var_copy (into->tenantnames, names);
     into->ctime = into->lastref = tnow;
     
     pthread_rwlock_unlock (&TOKENCACHE.lock);

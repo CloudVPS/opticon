@@ -293,6 +293,8 @@ req_context *req_context_alloc (void) {
         self->bodyjson = var_alloc();
         self->response = var_alloc();
         self->auth_data = var_alloc();
+        self->auth_tenants = NULL;
+        self->auth_tenantcount = 0;
         self->status = 500;
         self->url = NULL;
         self->ctype = NULL;
@@ -316,6 +318,7 @@ void req_context_free (req_context *self) {
     if (self->url) {
         free (self->url);
     }
+    if (self->auth_tenants) free (self->auth_tenants);
     if (self->body) free (self->body);
     if (self->openstack_token) free (self->openstack_token);
     free (self);

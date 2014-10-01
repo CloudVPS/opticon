@@ -358,16 +358,16 @@ int cmd_tenant_list_meters (req_context *ctx, req_arg *a,
     return 1;
 }
 
-static int set_meterid (char *meterid, req_arg *a) {
-    const char *meterpart = a->argv[1];
-    if (a->argc == 2) {
+int set_meterid (char *meterid, req_arg *a, int pos) {
+    const char *meterpart = a->argv[pos];
+    if (a->argc == (pos+1)) {
         if (strlen (meterpart) > 11) {
             return 0;
         }
         strcpy (meterid, meterpart);
     }
     else {
-        const char *secondpart = a->argv[2];
+        const char *secondpart = a->argv[pos+1];
         if (strlen (meterpart) + strlen (secondpart) > 10) {
             return 0;
         }
@@ -388,7 +388,7 @@ int cmd_tenant_set_meter (req_context *ctx, req_arg *a,
     if (a->argc < 2) return err_server_error (ctx, a, env, status);
 
     char meterid[16];
-    if (! set_meterid (meterid, a)) err_bad_request (ctx, a, env, status);
+    if (! set_meterid (meterid, a, 1)) err_bad_request (ctx, a, env, status);
     
     db *DB = localdb_create (OPTIONS.dbpath);
     if (! db_open (DB, ctx->tenantid, NULL)) {
@@ -438,7 +438,7 @@ int cmd_tenant_delete_meter (req_context *ctx, req_arg *a,
     if (a->argc < 2) return err_server_error (ctx, a, env, status);
 
     char meterid[16];
-    if (! set_meterid (meterid, a)) err_bad_request (ctx, a, env, status);
+    if (! set_meterid (meterid, a, 1)) err_bad_request (ctx, a, env, status);
     
     db *DB = localdb_create (OPTIONS.dbpath);
     if (! db_open (DB, ctx->tenantid, NULL)) {
@@ -474,7 +474,7 @@ int cmd_tenant_set_watcher (req_context *ctx, req_arg *a,
     if (a->argc < 2) return err_server_error (ctx, a, env, status);
 
     char meterid[16];
-    if (! set_meterid (meterid, a)) err_bad_request (ctx, a, env, status);
+    if (! set_meterid (meterid, a, 1)) err_bad_request (ctx, a, env, status);
     
     db *DB = localdb_create (OPTIONS.dbpath);
     if (! db_open (DB, ctx->tenantid, NULL)) {
@@ -509,7 +509,7 @@ int cmd_tenant_delete_watcher (req_context *ctx, req_arg *a,
     if (a->argc < 2) return err_server_error (ctx, a, env, status);
 
     char meterid[16];
-    if (! set_meterid (meterid, a)) err_bad_request (ctx, a, env, status);
+    if (! set_meterid (meterid, a, 1)) err_bad_request (ctx, a, env, status);
     
     db *DB = localdb_create (OPTIONS.dbpath);
     if (! db_open (DB, ctx->tenantid, NULL)) {
