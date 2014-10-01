@@ -33,6 +33,7 @@ int answer_to_connection (void *cls, struct MHD_Connection *connection,
     /* Set up a context if we're at the first callback */
     req_context *ctx = *con_cls;
     if (ctx == NULL) {
+        printf ("%s %s\n", method, url);
         ctx = req_context_alloc();
         req_context_set_url (ctx, url);
         req_context_set_method (ctx, method);

@@ -5,6 +5,7 @@
 #include <unistd.h>
 #include <string.h>
 #include <stdlib.h>
+#include <stdarg.h>
 
 #include <libopticon/datatypes.h>
 #include <libopticon/aes.h>
@@ -15,82 +16,112 @@
 #include <libopticon/dump.h>
 #include <libopticon/defaultmeters.h>
 #include <libopticondb/db_local.h>
+#include <libhttp/http.h>
 
 #include "import.h"
 
+var *api_call (const char *mth, var *data, const char *fmt, ...)
+{
+    char path[1024];
+    path[0] = 0;
+    va_list ap;
+    va_start (ap, fmt);
+    vsnprintf (path, 1023, fmt, ap);
+    va_end (ap);
+    
+    char tmpurl[1024];
+    var *outhdr = var_alloc();
+    if (OPTIONS.keystone_token[0]) {
+        var_set_str_forkey (outhdr, "X-Auth-Token", OPTIONS.keystone_token);
+    }
+    else if (OPTIONS.opticon_token[0]) {
+        var_set_str_forkey (outhdr, "X-Opticon-Token", OPTIONS.opticon_token);
+    }
+    strcpy (tmpurl, OPTIONS.api_url);
+    int len = strlen (tmpurl);
+    if (! len) { var_free (outhdr); return NULL; }
+    
+    if (tmpurl[len-1] == '/') tmpurl[len-1] = 0;
+    strncat (tmpurl, path, 1023);
+    tmpurl[1023] = 0;
+    var *res = http_call (mth, tmpurl, outhdr, data, NULL);
+    var_free (outhdr);
+    return res;
+}
+
+var *api_get (const char *fmt, ...) {
+    char path[1024];
+    path[0] = 0;
+    va_list ap;
+    va_start (ap, fmt);
+    vsnprintf (path, 1023, fmt, ap);
+    va_end (ap);
+    
+    char tmpurl[1024];
+    var *outhdr = var_alloc();
+    var *data = var_alloc();
+    if (OPTIONS.keystone_token[0]) {
+        var_set_str_forkey (outhdr, "X-Auth-Token", OPTIONS.keystone_token);
+    }
+    else if (OPTIONS.opticon_token[0]) {
+        var_set_str_forkey (outhdr, "X-Opticon-Token", OPTIONS.opticon_token);
+    }
+    strcpy (tmpurl, OPTIONS.api_url);
+    int len = strlen (tmpurl);
+    if (! len) {
+        var_free (outhdr);
+        var_free (data);
+        return NULL;
+    }
+    
+    if (tmpurl[len-1] == '/') tmpurl[len-1] = 0;
+    strncat (tmpurl, path, 1023);
+    tmpurl[1023] = 0;
+    var *res = http_call ("GET", tmpurl, outhdr, data, NULL);
+    var_free (outhdr);
+    var_free (data);
+    return res;
+}
+
 /** The tenant-list command */
 int cmd_tenant_list (int argc, const char *argv[]) {
-    int count = 0;
-    char uuidstr[40];
-    if (OPTIONS.json) {
-        printf ("\"tenants\":{\n");
-    }
-    else {
-        printf ("UUID                                 Hosts  Name\n");
-        printf ("---------------------------------------------"
-                "----------------------------------\n");
-    }
-    db *DB = localdb_create (OPTIONS.path);
-    uuid *list = db_list_tenants (DB, &count);
-    for (int i=0; i<count; ++i) {
-        int cnt = 0;
-        var *meta = NULL;
-        const char *tenantname = NULL;
-        
-        if (db_open (DB, list[i], NULL)) {
-            uuid *list = db_list_hosts (DB, &cnt);
-            meta = db_get_metadata (DB);
-            if (list) free(list);
-            db_close (DB);
-        }
+    printf ("UUID                                 Hosts  Name\n");
+    printf ("---------------------------------------------"
+            "----------------------------------\n");
 
-        if (meta) tenantname = var_get_str_forkey (meta, "name");
-        if (! tenantname) tenantname = "";
-        
-        uuid2str (list[i], uuidstr);
-        if (OPTIONS.json) {
-            printf ("    \"%s\":{\"count\":%i,\"name\":\"%s\"}", 
-                    uuidstr, cnt, tenantname);
-            if ((i+1)<count) printf (",\n");
-            else printf ("\n");
+    var *res = api_get ("/");
+    if (res) {
+        var *res_tenant = var_get_array_forkey (res, "tenant");
+        if (var_get_count (res_tenant)) {
+            var *crsr = res_tenant->value.arr.first;
+            while (crsr) {
+                printf ("%s %5llu  %s\n",
+                        var_get_str_forkey (crsr, "id"),
+                        var_get_int_forkey (crsr, "hostcount"),
+                        var_get_str_forkey (crsr, "name"));
+                crsr = crsr->next;
+            }
         }
-        else {
-            printf ("%s %5i  %s\n", uuidstr, cnt, tenantname);
-        }
-        if (meta) var_free (meta);
     }
-    if (OPTIONS.json) printf ("}\n");
-    db_free (DB);
-    free (list);
+    var_free (res);
     return 0;
 }
 
 /** The tenant-get-metadata command */
 int cmd_tenant_get_metadata (int argc, const char *argv[]) {
-    uuid tenant;
     if (OPTIONS.tenant[0] == 0) {
         fprintf (stderr, "%% No tenantid provided\n");
         return 1;
     }
 
-    tenant = mkuuid (OPTIONS.tenant);
-    db *DB = localdb_create (OPTIONS.path);
-    if (! db_open (DB, tenant, NULL)) {
-        fprintf (stderr, "%% Could not open %s\n", OPTIONS.tenant);
-        db_free (DB);
-        return 1;
-    }
-    var *meta = db_get_metadata (DB);
+    var *meta = api_get ("/%s/meta", OPTIONS.tenant);
     dump_var (meta, stdout);
     var_free (meta);
-    db_free (DB);
     return 0;
 }
 
 /** The tenant-set-metadata command */
 int cmd_tenant_set_metadata (int argc, const char *argv[]) {
-    uuid tenant;
-    
     if (argc < 4) {
         fprintf (stderr, "%% Missing key and value arguments\n");
         return 1;
@@ -104,91 +135,67 @@ int cmd_tenant_set_metadata (int argc, const char *argv[]) {
         return 1;
     }
 
-    tenant = mkuuid (OPTIONS.tenant);
-    db *DB = localdb_create (OPTIONS.path);
-    if (! db_open (DB, tenant, NULL)) {
-        fprintf (stderr, "%% Could not open %s\n", OPTIONS.tenant);
-        db_free (DB);
-        return 1;
-    }
-    var *meta = db_get_metadata (DB);
+    var *api_meta = api_get ("/%s/meta", OPTIONS.tenant);
+    var *meta = var_get_dict_forkey (api_meta, "metadata");
     var_set_str_forkey (meta, key, val);
-    db_set_metadata (DB, meta);
-    var_free (meta);
-    db_free (DB);
+    
+    var *res = api_call ("POST", api_meta, "/%s/meta", OPTIONS.tenant);
+    var_free (api_meta);
+    var_free (res);
     return 0;
 }
 
 int cmd_tenant_add_meter (int argc, const char *argv[]) {
-    uuid tenant;
     if (OPTIONS.tenant[0] == 0) {
         fprintf (stderr, "%% No tenantid provided\n");
         return 1;
     }
-    tenant = mkuuid (OPTIONS.tenant);
     if (OPTIONS.meter[0] == 0) {
         fprintf (stderr, "%% No meter provided\n");
         return 1;
     }
-    db *DB = localdb_create (OPTIONS.path);
-    if (! db_open (DB, tenant, NULL)) {
-        fprintf (stderr, "%% Could not open %s\n", OPTIONS.tenant);
-        db_free (DB);
-        return 1;
-    }
-    var *meta = db_get_metadata (DB);
-    var *v_meter = var_get_dict_forkey (meta, "meter");
-    var *v_this = var_get_dict_forkey (v_meter, OPTIONS.meter);
-    var_set_str_forkey (v_this, "type", OPTIONS.type);
+
+    var *req = var_alloc();
+    var *req_meter = var_get_dict_forkey (req, "meter");
+    var_set_str_forkey (req_meter, "type", OPTIONS.type);
     if (OPTIONS.description[0]) {
-        var_set_str_forkey (v_this, "description", OPTIONS.description);
+        var_set_str_forkey (req_meter, "description", OPTIONS.description);
     }
     if (OPTIONS.unit[0]) {
-        var_set_str_forkey (v_this, "unit", OPTIONS.unit);
+        var_set_str_forkey (req_meter, "unit", OPTIONS.unit);
     }
-    db_set_metadata (DB, meta);
-    var_free (meta);
-    db_free (DB);
+    
+    var *apires = api_call ("POST",req,"/%s/meter/%s",
+                            OPTIONS.tenant, OPTIONS.meter);
+
+    var_free (req);
+    var_free (apires);
     return 0;
 }
 
 int cmd_tenant_delete_meter (int argc, const char *argv[]) {
-    uuid tenant;
     if (OPTIONS.tenant[0] == 0) {
         fprintf (stderr, "%% No tenantid provided\n");
         return 1;
     }
-    tenant = mkuuid (OPTIONS.tenant);
     if (OPTIONS.meter[0] == 0) {
         fprintf (stderr, "%% No meter provided\n");
         return 1;
     }
-    db *DB = localdb_create (OPTIONS.path);
-    if (! db_open (DB, tenant, NULL)) {
-        fprintf (stderr, "%% Could not open %s\n", OPTIONS.tenant);
-        db_free (DB);
-        return 1;
-    }
-    var *meta = db_get_metadata (DB);
-    if (! meta) {
-        db_free (DB);
-        return 1;
-    }
-    var *v_meter = var_get_dict_forkey (meta, "meter");
-    var_delete_key (v_meter, OPTIONS.meter);
-    db_set_metadata (DB, meta);
-    var_free (meta);
-    db_free (DB);
+    
+    var *p = var_alloc();
+    var *apires = api_call ("DELETE", p, "/%s/meter/%s",
+                            OPTIONS.tenant, OPTIONS.meter);
+    var_free (p);
+    var_free (apires);
     return 0;
 }    
 
 int cmd_tenant_set_watcher (int argc, const char *argv[]) {
-    uuid tenant;
     if (OPTIONS.tenant[0] == 0) {
         fprintf (stderr, "%% No tenantid provided\n");
         return 1;
     }
-    tenant = mkuuid (OPTIONS.tenant);
     if (OPTIONS.meter[0] == 0) {
         fprintf (stderr, "%% No meter provided\n");
         return 1;
@@ -201,116 +208,108 @@ int cmd_tenant_set_watcher (int argc, const char *argv[]) {
         fprintf (stderr, "%% No value provided\n");
         return 1;
     }
-    db *DB = localdb_create (OPTIONS.path);
-    if (! db_open (DB, tenant, NULL)) {
-        fprintf (stderr, "%% Could not open %s\n", OPTIONS.tenant);
-        db_free (DB);
-        return 1;
+    
+    var *mdef = api_get ("/%s/meter", OPTIONS.tenant);
+    if (! mdef) return 1;
+    
+    var *mdef_m = var_get_dict_forkey (mdef, "meter");
+    var *mde_meter = var_get_dict_forkey (mdef_m, OPTIONS.meter);
+    const char *inftype = var_get_str_forkey (mde_meter, "type");
+    
+    var *req = var_alloc();
+    var *req_watcher = var_get_dict_forkey (req, "watcher");
+    var *reql = var_get_dict_forkey (req_watcher, OPTIONS.level);
+    
+    var_set_str_forkey (reql, "cmp", OPTIONS.match);
+    
+    if (strcmp (inftype, "integer") == 0) {
+        var_set_int_forkey (reql, "val", strtoull (OPTIONS.value, NULL, 10));
     }
-    var *meta = db_get_metadata (DB);
-    var *v_meter = var_get_dict_forkey (meta, "meter");
-    var *v_mdef = var_get_dict_forkey (v_meter, OPTIONS.meter);
-    const char *tp = var_get_str_forkey (v_mdef, "type");
-    if ((!tp) || (! *tp)) {
-        fprintf (stderr, "%% Meter %s not defined\n", OPTIONS.meter);
-        var_free (meta);
-        db_free (DB);
-        return 1;
-    }
-    var *v_this = var_get_dict_forkey (v_mdef, OPTIONS.level);
-    var_set_str_forkey (v_this, "cmp", OPTIONS.match);
-    if (strcmp (tp, "frac") == 0) {
-        var_set_double_forkey (v_this, "val", atof (OPTIONS.value));
-    }
-    else if (strcmp (tp, "int") == 0) {
-        var_set_int_forkey (v_this, "val", strtoull (OPTIONS.value,NULL,10));
+    else if (strcmp (inftype, "frac") == 0) {
+        var_set_double_forkey (reql, "val", atof (OPTIONS.value));
     }
     else {
-        var_set_str_forkey (v_this, "val", OPTIONS.value);
+        var_set_str_forkey (reql, "val", OPTIONS.value);
     }
-    var_set_double_forkey (v_this, "weight", atof (OPTIONS.weight));
-    db_set_metadata (DB, meta);
-    var_free (meta);
-    db_free (DB);
+    
+    var_set_double_forkey (reql, "weight", atof (OPTIONS.weight));
+    
+    dump_var (req, stdout);
+    
+    var *apires = api_call ("POST", req, "/%s/watcher/%s",
+                            OPTIONS.tenant, OPTIONS.meter);
+    var_free (mdef);
+    var_free (req);
+    var_free (apires);
     return 0;
 }
 
 int cmd_tenant_delete_watcher (int argc, const char *argv[]) {
-    uuid tenant;
     if (OPTIONS.tenant[0] == 0) {
         fprintf (stderr, "%% No tenantid provided\n");
         return 1;
     }
-    tenant = mkuuid (OPTIONS.tenant);
     if (OPTIONS.meter[0] == 0) {
         fprintf (stderr, "%% No meter provided\n");
         return 1;
     }
-    db *DB = localdb_create (OPTIONS.path);
-    if (! db_open (DB, tenant, NULL)) {
-        fprintf (stderr, "%% Could not open %s\n", OPTIONS.tenant);
-        db_free (DB);
-        return 1;
-    }
-    var *meta = db_get_metadata (DB);
-    var *v_meter = var_get_dict_forkey (meta, "meter");
-    var *v_mdef = var_get_dict_forkey (v_meter, OPTIONS.meter);
-    var_delete_key (v_mdef, OPTIONS.level);
-    db_set_metadata (DB, meta);
-    var_free (meta);
-    db_free (DB);
+    
+    var *req = var_alloc();
+    var *apires = api_call ("DELETE", req, "/%s/watcher/%s",
+                            OPTIONS.tenant, OPTIONS.meter);
+    var_free (req);
+    var_free (apires);
     return 0;    
 }
 
 int cmd_host_set_watcher (int argc, const char *argv[]) {
-    uuid tenant;
-    uuid host;
     if (OPTIONS.tenant[0] == 0) {
         fprintf (stderr, "%% No tenantid provided\n");
         return 1;
     }
-    tenant = mkuuid (OPTIONS.tenant);
     if (OPTIONS.host[0] == 0) {
         fprintf (stderr, "%% No host provided\n");
         return 1;
     }
-    host = mkuuid (OPTIONS.host);
     if (OPTIONS.meter[0] == 0) {
         fprintf (stderr, "%% No meter provided\n");
-        return 1;
-    }
-    if (OPTIONS.type[0] == 0) {
-        fprintf (stderr, "%% No type provided\n");
         return 1;
     }
     if (OPTIONS.value[0] == 0) {
         fprintf (stderr, "%% No value provided\n");
         return 1;
     }
-    db *DB = localdb_create (OPTIONS.path);
-    if (! db_open (DB, tenant, NULL)) {
-        fprintf (stderr, "%% Could not open %s\n", OPTIONS.tenant);
-        db_free (DB);
-        return 1;
-    }
+    
+    var *mdef = api_get ("/%s/meter", OPTIONS.tenant);
+    if (! mdef) return 1;
+    
+    var *mdef_m = var_get_dict_forkey (mdef, "meter");
+    var *mde_meter = var_get_dict_forkey (mdef_m, OPTIONS.meter);
+    const char *inftype = var_get_str_forkey (mde_meter, "type");
+    
 
-    var *meta = db_get_hostmeta (DB, host);
-    if (! meta) meta = var_alloc();
-    var *v_meter = var_get_dict_forkey (meta, "meter");
-    var *v_thismeter = var_get_dict_forkey (v_meter, OPTIONS.meter);
-    var_set_str_forkey (v_thismeter, "type", OPTIONS.type);
-    var *v_thislevel = var_get_dict_forkey (v_thismeter, OPTIONS.level);
+    var *req = var_alloc();
+    var *v_watcher = var_get_dict_forkey (req, "watcher");
+    var *v_thislevel = var_get_dict_forkey (v_watcher, OPTIONS.level);
     var_set_double_forkey (v_thislevel, "weight", atof(OPTIONS.weight));
-    if (strcmp (OPTIONS.type, "int") == 0) {
+    if (strcmp (inftype, "int") == 0) {
         var_set_int_forkey (v_thislevel, "val",
                             strtoull (OPTIONS.value, NULL, 10));
     }
-    else if (strcmp (OPTIONS.type, "frac") == 0) {
+    else if (strcmp (inftype, "frac") == 0) {
         var_set_double_forkey (v_thislevel, "val", atof (OPTIONS.value));
     }
     else var_set_str_forkey (v_thislevel, "val", OPTIONS.value);
-    db_set_hostmeta (DB, host, meta);
-    db_free (DB);
+    
+    dump_var (req, stdout);
+    
+    var *apires = api_call ("POST",req, "/%s/host/%s/watcher/%s",
+                            OPTIONS.tenant, OPTIONS.host,
+                            OPTIONS.meter);
+    
+    var_free (mdef);
+    var_free (req);
+    var_free (apires);
     return 0;
 }
 
@@ -479,33 +478,34 @@ int cmd_host_list_watchers (int argc, const char *argv[]) {
         fprintf (stderr, "%% No tenantid provided\n");
         return 1;
     }
-    tenant = mkuuid (OPTIONS.tenant);
-    if (OPTIONS.host[0] == 0) {
-        memset (&host, 0, sizeof (host));
+    
+    printf ("From     Meter        Trigger   Match                  "
+            "Value             Weight\n"
+            "-------------------------------------------------------"
+            "------------------------\n");
+
+    var *apires;
+    
+    if (OPTIONS.host[0]) {
+        apires = api_get ("/%s/host/%s/watcher", OPTIONS.tenant, OPTIONS.host);
     }
-    else host = mkuuid (OPTIONS.host);
-    
-    const char *triggers[3] = {"warning","alert","critical"};
-    
-    var *mdef = collect_meterdefs (tenant, host);
-    if (mdef) {
-        printf ("From     Meter        Trigger   Match                  "
-                "Value             Weight\n"
-                "-------------------------------------------------------"
-                "------------------------\n");
-                
-        var *mmet = var_get_dict_forkey (mdef, "meter");
-        var *crsr = mmet->value.arr.first;
+    else {
+        apires = api_get ("/%s/watcher", OPTIONS.tenant);
+    }
+    var *apiwatch = var_get_dict_forkey (apires, "watcher");
+    if (var_get_count (apiwatch)) {
+        var *crsr = apiwatch->value.arr.first;
         while (crsr) {
-            const char *val_meter = crsr->id;
-            for (int i=0; i<3; ++i) {
-                var *attrig = var_find_key (crsr, triggers[i]);
-                if (! attrig) continue;
-                print_data (crsr->id, triggers[i], attrig);
-            }
+            print_data (crsr->id, "warning",
+                        var_get_dict_forkey (crsr, "warning"));
+            print_data (crsr->id, "alert",
+                        var_get_dict_forkey (crsr, "alert"));
+            print_data (crsr->id, "critical",
+                        var_get_dict_forkey (crsr, "critical"));
             crsr = crsr->next;
         }
     }
+    var_free (apires);
     return 0;
 }
 
@@ -517,10 +517,11 @@ int cmd_tenant_delete (int argc, const char *argv[]) {
         return 1;
     }
     
-    tenant = mkuuid (OPTIONS.tenant);
-    db *DB = localdb_create (OPTIONS.path);
-    db_remove_tenant (DB, tenant);
-    db_free (DB);
+    var *req = var_alloc();
+    var *apires = api_call ("DELETE", req, "/%s", OPTIONS.tenant);
+    if (apires) dump_var (apires, stdout);
+    var_free (req);
+    var_free (apires);
     return 0;
 }
 
@@ -539,36 +540,18 @@ int cmd_tenant_create (int argc, const char *argv[]) {
         tenant = mkuuid (OPTIONS.tenant);
     }
     
-    if (OPTIONS.key[0] == 0) {
-        key = aeskey_create();
+    var *req = var_alloc();
+    var *req_tenant = var_get_dict_forkey (req, "tenant");
+    if (OPTIONS.key[0]) {
+        var_set_str_forkey (req_tenant, "key", OPTIONS.key);
     }
-    else key = aeskey_from_base64 (OPTIONS.key);
-    
-    strkey = aeskey_to_base64 (key);
-    
-    db *DB = localdb_create (OPTIONS.path);
-    var *meta = var_alloc();
-    var_set_str_forkey (meta, "key", strkey);
     if (OPTIONS.name[0]) {
-        var_set_str_forkey (meta, "name", OPTIONS.name);
+        var_set_str_forkey (req_tenant, "name", OPTIONS.name);
     }
     
-    if (! db_create_tenant (DB, tenant, meta)) {
-        fprintf (stderr, "%% Error creating tenant\n");
-        free (strkey);
-        var_free (meta);
-        db_free (DB);
-        return 1;
-    }
-    
-    if (OPTIONS.json) {
-        printf ("\"tenant\":{\n"
-                "    \"id\":\"%s\",\n"
-                "    \"key\":\"%s\"\n"
-                "    \"name\":\"%s\"\n"
-                "}\n", OPTIONS.tenant, strkey, OPTIONS.name);
-    }
-    else {
+    var *apires = api_call ("POST", req, "/%s", OPTIONS.tenant);
+    if (apires) {
+        var *r = var_get_dict_forkey (apires, "tenant");
         printf ("Tenant created:\n"
                 "---------------------------------------------"
                 "----------------------------------\n"
@@ -577,11 +560,13 @@ int cmd_tenant_create (int argc, const char *argv[]) {
                 "  AES Key: %s\n"
                 "---------------------------------------------"
                 "----------------------------------\n",
-                OPTIONS.name, OPTIONS.tenant, strkey);
+                var_get_str_forkey (r, "name"),
+                OPTIONS.tenant,
+                var_get_str_forkey (r, "key"));
     }
-    free (strkey);
-    var_free (meta);
-    db_free (DB);
+    
+    var_free (req);
+    var_free (apires);
     return 0;
 }
 

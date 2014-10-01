@@ -19,6 +19,10 @@ typedef struct optinfo {
     const char  *weight;
     time_t       time;
     int          json;
+    const char  *api_url;
+    const char  *keystone_url;
+    const char  *keystone_token;
+    const char  *opticon_token;
 } optinfo;
 
 extern optinfo OPTIONS;

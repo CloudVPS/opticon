@@ -15,19 +15,26 @@ ifeq (freebsd,$(OSNAME))
   LDFLAGS+=-lkvm
 endif
 
+LIBS = ../../lib/libopticon.a ../../lib/libopticondb.a ../../lib/libhttp.a
+
+ifeq (darwin,$(OSNAME))
+  CFLAGS+=-I/usr/local/include 
+  LIBS+=/usr/local/lib/libcurl.a
+endif
+
 CFLAGS+=-DOSNAME=$(OSNAME) -DOSREL=$(OSREL) -DOSRELMAJOR=$(OSRELMAJOR)
 
-OBJS_OPTICONDB = cmd.o import.o main.o
-LIBS = ../../lib/libopticon.a ../../lib/libopticondb.a
+OBJS_OPTICONCLI = cmd.o import.o main.o
 				  
-all: ../../bin/opticon-db
+all: ../../bin/opticon
 
-../../bin/opticon-db: $(OBJS_OPTICONDB) $(LIBS)
-	@echo "[LINK ] opticon-db"
-	@$(CC) $(LDFLAGS) -o ../../bin/opticon-db $(OBJS_OPTICONDB) $(LIBS) -lz
+../../bin/opticon: $(OBJS_OPTICONCLI) $(LIBS)
+	@echo "[LINK ] opticon-cli"
+	@$(CC) $(LDFLAGS) -o ../../bin/opticon $(OBJS_OPTICONCLI) $(LIBS) -lz \
+	    -L/opt/local/lib -lidn -lssl -lcrypto -lssl -lcrypto -lldap -lz
 
 clean:
-	rm -f *.o ../../bin/opticon-db
+	rm -f *.o ../../bin/opticon
 
 .SUFFIXES: .c .o
 .c.o:

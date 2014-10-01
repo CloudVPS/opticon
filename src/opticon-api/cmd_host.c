@@ -67,10 +67,10 @@ int cmd_host_set_watcher (req_context *ctx, req_arg *a,
         db_free (DB);
         return 0;
     }
-
+    
     var *def = collect_meterdefs (ctx->tenantid, uuidnil(), 0);
     var *def_meters = var_get_dict_forkey (def, "meter");
-    var *def_meter = var_get_dict_forkey (def, meterid);
+    var *def_meter = var_get_dict_forkey (def_meters, meterid);
     var *hmeta = db_get_hostmeta (DB, ctx->hostid);
     var *hmeta_meters = var_get_dict_forkey (hmeta, "meter");
     var *hmeta_meter = var_get_dict_forkey (hmeta_meters, meterid);
@@ -113,6 +113,8 @@ int cmd_host_set_watcher (req_context *ctx, req_arg *a,
             var_set_double_forkey (wval, "weight", weight);
         }
     }
+    
+    dump_var (hmeta, stdout);
     
     db_set_hostmeta (DB, ctx->hostid, hmeta);
     var *envwatcher = var_get_dict_forkey (env, "watcher");

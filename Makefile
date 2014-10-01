@@ -9,8 +9,8 @@ all:
 	@cd src/opticon-agent && make && cd ../..
 	@echo "=== Building opticon-api ============================================"
 	@cd src/opticon-api && make && cd ../..
-	@echo "=== Building opticon-db ============================================="
-	@cd src/opticon-db && make && cd ../..
+	@echo "=== Building opticon-cli ============================================"
+	@cd src/opticon-cli && make && cd ../..
 	@echo "=== Building opticon-collector ======================================"
 	@cd src/opticon-collector && make && cd ../..
 
@@ -21,7 +21,7 @@ clean:
 	@cd src/libopticon && make clean && cd ../..
 	@cd src/libopticondb && make clean && cd ../..
 	@cd src/libhttp && make clean && cd ../..
-	@cd src/opticon-db && make clean && cd ../..
+	@cd src/opticon-cli && make clean && cd ../..
 	@cd src/opticon-api && make clean && cd ../..
 	@cd src/opticon-agent && make clean && cd ../..
 	@cd src/opticon-collector && make clean && cd ../..

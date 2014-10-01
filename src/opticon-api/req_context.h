@@ -11,7 +11,7 @@ typedef uint8_t req_method;
 #define REQ_DELETE 0x08
 #define REQ_OTHER 0x10
 #define REQ_UPDATE (REQ_POST|REQ_PUT)
-#define REQ_ANY (REQ_UPDATE|REQ_GET|REQ_OTHER)
+#define REQ_ANY (REQ_UPDATE|REQ_GET|REQ_DELETE|REQ_OTHER)
 
 typedef enum {
     AUTH_GUEST,

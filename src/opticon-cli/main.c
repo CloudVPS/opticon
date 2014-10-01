@@ -36,6 +36,10 @@ STRINGOPT(level)
 STRINGOPT(match)
 STRINGOPT(value)
 STRINGOPT(weight)
+STRINGOPT(api_url)
+STRINGOPT(keystone_url)
+STRINGOPT(keystone_token)
+STRINGOPT(opticon_token)
 
 /** Handle --type */
 int set_type (const char *o, const char *v) {
@@ -142,6 +146,12 @@ cliopt CLIOPT[] = {
     {"--match","-M",OPT_VALUE,"gt",set_match},
     {"--value","-V",OPT_VALUE,"",set_value},
     {"--weight","-W",OPT_VALUE,"1.0",set_weight},
+    {"--api_url","-A",OPT_VALUE,"http://localhost:8888/",set_api_url},
+    {"--keystone_url","-X",OPT_VALUE,
+            "https://identity.stack.cloudvps.com/v2.0/",set_keystone_url},
+    {"--keystone_token","-K",OPT_VALUE,"",set_keystone_token},
+    {"--opticon-token","-O",OPT_VALUE,
+            "a1bc7681-b616-4805-90c2-f9a08ce460d3",set_opticon_token},
     {NULL,NULL,0,NULL,NULL}
 };
 

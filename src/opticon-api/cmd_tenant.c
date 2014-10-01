@@ -329,6 +329,7 @@ int cmd_tenant_get_meta (req_context *ctx, req_arg *a,
   */
 int cmd_tenant_set_meta (req_context *ctx, req_arg *a, 
                          var *env, int *status) {
+
     db *DB = localdb_create (OPTIONS.dbpath);
     if (! db_open (DB, ctx->tenantid, NULL)) {
         db_free (DB);
