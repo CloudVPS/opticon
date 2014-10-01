@@ -66,6 +66,7 @@ int jsoncodec_encode_host (ioport *into, host *h) {
     int i;
     int first=1;
     int dobrk = 0;
+    ioport_write (into, "{\n", 2);
     while (m) {
         pathmask = idhaspath (m->id);
         if (pathmask) {
@@ -86,7 +87,7 @@ int jsoncodec_encode_host (ioport *into, host *h) {
         
         if (first) first=0;
         else ioport_write (into, ",\n", 2);
-        ioport_write (into, "\"", 1);
+        ioport_write (into, "  \"", 3);
 
         if (pathmask) {
             id2str (m->id & pathmask, buffer);
@@ -109,7 +110,7 @@ int jsoncodec_encode_host (ioport *into, host *h) {
                 }
             
                 if (m->count > 0) {
-                    ioport_write (into, "\n]", 2);
+                    ioport_write (into, "\n  ]", 4);
                 }
             }
         }
@@ -138,7 +139,7 @@ int jsoncodec_encode_host (ioport *into, host *h) {
         }
         m=m->next;
     }
-    ioport_write (into,"\n",1);
+    ioport_write (into,"\n}\n",3);
     return 0;
 }
 

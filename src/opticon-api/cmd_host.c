@@ -23,9 +23,7 @@ int cmd_host_get (req_context *ctx, req_arg *a, ioport *outio, int *status) {
     
     h->uuid = ctx->hostid;
     if (db_get_record (DB, tnow, h)) {
-        ioport_write (outio,"{\n",2);
         codec_encode_host (JSONCODEC, outio, h);
-        ioport_write (outio,"}\n",2);
         *status = 200;
         db_free (DB);
         host_delete (h);

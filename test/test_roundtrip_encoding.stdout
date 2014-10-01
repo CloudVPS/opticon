@@ -1,16 +1,17 @@
-"hostname":"srv-01.heikneuter.nl",
-"uname":"Linux srv-01.heikneuter.nl 2.6.18-prep #1 SMP",
-"problems":[],
-"pcpu":100.000,
-"piowait":3.000,
-"loadavg":6.027,
-"mem":{"size":524288,"free":424250},
-"swap":{"size":1048576,"free":122020},
-"net":[
+{
+  "hostname":"srv-01.heikneuter.nl",
+  "uname":"Linux srv-01.heikneuter.nl 2.6.18-prep #1 SMP",
+  "problems":[],
+  "pcpu":100.000,
+  "piowait":3.000,
+  "loadavg":6.027,
+  "mem":{"size":524288,"free":424250},
+  "swap":{"size":1048576,"free":122020},
+  "net":[
     {"name":"eth0","in.kbs":100,"in.pps":150,"out.kbs":250,"out.pps":250},
     {"name":"eth1","in.kbs":70,"in.pps":100,"out.kbs":90,"out.pps":117}
-],
-"top":[
+  ],
+  "top":[
     {"pid":27562,"user":"www-data","pcpu":16.914,"pmem":0.137,"name":"apache2"},
     {"pid":28074,"user":"www-data","pcpu":16.914,"pmem":0.137,"name":"apache2"},
     {"pid":27983,"user":"www-data","pcpu":16.875,"pmem":0.137,"name":"apache2"},
@@ -22,4 +23,5 @@
     {"pid":6129,"user":"root","pcpu":0.000,"pmem":5.535,"name":"spamd"},
     {"pid":1862,"user":"nobody","pcpu":0.285,"pmem":0.086,"name":"n2txd"},
     {"pid":2564,"user":"root","pcpu":0.027,"pmem":0.484,"name":"zarafa-search"}
-]
+  ]
+}
