@@ -253,6 +253,7 @@ req_context *req_context_alloc (void) {
         self->ctype = NULL;
         self->body = NULL;
         self->bodysz = self->bodyalloc = 0;
+        self->isadmin = 0;
         memset (&self->tenantid, 0, sizeof (uuid));
         memset (&self->hostid, 0, sizeof (uuid));
         memset (&self->opticon_token, 0, sizeof (uuid));

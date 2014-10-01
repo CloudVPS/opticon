@@ -39,3 +39,10 @@ int err_bad_request (req_context *ctx, req_arg *a, var *out, int *status) {
     return 1;    
 }
 
+int err_conflict (req_context *ctx, req_arg *a, var *out, int *status) {
+    var_set_str_forkey (out, "error", "Request conflicts with existing "
+                        "resources");
+    *status = 409;
+    return 1;    
+}
+

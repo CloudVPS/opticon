@@ -10,6 +10,12 @@
 #include "cmd.h"
 #include "options.h"
 
+/** Build up a summarized collection of meter information bound to
+  * a specific tenant or host.
+  * \param tenant The tenant uuid
+  * \param host The host uuid (can be uuidnil())
+  * \param watchonly If 1, collect watcher data, not meter data
+  */
 var *collect_meterdefs (uuid tenant, uuid host, int watchonly) {
     char tenantstr[40];
     uuid2str (tenant, tenantstr);
@@ -42,13 +48,18 @@ var *collect_meterdefs (uuid tenant, uuid host, int watchonly) {
     
     var *tc = tmeters->value.arr.first;
     while (tc) {
-        var *cc = var_get_dict_forkey (cmeters, tc->id);
+        tvar = var_find_key (cmeters, tc->id);
+        var *cc = tvar;
+        if (! cc) cc = var_get_dict_forkey (cmeters, tc->id);
         tstr = var_get_str_forkey (tc, "type");
         if (tstr) var_set_str_forkey (cc, "type", tstr);
-        tstr = var_get_str_forkey (tc, "description");
-        if (tstr) var_set_str_forkey (cc, "description", tstr);
-        tstr = var_get_str_forkey (tc, "unit");
-        if (tstr) var_set_str_forkey (cc, "unit", tstr);
+        if (! watchonly) {
+            tstr = var_get_str_forkey (tc, "description");
+            if (tstr) var_set_str_forkey (cc, "description", tstr);
+            tstr = var_get_str_forkey (tc, "unit");
+            if (tstr) var_set_str_forkey (cc, "unit", tstr);
+            if (! tvar) var_set_str_forkey (cc, "origin", "tenant");
+        }
         
         for (int tr=0; tr<3; ++tr) {
             tvar = var_find_key (tc, triggers[tr]);
@@ -64,7 +75,7 @@ var *collect_meterdefs (uuid tenant, uuid host, int watchonly) {
     if (host.msb || host.lsb) {
         hc = hmeters->value.arr.first;
     }
-    while (hc) {
+    while (watchonly && hc) {
         var *cc = var_get_dict_forkey (cmeters, hc->id);
         tstr = var_get_str_forkey (hc, "type");
         if (! tstr) {
@@ -109,11 +120,11 @@ var *collect_meterdefs (uuid tenant, uuid host, int watchonly) {
     var_free (tenantmeta);
     var_free (hostmeta);
     
-    if (watchonly) {
-        var *crsr = cmeters->value.arr.first;
-        var *ncrsr;
-        while (crsr) {
-            ncrsr = crsr->next;
+    var *crsr = cmeters->value.arr.first;
+    var *ncrsr;
+    while (crsr) {
+        ncrsr = crsr->next;
+        if (watchonly) {
             if ( (! var_find_key (crsr, "warning")) &&
                  (! var_find_key (crsr, "alert")) &&
                  (! var_find_key (crsr, "critical")) ) {
@@ -123,8 +134,13 @@ var *collect_meterdefs (uuid tenant, uuid host, int watchonly) {
                 var_delete_key (crsr, "description");
                 var_delete_key (crsr, "unit");
             }
-            crsr = ncrsr;
         }
+        else {
+            var_delete_key (crsr, "warning");
+            var_delete_key (crsr, "alert");
+            var_delete_key (crsr, "critical");
+        }
+        crsr = ncrsr;
     }
     
     return conf;
@@ -207,6 +223,13 @@ int cmd_tenant_create (req_context *ctx, req_arg *a, var *env, int *status) {
     free (strkey);
     
     db *DB = localdb_create (OPTIONS.dbpath);
+    
+    /* Reject existing tenants */
+    if (db_open (DB, ctx->tenantid, NULL)) {
+        db_free (DB);
+        return err_conflict (ctx, a, env, status);
+    }
+    
     if (! db_create_tenant (DB, ctx->tenantid, outmeta)) {
         db_free (DB);
         return err_server_error (ctx, a, env, status);
@@ -220,7 +243,7 @@ int cmd_tenant_create (req_context *ctx, req_arg *a, var *env, int *status) {
 /** PUT /$TENANT
   * tenant: {
   *     key: "base64",
-  *     name: "tenant name"
+  *     name: "tenant name" # optional (needs admin)
   * }
   */
 int cmd_tenant_update (req_context *ctx, req_arg *a, var *env, int *status) {
@@ -238,14 +261,15 @@ int cmd_tenant_update (req_context *ctx, req_arg *a, var *env, int *status) {
     key = aeskey_from_base64 (strvkey);
 
     const char *sname = var_get_str_forkey (vopts, "name");
-    if ((! sname) || strlen (sname) == 0) {
-        return err_bad_request (ctx, a, env, status);
+    
+    if (sname && (! ctx->isadmin)) {
+        return err_not_allowed (ctx, a, env, status);
     }
     
     strkey = aeskey_to_base64 (key);
     var *outmeta = var_get_dict_forkey (env, "tenant");
     var_set_str_forkey (outmeta, "key", strkey);
-    var_set_str_forkey (outmeta, "name", sname);
+    if (sname) var_set_str_forkey (outmeta, "name", sname);
     
     db *DB = localdb_create (OPTIONS.dbpath);
     if (! db_open (DB, ctx->tenantid, NULL)) {
@@ -256,7 +280,7 @@ int cmd_tenant_update (req_context *ctx, req_arg *a, var *env, int *status) {
     
     var *dbmeta = db_get_metadata (DB);
     var_set_str_forkey (dbmeta, "key", strkey);
-    var_set_str_forkey (dbmeta, "name", sname);
+    if (sname) var_set_str_forkey (dbmeta, "name", sname);
     free (strkey);
     db_set_metadata (DB, dbmeta);
     *status = 200;
@@ -297,7 +321,11 @@ int cmd_tenant_get_meta (req_context *ctx, req_arg *a,
     return 1;
 }
 
-/** POST /$TENANT/meta */
+/** POST /$TENANT/meta 
+  * metadata: {
+  *    key: value, ...
+  * }
+  */
 int cmd_tenant_set_meta (req_context *ctx, req_arg *a, 
                          var *env, int *status) {
     db *DB = localdb_create (OPTIONS.dbpath);
@@ -320,19 +348,13 @@ int cmd_tenant_set_meta (req_context *ctx, req_arg *a,
 /** GET /$TENANT/meter */
 int cmd_tenant_list_meters (req_context *ctx, req_arg *a, 
                             var *env, int *status) {
-    db *DB = localdb_create (OPTIONS.dbpath);
-    if (! db_open (DB, ctx->tenantid, NULL)) {
-        db_free (DB);
-        return err_not_found (ctx, a, env, status);
-    }
-    var *dbmeta = db_get_metadata (DB);
-    var *dbmeta_meter = var_get_dict_forkey (dbmeta, "meter");
-    var *env_meter = var_get_dict_forkey (env, "meter");
-    var_copy (env_meter, dbmeta_meter);
-    var_free (dbmeta);
-    db_free (DB);
+    var *res = collect_meterdefs (ctx->tenantid, uuidnil(), 0);
+    if (! res) { return err_not_found (ctx, a, env, status); }
+    
+    var_copy (env, res);
+    var_free (res);
     *status = 200;
-    return 1; 
+    return 1;
 }
 
 static int set_meterid (char *meterid, req_arg *a) {
@@ -353,7 +375,13 @@ static int set_meterid (char *meterid, req_arg *a) {
     return 1;
 }
 
-/** POST /$TENANT/meter/$meterid[/$subid] */
+/** POST /$TENANT/meter/$meterid[/$subid] 
+  * meter: {
+  *     type: "integer",
+  *     description: "Description text", # optional
+  *     unit: "storpels/s" # optional
+  * }
+  */
 int cmd_tenant_set_meter (req_context *ctx, req_arg *a, 
                           var *env, int *status) {
     if (a->argc < 2) return err_server_error (ctx, a, env, status);
@@ -369,9 +397,18 @@ int cmd_tenant_set_meter (req_context *ctx, req_arg *a,
     var *dbmeta = db_get_metadata (DB);
     var *dbmeta_meters = var_get_dict_forkey (dbmeta, "meter");
     var *dbmeta_meter = var_get_dict_forkey (dbmeta_meters, meterid);
-    var *req_meters = var_get_dict_forkey (ctx->bodyjson, "meter");
-    var *req_meter = var_get_dict_forkey (req_meters, meterid);
+    var *req_meter = var_get_dict_forkey (ctx->bodyjson, "meter");
     const char *tstr;
+    
+    /* validate type */
+    tstr = var_get_str_forkey (req_meter, "type");
+    if (!tstr || (strcmp (tstr, "integer") &&
+                  strcmp (tstr, "frac") &&
+                  strcmp (tstr, "string"))) {
+        var_free (dbmeta);
+        db_free (DB);
+        return err_bad_request (ctx, a, env, status);
+    }
     
     #define copystr(x) \
         if ((tstr = var_get_str_forkey (req_meter, x))) { \

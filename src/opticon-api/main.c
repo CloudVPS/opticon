@@ -57,11 +57,15 @@ int flt_check_validuser (req_context *ctx, req_arg *a,
     if (! uuidvalid (ctx->opticon_token)) {
         return err_unauthorized (ctx, a, out, status);
     }
+    ctx->isadmin = 1;
     return 0;
 }
 
 int flt_check_admin (req_context *ctx, req_arg *a, var *out, int *status) {
     if (! uuidvalid (ctx->opticon_token)) {
+        return err_not_allowed (ctx, a, out, status);
+    }
+    if (! ctx->isadmin) {
         return err_not_allowed (ctx, a, out, status);
     }
     return 0;

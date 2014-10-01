@@ -14,6 +14,7 @@ int err_not_allowed (req_context *, req_arg *, var *, int *);
 int err_not_found (req_context *, req_arg *, var *, int *);
 int err_method_not_allowed (req_context *, req_arg *, var *, int *);
 int err_bad_request (req_context *, req_arg *, var *, int *);
+int err_conflict (req_context *, req_arg *, var *, int *);
 int cmd_list_tenants (req_context *, req_arg *, var *, int *);
 int cmd_tenant_get (req_context *, req_arg *, var *, int *);
 int cmd_tenant_create (req_context *, req_arg *, var *, int *);

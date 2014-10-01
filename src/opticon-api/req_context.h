@@ -33,6 +33,7 @@ typedef struct req_context_s {
     size_t       bodyalloc; /**< Allocated size of body buffer */
     uuid         tenantid; /**< URL-parsed tenantid, if any */
     uuid         hostid; /**< URL-parsed hostid, if any */
+    int          isadmin; /**< 1 if user is admin */
     uuid         opticon_token; /**< Header-parsed opticon token */
     char        *openstack_token; /**< Header-pasred openstack token */
     var         *auth_data; /**< Authentication data */
