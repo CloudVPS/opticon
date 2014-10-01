@@ -4,6 +4,7 @@
 typedef struct apioptions_s {
     const char *dbpath;
     int port;
+    uuid admintoken;
 } apioptions;
 
 extern apioptions OPTIONS;

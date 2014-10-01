@@ -60,7 +60,10 @@ int flt_check_validuser (req_context *ctx, req_arg *a,
     if (! uuidvalid (ctx->opticon_token)) {
         return err_unauthorized (ctx, a, out, status);
     }
-    ctx->userlevel = AUTH_ADMIN;
+    if (uuidcmp (ctx->opticon_token, OPTIONS.admintoken)) {
+        ctx->userlevel = AUTH_ADMIN;
+    }
+    else ctx->userlevel = AUTH_USER;
     return 0;
 }
 
@@ -71,7 +74,7 @@ int flt_check_admin (req_context *ctx, req_arg *a, var *out, int *status) {
     if (! uuidvalid (ctx->opticon_token)) {
         return err_not_allowed (ctx, a, out, status);
     }
-    if (! ctx->userlevel != AUTH_ADMIN) {
+    if (ctx->userlevel != AUTH_ADMIN) {
         return err_not_allowed (ctx, a, out, status);
     }
     return 0;
@@ -150,6 +153,7 @@ apioptions OPTIONS;
 int main() {
     OPTIONS.dbpath = "/Users/pi/var";
     OPTIONS.port = 8888;
+    OPTIONS.admintoken = mkuuid ("a1bc7681-b616-4805-90c2-f9a08ce460d3");
     setup_matches();
     struct MHD_Daemon *daemon;
     unsigned int flags = MHD_USE_THREAD_PER_CONNECTION |
