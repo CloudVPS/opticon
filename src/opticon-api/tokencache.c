@@ -9,6 +9,10 @@
 static uint32_t IHASH = 0;
 tokencache TOKENCACHE;
 
+/** Generic hash-function nicked from grace.
+  * \param str The string to hash
+  * \return A 32 bit hashed guaranteed not 0.
+  */
 uint32_t hash_token (const char *str) {
     uint32_t hash = 0;
     uint32_t i    = 0;
@@ -54,6 +58,9 @@ uint32_t hash_token (const char *str) {
     return hash;
 }
 
+/** Reset a tcache_node to unset.
+  * \param self The node to clear
+  */
 void tcache_node_clear (tcache_node *self) {
     self->token[0] = 0;
     self->hashcode = 0;
@@ -64,6 +71,7 @@ void tcache_node_clear (tcache_node *self) {
     self->name[0] = 0;
 }
 
+/** Initialize the global TOKENCACHE */
 void tokencache_init (void) {
     int i;
     
@@ -79,6 +87,13 @@ void tokencache_init (void) {
     TOKENCACHE.last_expire = time (NULL);
 }
 
+/** Find a cached positive or negative result for a specific
+  * authentication token.
+  * \param token The token to look up
+  * \return The cached result (negative results will have a userlevel
+  *         of AUTH_GUEST and a tenantid of nil) or NULL if no cached
+  *         data was found.
+  */
 tcache_node *tokencache_lookup (const char *token) {
     uint32_t hash = hash_token (token);
     tcache_node *crsr;
@@ -123,6 +138,7 @@ tcache_node *tokencache_lookup (const char *token) {
     return NULL;
 }
 
+/** Clear out expired tokencache nodes */
 void tokencache_expire (void) {
     time_t tnow = time (NULL);
     if (tnow - TOKENCACHE.last_expire < 60) return;
@@ -134,23 +150,13 @@ void tokencache_expire (void) {
     for (i=0; i<16; ++i) {
         crsr = &TOKENCACHE.invalids[i];
         if ((crsr->ctime + TOKEN_TIMEOUT_INVALID) <= tnow) {
-            crsr->token[0] = 0;
-            crsr->hashcode = 0;
-            crsr->userlevel = AUTH_GUEST;
-            crsr->tenantid = uuidnil();
-            crsr->name[0] = 0;
-            crsr->lastref = crsr->ctime = 0;
+            tache_node_clear (crsr);
         }
     }
     for (i=0; i<TOKENCACHE.count; ++i) {
         crsr = &TOKENCACHE.nodes[i];
         if ((crsr->ctime + TOKEN_TIMEOUT_VALID) <= tnow) {
-            crsr->token[0] = 0;
-            crsr->hashcode = 0;
-            crsr->userlevel = AUTH_GUEST;
-            crsr->tenantid = uuidnil();
-            crsr->name[0] = 0;
-            crsr->lastref = crsr->ctime = 0;
+            tcache_node_clear (crsr);
         }
     }
     
@@ -159,6 +165,10 @@ void tokencache_expire (void) {
     pthread_rwlock_unlock (&TOKENCACHE.lock);
 }
 
+/** Store an invalid token in the cache to save roundtrips on wrong
+  * sessions that keep knocking.
+  * \param token The token to cache as badnotgood.
+  */
 void tokencache_store_invalid (const char *token) {
     int i;
     tcache_node *crsr;
@@ -192,6 +202,12 @@ void tokencache_store_invalid (const char *token) {
     pthread_rwlock_unlock (&TOKENCACHE.lock);
 }
 
+/** Store a valid token in the cache.
+  * \param token The string token
+  * \param tenantid The resolved tenantid
+  * \param userlevel The resolved access level
+  * \param name The resolved tenant name
+  */
 void tokencache_store_valid (const char *token, uuid tenantid,
                              auth_level userlevel, const char *name) {
     int i;
@@ -233,4 +249,3 @@ void tokencache_store_valid (const char *token, uuid tenantid,
     
     pthread_rwlock_unlock (&TOKENCACHE.lock);
 }
-
