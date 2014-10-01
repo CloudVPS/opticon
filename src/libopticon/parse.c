@@ -16,6 +16,7 @@ static char LAST_PARSE_ERROR[4096];
 static int LAST_PARSE_LINE = 0;
 
 typedef enum parse_state_e {
+    PSTATE_BEGINNING,
     PSTATE_DICT_WAITKEY,
     PSTATE_DICT_KEY,
     PSTATE_DICT_KEY_QUOTED,
@@ -47,8 +48,14 @@ int parse_json_level (var *v, const char **buf, parse_state st) {
 
     while (*c) {    
         switch (st) {
+            case PSTATE_BEGINNING:
+                if (*c == '{') {
+                    st = PSTATE_DICT_WAITKEY;
+                    break;
+                }
+                /* intentional fall-through */
+                
             case PSTATE_DICT_WAITKEY:
-                if (*c == '{') break;
                 if (*c == '#') {
                     stnext = st;
                     st = PSTATE_COMMENT;
@@ -396,7 +403,7 @@ int load_json (var *into, const char *path) {
   */
 int parse_json (var *into, const char *buf) {
     const char *crsr = buf;
-    int res = parse_json_level (into, &crsr, PSTATE_DICT_WAITKEY);
+    int res = parse_json_level (into, &crsr, PSTATE_BEGINNING);
     if (! res) {
         char errbuf[64];
         LAST_PARSE_LINE=1;
