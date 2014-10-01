@@ -11,6 +11,7 @@
 
 static codec *JSONCODEC = NULL;
 
+/** GET /$TENANT/host/$HOST */
 int cmd_host_get (req_context *ctx, req_arg *a, ioport *outio, int *status) {
     db *DB = localdb_create (OPTIONS.dbpath);
     if (! db_open (DB, ctx->tenantid, NULL)) {
@@ -35,16 +36,25 @@ int cmd_host_get (req_context *ctx, req_arg *a, ioport *outio, int *status) {
     return 0;
 }
 
+/** GET /$TENANT/host/$HOST/watcher */
 int cmd_host_list_watchers (req_context *ctx, req_arg *a, 
                             var *env, int *status) {
-    return err_server_error (ctx, a, env, status);
+    var *res = collect_meterdefs (ctx->tenantid, ctx->hostid, 1);
+    if (! res) { return err_not_found (ctx, a, env, status); }
+    
+    var_copy (env, res);
+    var_free (res);
+    *status = 200;
+    return 1;
 }
 
+/** POST /$TENANT/host/$HOST/watcher/$METERID */
 int cmd_host_set_watcher (req_context *ctx, req_arg *a, 
                           var *env, int *status) {
     return err_server_error (ctx, a, env, status);
 }
 
+/** DELETE /$TENANT/host/$HOST/watcher/$METERID */
 int cmd_host_delete_watcher (req_context *ctx, req_arg *a, 
                              var *env, int *status) {
     return err_server_error (ctx, a, env, status);
