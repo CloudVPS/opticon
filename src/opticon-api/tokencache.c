@@ -150,7 +150,7 @@ void tokencache_expire (void) {
     for (i=0; i<16; ++i) {
         crsr = &TOKENCACHE.invalids[i];
         if ((crsr->ctime + TOKEN_TIMEOUT_INVALID) <= tnow) {
-            tache_node_clear (crsr);
+            tcache_node_clear (crsr);
         }
     }
     for (i=0; i<TOKENCACHE.count; ++i) {
