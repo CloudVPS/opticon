@@ -18,7 +18,8 @@ typedef struct tcache_node_s {
     uint32_t     hashcode; /**< Hash code of same */
     time_t       lastref; /**< Time token was last referenced */
     time_t       ctime; /**< Time cache-entry was created */ 
-    uuid         tenantid; /**< Tenantid bound to the token */
+    uuid        *tenantlist; /**< Tenants bound to the token */
+    int          tenantcount; /**< Number of tenants */
     auth_level   userlevel; /**< Userlevel for the token */
     char         name[256]; /**< Tenant name for the token */
 } tcache_node;
@@ -43,7 +44,8 @@ void         tokencache_init (void);
 tcache_node *tokencache_lookup (const char *token);
 void         tokencache_expire (void);
 void         tokencache_store_invalid (const char *token);
-void         tokencache_store_valid (const char *token, uuid tenantid,
-                                     auth_level userlevel, const char *name);
+void         tokencache_store_valid (const char *token, uuid *tenants,
+                                     int numtenants, auth_level userlevel,
+                                     const char *name);
 
 #endif

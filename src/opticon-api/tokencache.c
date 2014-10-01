@@ -61,12 +61,14 @@ uint32_t hash_token (const char *str) {
 /** Reset a tcache_node to unset.
   * \param self The node to clear
   */
-void tcache_node_clear (tcache_node *self) {
+void tcache_node_clear (tcache_node *self, int dofree) {
+    if (dofree && self->tenantlist) free (self->tenantlist);
     self->token[0] = 0;
     self->hashcode = 0;
     self->lastref = 0;
     self->ctime = 0;
-    self->tenantid = uuidnil();
+    self->tenantlist = NULL;
+    self->tenantcount = 0;
     self->userlevel = AUTH_GUEST;
     self->name[0] = 0;
 }
@@ -76,10 +78,10 @@ void tokencache_init (void) {
     int i;
     
     for (i=0; i<256; ++i) {
-        tcache_node_clear (&TOKENCACHE.nodes[i]);
+        tcache_node_clear (&TOKENCACHE.nodes[i], 0);
     }
     for (i=0; i<16; ++i) {
-        tcache_node_clear (&TOKENCACHE.invalids[i]);
+        tcache_node_clear (&TOKENCACHE.invalids[i], 0);
     }
     
     pthread_rwlock_init (&TOKENCACHE.lock, NULL);
@@ -150,13 +152,13 @@ void tokencache_expire (void) {
     for (i=0; i<16; ++i) {
         crsr = &TOKENCACHE.invalids[i];
         if ((crsr->ctime + TOKEN_TIMEOUT_INVALID) <= tnow) {
-            tcache_node_clear (crsr);
+            tcache_node_clear (crsr, 1);
         }
     }
     for (i=0; i<TOKENCACHE.count; ++i) {
         crsr = &TOKENCACHE.nodes[i];
         if ((crsr->ctime + TOKEN_TIMEOUT_VALID) <= tnow) {
-            tcache_node_clear (crsr);
+            tcache_node_clear (crsr, 1);
         }
     }
     
@@ -195,7 +197,9 @@ void tokencache_store_invalid (const char *token) {
     strncpy (into->token, token, 1023);
     into->token[1023] = 0;
     into->userlevel = AUTH_GUEST;
-    into->tenantid = uuidnil();
+    if (into->tenantlist) free (into->tenantlist);
+    into->tenantlist = NULL;
+    into->tenantcount = 0;
     into->name[0] = 0;
     into->ctime = into->lastref = tnow;
     
@@ -208,7 +212,8 @@ void tokencache_store_invalid (const char *token) {
   * \param userlevel The resolved access level
   * \param name The resolved tenant name
   */
-void tokencache_store_valid (const char *token, uuid tenantid,
+void tokencache_store_valid (const char *token, uuid *tenantlist,
+                             int tenantcount,
                              auth_level userlevel, const char *name) {
     int i;
     tcache_node *crsr;
@@ -242,7 +247,12 @@ void tokencache_store_valid (const char *token, uuid tenantid,
     strncpy (into->token, token, 1023);
     into->token[1023] = 0;
     into->userlevel = userlevel;
-    into->tenantid = tenantid;
+    
+    if (into->tenantlist) free (into->tenantlist);
+    into->tenantcount = tenantcount;
+    into->tenantlist = (uuid *) malloc (tenantcount * sizeof (uuid));
+    memcpy (into->tenantlist, tenantlist, tenantcount * sizeof (uuid));
+    
     strncpy (into->name, name, 255);
     into->name[255] = 0;
     into->ctime = into->lastref = tnow;
