@@ -50,7 +50,7 @@ int set_type (const char *o, const char *v) {
         return 1;
     }
     fprintf (stderr, "%% Illegal type: %s\n", v);
-    return 0;
+    exit (1);
 }
 
 /** Handle --time */
@@ -162,15 +162,13 @@ clicmd CLICMD[] = {
     {"tenant-delete",cmd_tenant_delete},
     {"tenant-get-metadata",cmd_tenant_get_metadata},
     {"tenant-set-metadata",cmd_tenant_set_metadata},
-    {"tenant-add-meter",cmd_tenant_add_meter},
-    {"tenant-delete-meter",cmd_tenant_delete_meter},
-    {"tenant-set-watcher",cmd_tenant_set_watcher},
-    {"tenant-delete-watcher",cmd_tenant_delete_watcher},
-    {"tenant-watcher-list",cmd_host_list_watchers},
+    {"meter-list",cmd_meter_list},
+    {"meter-create",cmd_meter_create},
+    {"meter-delete",cmd_meter_delete},
     {"host-list",cmd_host_list},
-    {"host-set-watcher",cmd_host_set_watcher},
-    {"host-delete-watcher",cmd_host_delete_watcher},
-    {"host-watcher-list",cmd_host_list_watchers},
+    {"watcher-set",cmd_watcher_set},
+    {"watcher-delete",cmd_watcher_delete},
+    {"watcher-list",cmd_watcher_list},
     {"host-get-record",cmd_get_record},
     {NULL,NULL}
 };
@@ -187,27 +185,23 @@ void usage (const char *cmdname) {
          "\n"
          "  Commands:\n"
          "        tenant-list\n"
-         "        tenant-get-metadata   --tenant <uuid>\n"
-         "        tenant-set-metadata   --tenant <uuid> <key> <value>\n"
-         "        tenant-add-meter      --tenant <uuid> --meter <meterid> --type <TYPE>\n"
-         "                             [--description <description>] [--unit <unitstr>]\n"
-         "        tenant-delete-meter   --tenant <uuid> --meter <meterid>\n"
-         "        tenant-watcher-list   --tenant <uuid\n"
-         "        tenant-set-watcher    --tenant <uuid> --meter <meterid>\n"
-         "                              --level <warning|alert|critical>\n"
-         "                              --match <gt|lt|eq> --value <value>\n"
-         "                             [--weight <weight>]\n"
-         "        tenant-delete-watcher --tenant <uuid> --meter <meterid>\n"
-         "                              --level <warning|alert|critical>\n"
          "        tenant-create        [--tenant <uuid>] [--key <base64>] [--name <name>]\n"
          "        tenant-delete         --tenant <uuid>\n"
+         "        tenant-get-metadata   --tenant <uuid>\n"
+         "        tenant-set-metadata   --tenant <uuid> <key> <value>\n"
+         "        meter-list            --tenant <uuid>\n"
+         "        meter-create          --tenant <uuid> --meter <meterid> --type <TYPE>\n"
+         "                             [--description <description>] [--unit <unitstr>]\n"
+         "        meter-delete          --tenant <uuid> --meter <meterid>\n"
+         "        watcher-list          --tenant <uuid> [--host <uuid>]\n"
+         "        watcher-set           --tenant <uuid> [--host <uuid>]\n"
+         "                              --meter <meterid>\n"
+         "                              --level <warning|alert|critical>\n"
+         "                              --match <gt|lt|eq> (only for tenant)\n"
+         "                             [--weight <weight>] --value <value>\n"
+         "        watcher-delete        --tenant <uuid> [--host <uuid>\n"
+         "                              --meter <meterid>\n"
          "        host-list             --tenant <uuid>\n"
-         "        host-watcher-list     --tenant <uuid> --host <uuid>\n"
-         "        host-set-watcher      --tenant <uuid> --host <uuid> --meter <meterid>\n"
-         "                              --level <warning|alert|critical>\n"
-         "                              --type <TYPE> --value <value> [--weight <weight>]\n"
-         "        host-delete-watcher   --tenant <uuid> --host <uuid> --meter <meterid>\n"
-         "                              --level <warning|alert|critical>\n"
          "        host-get-record       --tenant <uuid> --host <host> [--time <TIMESPEC>]\n"
          "\n"
          "  TYPE:\n"

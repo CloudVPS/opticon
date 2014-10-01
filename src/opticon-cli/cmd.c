@@ -145,7 +145,7 @@ int cmd_tenant_set_metadata (int argc, const char *argv[]) {
     return 0;
 }
 
-int cmd_tenant_add_meter (int argc, const char *argv[]) {
+int cmd_meter_create (int argc, const char *argv[]) {
     if (OPTIONS.tenant[0] == 0) {
         fprintf (stderr, "%% No tenantid provided\n");
         return 1;
@@ -173,7 +173,7 @@ int cmd_tenant_add_meter (int argc, const char *argv[]) {
     return 0;
 }
 
-int cmd_tenant_delete_meter (int argc, const char *argv[]) {
+int cmd_meter_delete (int argc, const char *argv[]) {
     if (OPTIONS.tenant[0] == 0) {
         fprintf (stderr, "%% No tenantid provided\n");
         return 1;
@@ -189,9 +189,41 @@ int cmd_tenant_delete_meter (int argc, const char *argv[]) {
     var_free (p);
     var_free (apires);
     return 0;
-}    
+}
 
-int cmd_tenant_set_watcher (int argc, const char *argv[]) {
+int cmd_meter_list (int argc, const char *argv[]) {
+    if (OPTIONS.tenant[0] == 0) {
+        fprintf (stderr, "%% No tenantid provided\n");
+        return 1;
+    }
+    
+    var *apires = api_get ("/%s/meter", OPTIONS.tenant);
+    var *res_meter = var_get_dict_forkey (apires, "meter");
+    if (var_get_count (res_meter)) {
+        printf ("From    Meter        Type     Unit    Description\n");
+        printf ("---------------------------------------"
+                "----------------------------------------\n");
+        var *crsr = res_meter->value.arr.first;
+        while (crsr) {
+            const char *desc = var_get_str_forkey (crsr, "description");
+            const char *type = var_get_str_forkey (crsr, "type");
+            const char *unit = var_get_str_forkey (crsr, "unit");
+            const char *org = var_get_str_forkey (crsr, "origin");
+            
+            if (!desc) desc = "-";
+            if (!unit) unit = "";
+            if (!org) org = "default";
+            
+            printf ("%-7s %-12s %-7s  %-7s %s\n", org, crsr->id,
+                    type, unit, desc);
+            crsr = crsr->next;
+        }
+    }
+    var_free (apires);
+    return 0;
+}
+
+int cmd_watcher_set (int argc, const char *argv[]) {
     if (OPTIONS.tenant[0] == 0) {
         fprintf (stderr, "%% No tenantid provided\n");
         return 1;
@@ -220,7 +252,9 @@ int cmd_tenant_set_watcher (int argc, const char *argv[]) {
     var *req_watcher = var_get_dict_forkey (req, "watcher");
     var *reql = var_get_dict_forkey (req_watcher, OPTIONS.level);
     
-    var_set_str_forkey (reql, "cmp", OPTIONS.match);
+    if (OPTIONS.host[0] == 0) {
+        var_set_str_forkey (reql, "cmp", OPTIONS.match);
+    }
     
     if (strcmp (inftype, "integer") == 0) {
         var_set_int_forkey (reql, "val", strtoull (OPTIONS.value, NULL, 10));
@@ -236,15 +270,22 @@ int cmd_tenant_set_watcher (int argc, const char *argv[]) {
     
     dump_var (req, stdout);
     
-    var *apires = api_call ("POST", req, "/%s/watcher/%s",
+    var *apires;
+    if (OPTIONS.host[0]) {
+        apires = api_call ("POST", req, "/%s/host/%s/watcher/%s",
+                           OPTIONS.tenant, OPTIONS.host, OPTIONS.meter);
+    }
+    else {
+        apires = api_call ("POST", req, "/%s/watcher/%s",
                             OPTIONS.tenant, OPTIONS.meter);
+    }
     var_free (mdef);
     var_free (req);
     var_free (apires);
     return 0;
 }
 
-int cmd_tenant_delete_watcher (int argc, const char *argv[]) {
+int cmd_watcher_delete (int argc, const char *argv[]) {
     if (OPTIONS.tenant[0] == 0) {
         fprintf (stderr, "%% No tenantid provided\n");
         return 1;
@@ -255,97 +296,19 @@ int cmd_tenant_delete_watcher (int argc, const char *argv[]) {
     }
     
     var *req = var_alloc();
-    var *apires = api_call ("DELETE", req, "/%s/watcher/%s",
+    var *apires;
+    
+    if (OPTIONS.host[0]) {
+        apires = api_call ("DELETE", req, "/%s/host/%s/watcher/%s",
+                           OPTIONS.tenant, OPTIONS.host, OPTIONS.meter);
+    }
+    else {
+        apires = api_call ("DELETE", req, "/%s/watcher/%s",
                             OPTIONS.tenant, OPTIONS.meter);
+    }
     var_free (req);
     var_free (apires);
     return 0;    
-}
-
-int cmd_host_set_watcher (int argc, const char *argv[]) {
-    if (OPTIONS.tenant[0] == 0) {
-        fprintf (stderr, "%% No tenantid provided\n");
-        return 1;
-    }
-    if (OPTIONS.host[0] == 0) {
-        fprintf (stderr, "%% No host provided\n");
-        return 1;
-    }
-    if (OPTIONS.meter[0] == 0) {
-        fprintf (stderr, "%% No meter provided\n");
-        return 1;
-    }
-    if (OPTIONS.value[0] == 0) {
-        fprintf (stderr, "%% No value provided\n");
-        return 1;
-    }
-    
-    var *mdef = api_get ("/%s/meter", OPTIONS.tenant);
-    if (! mdef) return 1;
-    
-    var *mdef_m = var_get_dict_forkey (mdef, "meter");
-    var *mde_meter = var_get_dict_forkey (mdef_m, OPTIONS.meter);
-    const char *inftype = var_get_str_forkey (mde_meter, "type");
-    
-
-    var *req = var_alloc();
-    var *v_watcher = var_get_dict_forkey (req, "watcher");
-    var *v_thislevel = var_get_dict_forkey (v_watcher, OPTIONS.level);
-    var_set_double_forkey (v_thislevel, "weight", atof(OPTIONS.weight));
-    if (strcmp (inftype, "int") == 0) {
-        var_set_int_forkey (v_thislevel, "val",
-                            strtoull (OPTIONS.value, NULL, 10));
-    }
-    else if (strcmp (inftype, "frac") == 0) {
-        var_set_double_forkey (v_thislevel, "val", atof (OPTIONS.value));
-    }
-    else var_set_str_forkey (v_thislevel, "val", OPTIONS.value);
-    
-    dump_var (req, stdout);
-    
-    var *apires = api_call ("POST",req, "/%s/host/%s/watcher/%s",
-                            OPTIONS.tenant, OPTIONS.host,
-                            OPTIONS.meter);
-    
-    var_free (mdef);
-    var_free (req);
-    var_free (apires);
-    return 0;
-}
-
-int cmd_host_delete_watcher (int argc, const char *argv[]) {
-    uuid tenant;
-    uuid host;
-    if (OPTIONS.tenant[0] == 0) {
-        fprintf (stderr, "%% No tenantid provided\n");
-        return 1;
-    }
-    tenant = mkuuid (OPTIONS.tenant);
-    if (OPTIONS.host[0] == 0) {
-        fprintf (stderr, "%% No host provided\n");
-        return 1;
-    }
-    host = mkuuid (OPTIONS.host);
-    if (OPTIONS.meter[0] == 0) {
-        fprintf (stderr, "%% No meter provided\n");
-        return 1;
-    }
-
-    db *DB = localdb_create (OPTIONS.path);
-    if (! db_open (DB, tenant, NULL)) {
-        fprintf (stderr, "%% Could not open %s\n", OPTIONS.tenant);
-        db_free (DB);
-        return 1;
-    }
-
-    var *meta = db_get_hostmeta (DB, host);
-    if (! meta) meta = var_alloc();
-    var *v_meter = var_get_dict_forkey (meta, "meter");
-    var *v_thismeter = var_get_dict_forkey (v_meter, OPTIONS.meter);
-    var_delete_key (v_thismeter, OPTIONS.level);
-    db_set_hostmeta (DB, host, meta);
-    db_free (DB);
-    return 0;
 }
 
 var *collect_meterdefs (uuid tenant, uuid host) {
@@ -471,7 +434,7 @@ void print_data (const char *meterid, const char *trig, var *v) {
             var_get_double_forkey (v, "weight"));
 }
 
-int cmd_host_list_watchers (int argc, const char *argv[]) {
+int cmd_watcher_list (int argc, const char *argv[]) {
     uuid tenant;
     uuid host;
     if (OPTIONS.tenant[0] == 0) {
