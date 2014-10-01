@@ -11,7 +11,7 @@ ifeq (freebsd,$(OSNAME))
   LDFLAGS+=-lkvm
 endif
 
-LIBS = ../../lib/libopticon.a ../../lib/libopticondb.a 
+LIBS = ../../lib/libopticon.a ../../lib/libopticondb.a ../../lib/libhttp.a
 
 ifeq (darwin,$(OSNAME))
   CFLAGS+=-I/usr/local/include 
