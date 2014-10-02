@@ -3,6 +3,7 @@
 #include <string.h>
 #include <pwd.h>
 #include <unistd.h>
+#include <sys/stat.h>
 
 #include <libopticondb/db_local.h>
 #include <libopticon/cliopt.h>
@@ -135,32 +136,6 @@ int set_time (const char *o, const char *v) {
     return 0;
 }
 
-int load_cached_token (void) {
-    char *home = getenv ("HOME");
-    if (! home) return 0;
-    if (OPTIONS.keystone_token[0]) return 1;
-    
-    int res = 0;
-    var *cache = var_alloc();
-    char path[1024];
-    sprintf (path, "%s/.opticon-token-cache", home);
-    if (load_json (cache, path)) {
-        const char *token;
-        token = var_get_str_forkey (cache, "keystone_token");
-        if (token) {
-            OPTIONS.keystone_token = token;
-            var *vres = api_get ("/token");
-            if (vres) {
-                OPTIONS.keystone_token = strdup (token);
-                res = 1;
-                var_free (vres);
-            }
-        }
-    }
-    var_free (cache);
-    return res;
-}
-
 void write_cached_token (const char *token) {
     char *home = getenv ("HOME");
     if (! home) return;
@@ -174,6 +149,46 @@ void write_cached_token (const char *token) {
     dump_var (cache, f);
     fclose (f);
     var_free (cache);
+}
+
+int load_cached_token (void) {
+    char *home = getenv ("HOME");
+    if (! home) return 0;
+    if (OPTIONS.keystone_token[0]) return 1;
+    struct stat st;
+    time_t tnow = time (NULL);
+    
+    int res = 0;
+    var *cache = var_alloc();
+    char path[1024];
+    sprintf (path, "%s/.opticon-token-cache", home);
+    if (load_json (cache, path)) {
+        const char *token;
+        token = var_get_str_forkey (cache, "keystone_token");
+        
+        if (token) {
+            stat (path, &st);
+            /* re-validate after an hour */
+            if (tnow - st.st_mtime > 3600) {
+                OPTIONS.keystone_token = token;
+                var *vres = api_get ("/token");
+                if (vres) {
+                    OPTIONS.keystone_token = strdup (token);
+                    res = 1;
+                    var_free (vres);
+                    
+                    /* refresh the file */
+                    write_cached_token (token);
+                }
+            }
+            else {
+                OPTIONS.keystone_token = strdup (token);
+                res = 1;
+            }
+        }
+    }
+    var_free (cache);
+    return res;
 }
 
 int keystone_login (void) {

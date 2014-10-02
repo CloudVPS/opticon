@@ -64,7 +64,6 @@ uint32_t hash_token (const char *str) {
 void tcache_node_clear (tcache_node *self, int dofree) {
     if (dofree) {
         if (self->tenantlist) free (self->tenantlist);
-        if (self->tenantnames) var_free (self->tenantnames);
     }
     self->token[0] = 0;
     self->hashcode = 0;
@@ -73,7 +72,24 @@ void tcache_node_clear (tcache_node *self, int dofree) {
     self->tenantlist = NULL;
     self->tenantcount = 0;
     self->userlevel = AUTH_GUEST;
-    self->tenantnames = NULL;
+}
+
+tcache_node *tcache_node_copy (tcache_node *src) {
+    tcache_node *dst = (tcache_node *) malloc (sizeof (tcache_node));
+    if (! dst) return dst;
+    
+    memcpy (dst, src, sizeof (tcache_node));
+    if (dst->tenantcount) {
+        size_t sz = dst->tenantcount * sizeof(uuid);
+        dst->tenantlist = (uuid *) malloc (sz);
+        memcpy (dst->tenantlist, src->tenantlist, sz);
+    }
+    return dst;
+}
+
+void tcache_node_free (tcache_node *self) {
+    tcache_node_clear (self, 1);
+    free (self);
 }
 
 /** Initialize the global TOKENCACHE */
@@ -114,8 +130,7 @@ tcache_node *tokencache_lookup (const char *token) {
             if (strcmp (token, crsr->token) != 0) continue;
             if ((crsr->ctime + TOKEN_TIMEOUT_INVALID) > tnow) {
                 crsr->lastref = tnow;
-                res = (tcache_node *) malloc (sizeof (tcache_node));
-                memcpy (res, crsr, sizeof (tcache_node));
+                res = tcache_node_copy (crsr);
                 pthread_rwlock_unlock (&TOKENCACHE.lock);
                 tokencache_expire();
                 return res;
@@ -129,8 +144,7 @@ tcache_node *tokencache_lookup (const char *token) {
             if (strcmp (token, crsr->token) != 0) continue;
             if ((crsr->ctime + TOKEN_TIMEOUT_VALID) > tnow) {
                 crsr->lastref = tnow;
-                res = (tcache_node *) malloc (sizeof (tcache_node));
-                memcpy (res, crsr, sizeof (tcache_node));
+                res = tcache_node_copy (crsr);
                 pthread_rwlock_unlock (&TOKENCACHE.lock);
                 tokencache_expire();
                 return res;
@@ -201,14 +215,14 @@ void tokencache_store_invalid (const char *token) {
     into->token[1023] = 0;
     into->userlevel = AUTH_GUEST;
     if (into->tenantlist) free (into->tenantlist);
-    if (into->tenantnames) var_free (into->tenantnames);
     into->tenantlist = NULL;
     into->tenantcount = 0;
-    into->tenantnames = NULL;
     into->ctime = into->lastref = tnow;
     
     pthread_rwlock_unlock (&TOKENCACHE.lock);
 }
+
+void __b__ (void) {};
 
 /** Store a valid token in the cache.
   * \param token The string token
@@ -217,8 +231,7 @@ void tokencache_store_invalid (const char *token) {
   * \param name The resolved tenant name
   */
 void tokencache_store_valid (const char *token, uuid *tenantlist,
-                             int tenantcount,
-                             auth_level userlevel, var *names) {
+                             int tenantcount, auth_level userlevel) {
     int i;
     tcache_node *crsr;
     tcache_node *into = NULL;
@@ -232,7 +245,7 @@ void tokencache_store_valid (const char *token, uuid *tenantlist,
         TOKENCACHE.count++;
     }
     else {
-        for (i=0; i<16; ++i) {
+        for (i=0; i<256; ++i) {
             crsr = &TOKENCACHE.nodes[i];
             if ((crsr->hashcode == 0) || 
                 (crsr->ctime + TOKEN_TIMEOUT_VALID) <= tnow) {
@@ -256,10 +269,8 @@ void tokencache_store_valid (const char *token, uuid *tenantlist,
     into->tenantcount = tenantcount;
     into->tenantlist = (uuid *) malloc (tenantcount * sizeof (uuid));
     memcpy (into->tenantlist, tenantlist, tenantcount * sizeof (uuid));
-    
-    if (! into->tenantnames) into->tenantnames = var_alloc();
-    var_copy (into->tenantnames, names);
     into->ctime = into->lastref = tnow;
     
     pthread_rwlock_unlock (&TOKENCACHE.lock);
+    __b__();
 }

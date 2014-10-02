@@ -12,6 +12,7 @@
 #include "req_context.h"
 #include "cmd.h"
 #include "options.h"
+#include "tokencache.h"
 
 req_matchlist REQ_MATCHES;
 
@@ -113,9 +114,27 @@ int flt_check_validuser (req_context *ctx, req_arg *a,
         else ctx->userlevel = AUTH_USER;
     }
     else if (ctx->openstack_token) {
+        tcache_node *cache = tokencache_lookup (ctx->openstack_token);
+        if (cache) {
+            if (ctx->auth_tenants) {
+                free (ctx->auth_tenants);
+            }
+            ctx->auth_tenants = cache->tenantlist;
+            ctx->auth_tenantcount = cache->tenantcount;
+            ctx->userlevel = cache->userlevel;
+            free (cache);
+            if (ctx->userlevel == AUTH_GUEST) {
+                return err_unauthorized (ctx, a, out, status);
+            }
+            return 0;
+        }
         if (! handle_openstack_token (ctx)) {
+            tokencache_store_invalid (ctx->openstack_token);
             return err_unauthorized (ctx, a, out, status);
         }
+        tokencache_store_valid (ctx->openstack_token, ctx->auth_tenants,
+                                ctx->auth_tenantcount, ctx->userlevel);
+        
     }
     else { 
         return err_unauthorized (ctx, a, out, status);
@@ -212,6 +231,7 @@ int main() {
     OPTIONS.dbpath = "/Users/pi/var";
     OPTIONS.port = 8888;
     OPTIONS.admintoken = mkuuid ("a1bc7681-b616-4805-90c2-f9a08ce460d3");
+    tokencache_init();
     setup_matches();
     struct MHD_Daemon *daemon;
     unsigned int flags = MHD_USE_THREAD_PER_CONNECTION |

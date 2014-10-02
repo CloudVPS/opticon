@@ -21,7 +21,6 @@ typedef struct tcache_node_s {
     uuid        *tenantlist; /**< Tenants bound to the token */
     int          tenantcount; /**< Number of tenants */
     auth_level   userlevel; /**< Userlevel for the token */
-    var         *tenantnames; /**< Tenant name for the token */
 } tcache_node;
 
 /** Structure keeping a cache of valid and invalid tokens */
@@ -40,12 +39,12 @@ extern tokencache TOKENCACHE;
 
 /* ============================= FUNCTIONS ============================= */
 
+void         tcache_node_free (tcache_node *);
 void         tokencache_init (void);
 tcache_node *tokencache_lookup (const char *token);
 void         tokencache_expire (void);
 void         tokencache_store_invalid (const char *token);
 void         tokencache_store_valid (const char *token, uuid *tenants,
-                                     int numtenants, auth_level userlevel,
-                                     var *names);
+                                     int numtenants, auth_level userlevel);
 
 #endif
