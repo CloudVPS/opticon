@@ -155,6 +155,18 @@ int cmd_list_tenants (req_context *ctx, req_arg *a, var *env, int *status) {
     uuid *list = db_list_tenants (DB, &count);
     
     for (int i=0; i<count; ++i) {
+        /* Filter only tenants the token has access to */
+        if (ctx->userlevel != AUTH_ADMIN) {
+            if (ctx->auth_tenantcount == 0) continue;
+            int found = 0;
+            for (int j=0; j<ctx->auth_tenantcount; ++j) {
+                if (uuidcmp (ctx->auth_tenants[j], list[i])) {
+                    found = 1;
+                    break;
+                }
+            }
+            if (! found) continue;
+        }
         int cnt = 0;
         var *meta = NULL;
         const char *tenantname = NULL;
@@ -176,6 +188,25 @@ int cmd_list_tenants (req_context *ctx, req_arg *a, var *env, int *status) {
     
     free (list);
     db_free (DB);
+    *status = 200;
+    return 1;
+}
+
+int cmd_token (req_context *ctx, req_arg *a, var *env, int *status) {
+    var *env_token = var_get_dict_forkey (env, "token");
+    switch (ctx->userlevel) {
+        case AUTH_GUEST:
+            var_set_str_forkey (env_token, "userlevel", "AUTH_GUEST");
+            break;
+        
+        case AUTH_USER:
+            var_set_str_forkey (env_token, "userlevel", "AUTH_USER");
+            break;
+        
+        case AUTH_ADMIN:
+            var_set_str_forkey (env_token, "userlevel", "AUT_ADMIN");
+            break;
+    }
     *status = 200;
     return 1;
 }

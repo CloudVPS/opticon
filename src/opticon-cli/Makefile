@@ -24,7 +24,7 @@ endif
 
 CFLAGS+=-DOSNAME=$(OSNAME) -DOSREL=$(OSREL) -DOSRELMAJOR=$(OSRELMAJOR)
 
-OBJS_OPTICONCLI = cmd.o import.o main.o
+OBJS_OPTICONCLI = cmd.o import.o main.o api.o
 				  
 all: ../../bin/opticon
 

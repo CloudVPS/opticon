@@ -1,11 +1,17 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <pwd.h>
+#include <unistd.h>
 
 #include <libopticondb/db_local.h>
 #include <libopticon/cliopt.h>
+#include <libopticon/parse.h>
+#include <libopticon/dump.h>
+#include <libhttp/http.h>
 
 #include "cmd.h"
+#include "api.h"
 
 optinfo OPTIONS;
 
@@ -129,6 +135,90 @@ int set_time (const char *o, const char *v) {
     return 0;
 }
 
+int load_cached_token (void) {
+    char *home = getenv ("HOME");
+    if (! home) return 0;
+    if (OPTIONS.keystone_token[0]) return 1;
+    
+    int res = 0;
+    var *cache = var_alloc();
+    char path[1024];
+    sprintf (path, "%s/.opticon-token-cache", home);
+    if (load_json (cache, path)) {
+        const char *token;
+        token = var_get_str_forkey (cache, "keystone_token");
+        if (token) {
+            OPTIONS.keystone_token = token;
+            var *vres = api_get ("/token");
+            if (vres) {
+                OPTIONS.keystone_token = strdup (token);
+                res = 1;
+                var_free (vres);
+            }
+        }
+    }
+    var_free (cache);
+    return res;
+}
+
+void write_cached_token (const char *token) {
+    char *home = getenv ("HOME");
+    if (! home) return;
+    char path[1024];
+    sprintf (path, "%s/.opticon-token-cache", home);
+    FILE *f = fopen (path, "w");
+    if (! f) return;
+
+    var *cache = var_alloc();
+    var_set_str_forkey (cache, "keystone_token", token);
+    dump_var (cache, f);
+    fclose (f);
+    var_free (cache);
+}
+
+int keystone_login (void) {
+    char username[256];
+    printf ("Keystone Username...: ");
+    fflush (stdout);
+    fgets (username, 255, stdin);
+    if (username[0]) username[strlen(username)-1] = 0;
+    const char *password = getpass ("Password............: ");
+    char *kurl = (char *) malloc (strlen (OPTIONS.keystone_url) + 10);
+    sprintf (kurl, "%s/tokens", OPTIONS.keystone_url);
+    var *req = var_alloc();
+    var *req_auth = var_get_dict_forkey (req, "auth");
+    var *req_pw = var_get_dict_forkey (req_auth, "passwordCredentials");
+    var_set_str_forkey (req_pw, "username", username);
+    var_set_str_forkey (req_pw, "password", password);
+    var *hdr = var_alloc();
+    var_set_str_forkey (hdr, "Content-Type", "application/json");
+    
+    var *err = var_alloc();
+    var *kres = http_call ("POST", kurl, hdr, req, err, NULL);
+    if (! kres) {
+        printf ("%% Login failed");
+        dump_var (err, stdout);
+        var_free (hdr);
+        var_free (req);
+        var_free (err);
+        free (kurl);
+        return 0;
+    }
+    
+    var *res_xs = var_get_dict_forkey (kres, "access");
+    var *res_tok = var_get_dict_forkey (res_xs, "token");
+    const char *token = var_get_str_forkey (res_tok, "id");
+    if (token) {
+        OPTIONS.keystone_token = strdup (token);
+        write_cached_token (token);
+    }
+    var_free (hdr);
+    var_free (req);
+    var_free (err);
+    free (kurl);
+    return (token == NULL) ? 0 : 1;
+}
+
 /** Command line flags */
 cliopt CLIOPT[] = {
     {"--tenant","-t",OPT_VALUE,"",set_tenant},
@@ -146,12 +236,11 @@ cliopt CLIOPT[] = {
     {"--match","-M",OPT_VALUE,"gt",set_match},
     {"--value","-V",OPT_VALUE,"",set_value},
     {"--weight","-W",OPT_VALUE,"1.0",set_weight},
-    {"--api_url","-A",OPT_VALUE,"http://localhost:8888/",set_api_url},
-    {"--keystone_url","-X",OPT_VALUE,
-            "https://identity.stack.cloudvps.com/v2.0/",set_keystone_url},
-    {"--keystone_token","-K",OPT_VALUE,"",set_keystone_token},
-    {"--opticon-token","-O",OPT_VALUE,
-            "a1bc7681-b616-4805-90c2-f9a08ce460d3",set_opticon_token},
+    {"--api-url","-A",OPT_VALUE,"http://localhost:8888/",set_api_url},
+    {"--keystone-url","-X",OPT_VALUE,
+            "https://identity.stack.cloudvps.com/v2.0",set_keystone_url},
+    {"--keystone-token","-K",OPT_VALUE,"",set_keystone_token},
+    {"--opticon-token","-O",OPT_VALUE,"",set_opticon_token},
     {NULL,NULL,0,NULL,NULL}
 };
 
@@ -224,6 +313,11 @@ int main (int _argc, const char *_argv[]) {
     if (argc < 2) {
         usage (argv[0]);
         return 1;
+    }
+    if (OPTIONS.keystone_token[0] == 0 && OPTIONS.opticon_token[0] == 0) {
+        if (! load_cached_token()) {
+            if (! keystone_login()) return 1;
+        }
     }
     const char *cmd = argv[1];
     return cliopt_runcommand (CLICMD, cmd, argc, argv);

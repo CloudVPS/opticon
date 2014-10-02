@@ -166,9 +166,9 @@ void setup_matches (void) {
     #define _T_(xx,yy,zz) req_matchlist_add_text(&REQ_MATCHES,xx,yy,zz)
 
     _P_ ("*",                         REQ_ANY,    flt_check_validuser);
-    _P_ ("/",                         REQ_GET,    flt_check_admin);
     _P_ ("/",                         REQ_GET,    cmd_list_tenants);
     _P_ ("/",                         REQ_ANY,    err_method_not_allowed);
+    _P_ ("/token",                    REQ_GET,    cmd_token);
     _P_ ("/%U*",                      REQ_ANY,    flt_check_tenant);
     _P_ ("/%U",                       REQ_GET,    cmd_tenant_get);
     _P_ ("/%U",                       REQ_POST,   cmd_tenant_create);
