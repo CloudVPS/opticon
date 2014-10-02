@@ -13,6 +13,7 @@ all:
 	@cd src/opticon-cli && make && cd ../..
 	@echo "=== Building opticon-collector ======================================"
 	@cd src/opticon-collector && make && cd ../..
+	@./md2git.sh
 
 test: all
 	@cd test && make test && cd ..
