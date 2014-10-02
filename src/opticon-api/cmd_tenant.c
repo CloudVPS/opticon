@@ -543,7 +543,7 @@ int cmd_tenant_set_watcher (req_context *ctx, req_arg *a,
     tv = var_find_key (ctxwatcher, "alert");
     if (tv) var_copy (var_get_dict_forkey (dbmeta_meter, "alert"), tv);
     tv = var_find_key (ctxwatcher, "critical");
-    if (tv) var_copy (var_get_dict_forkey (dbmeta_meter, "critial"), tv);
+    if (tv) var_copy (var_get_dict_forkey (dbmeta_meter, "critical"), tv);
     
     db_set_metadata (DB, dbmeta);
     var *env_watcher = var_get_dict_forkey (env, "watcher");
