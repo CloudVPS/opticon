@@ -12,6 +12,7 @@ typedef struct apioptions_s {
     int          foreground;
     int          port;
     uuid         admintoken;
+    const char  *adminhost;
     var         *conf;
     var         *mconf;
 } apioptions;

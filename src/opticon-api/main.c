@@ -133,7 +133,15 @@ int handle_openstack_token (req_context *ctx) {
 int flt_check_validuser (req_context *ctx, req_arg *a,
                          var *out, int *status) {
     if (uuidvalid (ctx->opticon_token)) {
-        if (uuidcmp (ctx->opticon_token, OPTIONS.admintoken)) {
+        if (strcmp (OPTIONS.adminhost, ctx->remote) != 0) {
+            log_error ("Rejected admin authentication from host "
+                       "<%s> for reasons of not being <%s>",
+                       ctx->remote, OPTIONS.adminhost);
+
+            ctx->userlevel = AUTH_GUEST;
+            return err_unauthorized (ctx, a, out, status);
+        }
+        else if (uuidcmp (ctx->opticon_token, OPTIONS.admintoken)) {
             ctx->userlevel = AUTH_ADMIN;
         }
         else ctx->userlevel = AUTH_USER;
@@ -217,6 +225,7 @@ void setup_matches (void) {
     _P_ ("/%U",                       REQ_GET,    cmd_tenant_get);
     _P_ ("/%U",                       REQ_POST,   cmd_tenant_create);
     _P_ ("/%U",                       REQ_PUT,    cmd_tenant_update);
+    _P_ ("/%U",                       REQ_DELETE, flt_check_admin);
     _P_ ("/%U",                       REQ_DELETE, cmd_tenant_delete);
     _P_ ("/%U/meta",                  REQ_GET,    cmd_tenant_get_meta);
     _P_ ("/%U/meta",                  REQ_UPDATE, cmd_tenant_set_meta);
@@ -319,6 +328,11 @@ int conf_admin_token (const char *id, var *v, updatetype tp) {
     return 1;
 }
 
+int conf_admin_host (const char *id, var *v, updatetype tp) {
+    OPTIONS.adminhost = var_get_str (v);
+    return 1;
+}
+
 int conf_keystone_url (const char *id, var *v, updatetype tp) {
     OPTIONS.keystone_url = var_get_str (v);
     return 1;
@@ -356,6 +370,7 @@ int main (int _argc, const char *_argv[]) {
 
     opticonf_add_reaction ("network/port", conf_port);
     opticonf_add_reaction ("auth/admin_token", conf_admin_token);
+    opticonf_add_reaction ("auth/admin_host", conf_admin_host);
     opticonf_add_reaction ("auth/keystone_url", conf_keystone_url);
     opticonf_add_reaction ("database/path", conf_dbpath);
     
