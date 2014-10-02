@@ -156,7 +156,8 @@ talk to them, the admin API can be used to add tenants to the database. Use the
 following command to create a new tenant:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-$ opticon --opticon-token a666ed1e-24dc-4533-acab-1efb2bb55081 tenant-create --name "Acme"
+$ opticon --opticon-token a666ed1e-24dc-4533-acab-1efb2bb55081 \
+  tenant-create --name "Acme"
 Tenant created:
 ------------------------------------------------------------------
      Name: Acme
@@ -174,7 +175,8 @@ If you want to create a tenant with a predefined UUID, you can use the —tenant
 command line flag:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-$ opticon --opticon-token a666ed1e-24dc-4533-acab-1efb2bb55081 tenant-create --name "Acme" --tenant 0296d893-8187-4f44-a31b-bf3b4c19fc10 
+$ opticon --opticon-token a666ed1e-24dc-4533-acab-1efb2bb55081 \
+  tenant-create --name "Acme" --tenant 0296d893-8187-4f44-a31b-bf3b4c19fc10 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 This will be followed by the same information as the first example.
@@ -203,13 +205,14 @@ To get rid of a tenant (and reclaim all associated storage), use the
 **tenant-delete **sub-command:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-$ opticon --opticon-token a666ed1e-24dc-4533-acab-1efb2bb55081 tenant-delete --tenant 0296d893-8187-4f44-a31b-bf3b4c19fc10
+$ opticon --opticon-token a666ed1e-24dc-4533-acab-1efb2bb55081 \
+  tenant-delete --tenant 0296d893-8187-4f44-a31b-bf3b4c19fc10
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 that should teach them.
 
-Using opticon as a user
------------------------
+Accessing opticon as a user
+---------------------------
 
 After you used the admin API to create a tenant, you should be able to access
 the rest of the functionality from any machine running an opticon client. If you
@@ -253,7 +256,8 @@ You can add keys to the metadata, or change the value of existing keys, by using
 the obviously named *tenant-set-metadata* sub-command:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-$ opticon tenant-set-metadata --tenant 001b7153-4f4b-4f1c-b281-cc06b134f98f sleep optional
+$ opticon tenant-set-metadata --tenant 001b7153-4f4b-4f1c-b281-cc06b134f98f \
+  sleep optional
 $ opticon tenant-get-metadata --tenant 001b7153-4f4b-4f1c-b281-cc06b134f98f
 {
     "metadata": {
