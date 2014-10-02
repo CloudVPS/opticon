@@ -17,7 +17,7 @@ int err_unauthorized (req_context *ctx, req_arg *a, var *out, int *status) {
 
 /** Generate a generic 403 error */
 int err_not_allowed (req_context *ctx, req_arg *a, var *out, int *status) {
-    var_set_str_forkey (out, "error", "Not allowed");
+    var_set_str_forkey (out, "error", "Permission denied");
     *status = 403;
     return 1;    
 }
