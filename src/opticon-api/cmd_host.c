@@ -33,7 +33,13 @@ int cmd_host_get (req_context *ctx, req_arg *a, ioport *outio, int *status) {
     
     host_delete (h);
     db_free (DB);
-    return 0;
+    
+    var *err = var_alloc();
+    var_set_str_forkey (err, "error", "No current record found for host");
+    write_var (err, outio);
+    var_free (err);
+    *status = 404;
+    return 1;
 }
 
 /** GET /$TENANT/host/$HOST/watcher */
