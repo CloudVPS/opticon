@@ -35,7 +35,6 @@ int answer_to_connection (void *cls, struct MHD_Connection *connection,
     /* Set up a context if we're at the first callback */
     req_context *ctx = *con_cls;
     if (ctx == NULL) {
-        printf ("%s %s\n", method, url);
         ctx = req_context_alloc();
         req_context_set_url (ctx, url);
         req_context_set_method (ctx, method);
@@ -53,10 +52,30 @@ int answer_to_connection (void *cls, struct MHD_Connection *connection,
     MHD_get_connection_values (connection, MHD_HEADER_KIND,
                                enumerate_header, ctx);
     
+    struct sockaddr *so;
+    so = MHD_get_connection_info (connection,
+            MHD_CONNECTION_INFO_CLIENT_ADDRESS)->client_addr;
+    
+    if (so->sa_family == AF_INET) {
+        struct sockaddr_in *si = (struct sockaddr_in *) so;        
+        inet_ntop (AF_INET, &si->sin_addr, ctx->remote, INET6_ADDRSTRLEN);
+    }
+    else if (so->sa_family == AF_INET6) {
+        struct sockaddr_in6 *si = (struct sockaddr_in6 *) so;
+        inet_ntop (AF_INET6, &si->sin6_addr, ctx->remote, INET6_ADDRSTRLEN);
+    }
+    
     /* Parse post data */
     req_context_parse_body (ctx);
     
     req_matchlist_dispatch (&REQ_MATCHES, url, ctx, connection);
+    
+    const char *lvl = "AUTH_GUEST";
+    if (ctx->userlevel == AUTH_USER) lvl = "AUTH_USER ";
+    if (ctx->userlevel == AUTH_ADMIN) lvl = "AUTH_ADMIN";
+    
+    log_info ("%s [%s] %i %s %s", ctx->remote, lvl, ctx->status, method, url);
+
     req_context_free (ctx);
     *con_cls = NULL;
     return MHD_YES;

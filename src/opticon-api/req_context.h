@@ -3,6 +3,7 @@
 
 #include <libopticon/var.h>
 #include <microhttpd.h>
+#include <arpa/inet.h>
 
 typedef uint8_t req_method;
 #define REQ_GET 0x01
@@ -26,6 +27,7 @@ typedef struct req_context_s {
     var         *response; /**< Prepared JSON response */
     int          status; /**< HTTP response code */
     req_method   method; /**< HTTP request method */
+    char         remote[INET6_ADDRSTRLEN]; /**< Remote address */
     char        *url; /**< Requested URL */
     char        *ctype; /**< Content type */
     char        *body; /**< Received body data */
