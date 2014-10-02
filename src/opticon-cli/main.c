@@ -303,9 +303,15 @@ int conf_endpoint_api (const char *id, var *v, updatetype tp) {
     return 1;
 }
 
-/** Set up watchlist from meter definitions */
 int conf_endpoint_keystone (const char *id, var *v, updatetype tp) {
     OPTIONS.keystone_url = var_get_str(v);
+    return 1;
+}
+
+int conf_default_tenant (const char *id, var *v, updatetype tp) {
+    if (OPTIONS.tenant[0] == 0) {
+        OPTIONS.tenant = var_get_str (v);
+    }
     return 1;
 }
 
@@ -365,6 +371,7 @@ int main (int _argc, const char *_argv[]) {
 
     opticonf_add_reaction ("endpoints/keystone", conf_endpoint_keystone);
     opticonf_add_reaction ("endpoints/opticon", conf_endpoint_api);
+    opticonf_add_reaction ("defaults/tenant", conf_default_tenant);
 
     OPTIONS.conf = var_alloc();
     
