@@ -9,6 +9,8 @@
 #include <libopticon/cliopt.h>
 #include <libopticon/parse.h>
 #include <libopticon/dump.h>
+#include <libopticon/react.h>
+#include <libopticon/log.h>
 #include <libhttp/http.h>
 
 #include "cmd.h"
@@ -47,6 +49,7 @@ STRINGOPT(api_url)
 STRINGOPT(keystone_url)
 STRINGOPT(keystone_token)
 STRINGOPT(opticon_token)
+STRINGOPT(config_file)
 
 /** Handle --type */
 int set_type (const char *o, const char *v) {
@@ -268,11 +271,12 @@ cliopt CLIOPT[] = {
     {"--match","-M",OPT_VALUE,"gt",set_match},
     {"--value","-V",OPT_VALUE,"",set_value},
     {"--weight","-W",OPT_VALUE,"1.0",set_weight},
-    {"--api-url","-A",OPT_VALUE,"http://localhost:8888/",set_api_url},
-    {"--keystone-url","-X",OPT_VALUE,
-            "https://identity.stack.cloudvps.com/v2.0",set_keystone_url},
+    {"--api-url","-A",OPT_VALUE,"",set_api_url},
+    {"--keystone-url","-X",OPT_VALUE,"",set_keystone_url},
     {"--keystone-token","-K",OPT_VALUE,"",set_keystone_token},
     {"--opticon-token","-O",OPT_VALUE,"",set_opticon_token},
+    {"--config-file","-c",OPT_VALUE,
+            "/etc/opticon/opticon-cli.conf",set_config_file},
     {NULL,NULL,0,NULL,NULL}
 };
 
@@ -293,6 +297,17 @@ clicmd CLICMD[] = {
     {"host-get-record",cmd_get_record},
     {NULL,NULL}
 };
+
+int conf_endpoint_api (const char *id, var *v, updatetype tp) {
+    OPTIONS.api_url = var_get_str(v);
+    return 1;
+}
+
+/** Set up watchlist from meter definitions */
+int conf_endpoint_keystone (const char *id, var *v, updatetype tp) {
+    OPTIONS.keystone_url = var_get_str(v);
+    return 1;
+}
 
 /** Print usage information.
   * \param cmdname argv[0]
@@ -340,12 +355,48 @@ void usage (const char *cmdname) {
 /** Main, uses cliopt to do the dirty. */
 int main (int _argc, const char *_argv[]) {
     int argc = _argc;
+    struct stat st;
     const char **argv = cliopt_dispatch (CLIOPT, _argv, &argc);
     if (! argv) return 1;
     if (argc < 2) {
         usage (argv[0]);
         return 1;
     }
+
+    opticonf_add_reaction ("endpoints/keystone", conf_endpoint_keystone);
+    opticonf_add_reaction ("endpoints/opticon", conf_endpoint_api);
+
+    OPTIONS.conf = var_alloc();
+    
+    if (stat (OPTIONS.config_file, &st) == 0) {
+        if (! load_json (OPTIONS.conf, OPTIONS.config_file)) {
+            log_error ("Error loading %s: %s\n",
+                       OPTIONS.config_file, parse_error());
+            return 1;
+        }
+    }
+    
+    char *rcpath = malloc(strlen(getenv("HOME")) + 32);
+    sprintf (rcpath, "%s/.opticonrc", getenv("HOME"));
+    
+    if (stat (rcpath, &st) == 0) {
+        if (! load_json (OPTIONS.conf, rcpath)) {
+            log_error ("Error loading %s: %s\n", rcpath, parse_error());
+            return 1;
+        }
+    }
+    
+    free (rcpath);
+    opticonf_handle_config (OPTIONS.conf);
+    if (OPTIONS.api_url[0] == 0) {
+        fprintf (stderr, "%% No opticon endpoint found\n");
+        return 1;
+    }
+    if (OPTIONS.keystone_url[0] == 0) {
+        fprintf (stderr, "%% No keystone endpoint found\n");
+        return 1;
+    }
+
     if (OPTIONS.keystone_token[0] == 0 && OPTIONS.opticon_token[0] == 0) {
         if (! load_cached_token()) {
             if (! keystone_login()) return 1;

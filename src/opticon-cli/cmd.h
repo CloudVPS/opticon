@@ -2,6 +2,7 @@
 #define _OPTICONDB_CMD_H 1
 
 #include <time.h>
+#include <libopticon/var.h>
 
 typedef struct optinfo {
     const char  *tenant;
@@ -23,6 +24,8 @@ typedef struct optinfo {
     const char  *keystone_url;
     const char  *keystone_token;
     const char  *opticon_token;
+    const char  *config_file;
+    var         *conf;
 } optinfo;
 
 extern optinfo OPTIONS;
