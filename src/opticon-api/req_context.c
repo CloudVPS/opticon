@@ -326,6 +326,7 @@ void req_context_free (req_context *self) {
     if (self->url) {
         free (self->url);
     }
+    if (self->ctype) free (self->ctype);
     if (self->auth_tenants) free (self->auth_tenants);
     if (self->body) free (self->body);
     if (self->openstack_token) free (self->openstack_token);
