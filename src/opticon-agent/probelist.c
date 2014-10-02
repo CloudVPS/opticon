@@ -24,9 +24,9 @@ var *runprobe_exec (probe *self) {
     FILE *proc = popen (self->call, "r");
     if (! proc) return NULL;
     while (!feof (proc)) {
-        size_t res = fread (buffer, 4096, 1, proc);
-        if (res < 4096) {
-            buffer[0] = res;
+        size_t res = fread (buffer, 1, 4096, proc);
+        if (res && res < 4096) {
+            buffer[res] = 0;
             break;
         }
     }
@@ -46,7 +46,7 @@ var *runprobe_exec (probe *self) {
   */
 void probe_run (thread *t) {
     probe *self = (probe *) t;
-    
+    self->vold = self->vcurrent = NULL;
     log_info ("Starting probe %s", self->call);
     
     while (1) {

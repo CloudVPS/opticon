@@ -124,6 +124,7 @@ int daemon_main (int argc, const char *argv[]) {
                     if ((slowround && p->interval>60) ||
                         ((!slowround) && p->interval<61)) {
                         log_debug ("Collecting '%s'", p->call);
+                        
                         var_to_host (h, (var *) v);
                         p->lastdispatch = tnow;
                         collected++;
