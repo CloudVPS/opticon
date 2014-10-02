@@ -3,10 +3,6 @@ ifdef STATIC
   LDFLAGS+=-static
 endif
 
-LUA?=lua
-LUALIBS?=$(shell pkg-config --libs $(LUA))
-LUAINC?=$(shell pkg-config --cflags $(LUA))
-
 OSNAME?=$(shell uname -s | tr A-Z a-z)
 OSREL?=$(shell uname -r)
 OSRELMAJOR?=$(shell uname -r | cut -f1 -d.)
@@ -19,7 +15,7 @@ LIBS = ../../lib/libopticon.a ../../lib/libopticondb.a ../../lib/libhttp.a
 LIBCURL = -lcurl
 
 ifeq (darwin,$(OSNAME))
-  CFLAGS+=-I/usr/local/include -framework Security -framework CoreFoundation
+  CFLAGS+=-I/usr/local/include
   LDFLAGS+=-L/usr/local/lib -framework Security -framework CoreFoundation
   LIBCURL=/usr/local/lib/libcurl.a
 endif

@@ -372,7 +372,7 @@ int main (int _argc, const char *_argv[]) {
                    OPTIONS.mconfpath, parse_error());
         return 1;
     }
-
+    
     opticonf_handle_config (OPTIONS.conf);
     tokencache_init();
     setup_matches();
