@@ -1,6 +1,7 @@
 #include <sys/types.h>
 #include <sys/select.h>
 #include <sys/socket.h>
+#include <libopticon/cliopt.h>
 #include <libopticon/util.h>
 #include <libopticon/datatypes.h>
 #include <libopticon/ioport.h>
@@ -8,8 +9,12 @@
 #include <libopticon/parse.h>
 #include <libopticon/dump.h>
 #include <libopticon/defaultmeters.h>
+#include <libopticon/react.h>
+#include <libopticon/daemon.h>
 #include <libhttp/http.h>
+#include <libopticon/log.h>
 #include <microhttpd.h>
+#include <syslog.h>
 #include "req_context.h"
 #include "cmd.h"
 #include "options.h"
@@ -245,22 +250,14 @@ void setup_matches (void) {
     #undef _T_
 }
 
-apioptions OPTIONS;
-
-int main() {
-    OPTIONS.dbpath = "/Users/pi/var";
-    OPTIONS.port = 8888;
-    OPTIONS.admintoken = mkuuid ("a1bc7681-b616-4805-90c2-f9a08ce460d3");
-    
-    OPTIONS.mconf = get_default_meterdef();
-    if (! load_json (OPTIONS.mconf, "meter.conf")) {
-        log_error ("Error loading %s: %s\n",
-                   "meter.conf", parse_error());
-        return 1;
+int daemon_main (int argc, const char *argv[]) {
+    if (strcmp (OPTIONS.logpath, "@syslog") == 0) {
+        log_open_syslog ("opticon-api", OPTIONS.loglevel);
     }
-    
-    tokencache_init();
-    setup_matches();
+    else {
+        log_open_file (OPTIONS.logpath, OPTIONS.loglevel);
+    }
+
     struct MHD_Daemon *daemon;
     unsigned int flags = MHD_USE_THREAD_PER_CONNECTION;
     daemon = MHD_start_daemon (flags, OPTIONS.port, NULL, NULL,
@@ -271,4 +268,118 @@ int main() {
                                (unsigned int) 64,
                                MHD_OPTION_END);
     while (1) sleep (60);
+}
+
+/** Set up foreground flag */
+int set_foreground (const char *i, const char *v) {
+    OPTIONS.foreground = 1;
+    return 1;
+}
+
+/** Set up configuration file path */
+int set_confpath (const char *i, const char *v) {
+    OPTIONS.confpath = v;
+    return 1;
+}
+
+int set_mconfpath (const char *i, const char *v) {
+    OPTIONS.mconfpath = v;
+    return 1;
+}
+
+/** Set up pidfile path */
+int set_pidfile (const char *i, const char *v) {
+    OPTIONS.pidfile = v;
+    return 1;
+}
+
+/** Set the logfile path, @syslog for logging to syslog */
+int set_logpath (const char *i, const char *v) {
+    OPTIONS.logpath = v;
+    return 1;
+}
+
+/** Handle --loglevel */
+int set_loglevel (const char *i, const char *v) {
+    if (strcmp (v, "CRIT") == 0) OPTIONS.loglevel = LOG_CRIT;
+    else if (strcmp (v, "ERR") == 0) OPTIONS.loglevel = LOG_ERR;
+    else if (strcmp (v, "WARNING") == 0) OPTIONS.loglevel = LOG_WARNING;
+    else if (strcmp (v, "INFO") == 0) OPTIONS.loglevel = LOG_INFO;
+    else if (strcmp (v, "DEBUG") == 0) OPTIONS.loglevel = LOG_DEBUG;
+    else OPTIONS.loglevel = LOG_WARNING;
+    return 1;
+}
+
+int conf_admin_token (const char *id, var *v, updatetype tp) {
+    OPTIONS.admintoken = mkuuid (var_get_str (v));
+    if (! uuidvalid (OPTIONS.admintoken)) {
+        log_error ("Invalid admintoken");
+        exit (1);
+    }
+    return 1;
+}
+
+int conf_keystone_url (const char *id, var *v, updatetype tp) {
+    OPTIONS.keystone_url = var_get_str (v);
+    return 1;
+}
+
+int conf_port (const char *id, var *v, updatetype tp) {
+    OPTIONS.port = var_get_int (v);
+    return 1;
+}
+
+int conf_dbpath (const char *id, var *v, updatetype tp) {
+    OPTIONS.dbpath = var_get_str (v);
+    return 1;
+}
+
+apioptions OPTIONS;
+
+cliopt CLIOPT[] = {
+    {"--foreground","-f",OPT_FLAG,NULL,set_foreground},
+    {"--pidfile","-p",OPT_VALUE,
+        "/var/run/opticon-api.pid", set_pidfile},
+    {"--logfile","-l",OPT_VALUE, "@syslog", set_logpath},
+    {"--loglevel","-L",OPT_VALUE, "INFO", set_loglevel},
+    {"--config-path","-c",OPT_VALUE,
+        "/etc/opticon/opticon-api.conf", set_confpath},
+    {"--meter-config-path","-m",OPT_VALUE,
+        "/etc/opticon/opticon-meter.conf", set_mconfpath},
+    {NULL,NULL,0,NULL,NULL}
+};
+
+int main (int _argc, const char *_argv[]) {
+    int argc = _argc;
+    const char **argv = cliopt_dispatch (CLIOPT, _argv, &argc);
+    if (! argv) return 1;
+
+    opticonf_add_reaction ("network/port", conf_port);
+    opticonf_add_reaction ("auth/admin_token", conf_admin_token);
+    opticonf_add_reaction ("auth/keystone_url", conf_keystone_url);
+    opticonf_add_reaction ("database/path", conf_dbpath);
+    
+    OPTIONS.conf = var_alloc();
+    if (! load_json (OPTIONS.conf, OPTIONS.confpath)) {
+        log_error ("Error loading %s: %s\n",
+                   OPTIONS.confpath, parse_error());
+        return 1;
+    }
+
+    OPTIONS.mconf = get_default_meterdef();
+    if (! load_json (OPTIONS.mconf, OPTIONS.mconfpath)) {
+        log_error ("Error loading %s: %s\n",
+                   OPTIONS.mconfpath, parse_error());
+        return 1;
+    }
+
+    opticonf_handle_config (OPTIONS.conf);
+    tokencache_init();
+    setup_matches();
+
+    if (! daemonize (OPTIONS.pidfile, argc, argv, daemon_main,
+                     OPTIONS.foreground)) {
+        log_error ("Error spawning");
+        return 1;
+    }
 }
