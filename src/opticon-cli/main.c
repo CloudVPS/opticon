@@ -294,7 +294,7 @@ clicmd CLICMD[] = {
     {"watcher-set",cmd_watcher_set},
     {"watcher-delete",cmd_watcher_delete},
     {"watcher-list",cmd_watcher_list},
-    {"host-get-record",cmd_get_record},
+    {"host-show",cmd_get_record},
     {NULL,NULL}
 };
 
@@ -344,7 +344,7 @@ void usage (const char *cmdname) {
          "        watcher-delete        --tenant <uuid> [--host <uuid>\n"
          "                              --meter <meterid>\n"
          "        host-list             --tenant <uuid>\n"
-         "        host-get-record       --tenant <uuid> --host <host> [--time <TIMESPEC>]\n"
+         "        host-show             --tenant <uuid> --host <host> [--time <TIMESPEC>]\n"
          "\n"
          "  TYPE:\n"
          "        integer, string, or frac\n"
