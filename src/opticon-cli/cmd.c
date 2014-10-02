@@ -214,8 +214,6 @@ int cmd_watcher_set (int argc, const char *argv[]) {
     
     var_set_double_forkey (reql, "weight", atof (OPTIONS.weight));
     
-    dump_var (req, stdout);
-    
     var *apires;
     if (OPTIONS.host[0]) {
         apires = api_call ("POST", req, "/%s/host/%s/watcher/%s",
@@ -353,7 +351,6 @@ int cmd_tenant_delete (int argc, const char *argv[]) {
     
     var *req = var_alloc();
     var *apires = api_call ("DELETE", req, "/%s", OPTIONS.tenant);
-    if (apires) dump_var (apires, stdout);
     var_free (req);
     var_free (apires);
     return 0;
