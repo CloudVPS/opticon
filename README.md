@@ -176,7 +176,7 @@ admin API. The tool will spit out the UUID for the newly created tenant, as well
 as the tenant AES256 key to be used in the configuration of this tenant’s
 *opticon-agent* instances.
 
-If you want to create a tenant with a predefined UUID, you can use the --tenant
+If you want to create a tenant with a predefined UUID, you can use the `--tenant`
 command line flag:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

@@ -19,7 +19,6 @@
 #include <libopticondb/db_local.h>
 #include <libhttp/http.h>
 
-#include "import.h"
 #include "api.h"
 
 /** The tenant-list command */
@@ -332,9 +331,21 @@ int cmd_watcher_list (int argc, const char *argv[]) {
     return 0;
 }
 
+/** If OPTIONS.tenant is the default, unset it */
+void disregard_default_tenant (void) {
+    var *conf_defaults = var_get_dict_forkey (OPTIONS.conf, "defaults");
+    const char *deftenant = var_get_str_forkey (conf_defaults, "tenant");
+    if (! deftenant) return;
+    if (strcmp (deftenant, OPTIONS.tenant) == 0) OPTIONS.tenant = "";
+}
+
 /** The tenant-delete command */
 int cmd_tenant_delete (int argc, const char *argv[]) {
-   uuid tenant;
+    uuid tenant;
+
+    /* Avoid using the default tenant in this case */
+    disregard_default_tenant();
+
     if (OPTIONS.tenant[0] == 0) {
         fprintf (stderr, "%% No tenantid provided\n");
         return 1;
@@ -353,6 +364,9 @@ int cmd_tenant_create (int argc, const char *argv[]) {
     uuid tenant;
     aeskey key;
     char *strkey;
+    
+    /* Avoid using the default tenant in this case */
+    disregard_default_tenant();
     
     if (OPTIONS.tenant[0] == 0) {
         tenant = uuidgen();
