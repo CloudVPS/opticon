@@ -264,7 +264,7 @@ probes {
 
 The `collector` section tells the agent how to reach the opticon-collector, and
 how to identify itself. If the server runs in an OpenStack cloud, you can change
-the `config` setting from `manual` to `metadata`. This will tell the agent to
+the `config` setting from `manual` to `cloud-init`. This will tell the agent to
 get the connection information out of the OpenStack metadata service, instead.
 It will try to read the following metadata fields: `opticon_collector_address`,
 `opticon_collector_port`, `opticon_tenant_key`, `opticon_tenant_id`, and
@@ -340,3 +340,125 @@ $ opticon tenant-get-metadata
     }
 }
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+### Navigating hosts
+
+To get an overview of the hosts being monitored by the system, use the
+`host-list` sub-command:
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+$ opticon host-list
+UUID                                    Size First record      Last record
+--------------------------------------------------------------------------------
+0d19d114-55c8-4077-9cab-348579c70612    5 MB 2014-09-24 13:57  2014-10-02 20:20
+2b331038-aac4-4d8b-a7cd-5271b603bd1e    5 MB 2014-09-24 16:14  2014-10-02 20:20
+--------------------------------------------------------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The times provided throughout opticon are always normalized to UTC.
+
+Use the `host-show` sub-command to get the latest record available for a host:
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+$ opticon host-show --host 2b331038-aac4-4d8b-a7cd-5271b603bd1e
+---( HOST )---------------------------------------------------------------------
+UUID............: 2b331038-aac4-4d8b-a7cd-5271b603bd1e
+Hostname........: Jander.local
+Address.........: fe80::8a53:95ff:fe32:557
+Status..........: OK
+Problems........: 
+Uptime..........: 21 days, 0:46:06
+OS/Hardware.....: Darwin 13.3.0 (x86_64)
+---( RESOURCES )----------------------------------------------------------------
+Processes.......: 161 (2 running, 5 stuck)
+Load/CPU........: 1.42 (4.75 %)                    -[                      ]+
+Available RAM...: 16734.00 MB
+Free RAM........: 15197.00 MB
+Network in/out..: 7 Kb/s (6 pps) / 4 Kb/s (5 pps)
+Disk i/o........: 0 rdops / 0 wrops
+---( PROCESS LIST )-------------------------------------------------------------
+USER                PID       CPU       MEM NAME 
+pi                  226    7.20 %    0.00 % EuControl 
+root                  0    6.20 %    0.00 % kernel_task 
+pi                 7833    6.00 %    0.00 % Pianoteq 5 
+_coreaudiod         227    3.59 %    0.00 % coreaudiod 
+root                118    1.69 %    0.00 % SGProtocolServi 
+pi                  349    1.39 %    0.00 % MC_Client 
+pi                 7840    0.49 %    0.00 % MIDIServer 
+root                  1    0.09 %    0.00 % launchd 
+---( STORAGE )------------------------------------------------------------------
+DEVICE                 SIZE FS         USED MOUNTPOINT 
+/dev/disk0s2      464.84 GB hfs     57.00 % / 
+/dev/disk1s2      931.19 GB hfs     20.00 % /Volumes/Audio 
+/dev/disk6       5588.40 GB hfs     49.00 % /Volumes/Oodle Nova 
+/dev/disk7       5588.40 GB hfs     31.00 % /Volumes/Storage 
+--------------------------------------------------------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Customizing alerts
+------------------
+
+The opticon-collector processes metering samples every minute, and uses a list
+of *watchers* to determine whether there are any problems. A watcher is a
+setting for a specific meter that compares it with a defined value, and uses the
+outcome to attribute a level of ‘badness’ to a host.
+
+The software ships with a default set of watchers that is hopefully useful for
+most cases. You can look at the current situation by issuing the `watcher-list`
+sub-command:
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+$ opticon watcher-list
+From     Meter        Trigger   Match                  Value             Weight
+--------------------------------------------------------------------------------
+default  df/pused     warning   gt                     90.00                1.0
+default  df/pused     alert     gt                     95.00                1.0
+default  df/pused     critical  gt                     99.00                1.0
+default  pcpu         warning   gt                     70.00                1.0
+default  pcpu         alert     gt                     90.00                1.0
+default  pcpu         critical  gt                     99.00                1.0
+default  loadavg      warning   gt                     10.00                1.0
+default  loadavg      alert     gt                     20.00                1.0
+default  loadavg      critical  gt                     50.00                1.0
+default  proc/stuck   warning   gt                         6                1.0
+default  proc/stuck   alert     gt                        10                1.0
+default  proc/stuck   critical  gt                        20                1.0
+default  net/in_kbs   warning   gt                     40000                0.5
+default  net/in_pps   warning   gt                     10000                1.0
+default  net/in_pps   alert     gt                     50000                1.0
+default  net/in_pps   critical  gt                    100000                1.0
+default  net/out_pps  warning   gt                     10000                1.0
+default  net/out_pps  alert     gt                     50000                1.0
+default  net/out_pps  critical  gt                    100000                1.0
+default  mem/free     warning   lt                     65536                0.5
+default  mem/free     alert     lt                     32768                1.0
+default  mem/free     critical  lt                      4096                1.0
+--------------------------------------------------------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+You can change the settings for a watcher, by using the `watcher-set`
+sub-command:
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+$ opticon watcher-set --meter pcpu --level warning --value 40
+$ opticon watcher-list
+From     Meter        Trigger   Match                  Value             Weight
+--------------------------------------------------------------------------------
+default  df/pused     warning   gt                     90.00                1.0
+default  df/pused     alert     gt                     95.00                1.0
+default  df/pused     critical  gt                     99.00                1.0
+tenant   pcpu         warning   gt                     40.00                1.0
+default  pcpu         alert     gt                     50.00                1.0
+default  pcpu         critical  gt                     99.00                1.0
+...
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The `weight` value for a watcher determines how fast it should cause the alert
+level to rise. If you set it lower, the time it takes for an over-threshold
+value to get to the various alert stages. To get rid of any customizations,
+issue the `watcher-delete` command with the proper `--meter` provided.
+
+If you want to view or change watchers only for a specific host, specify the
+host with the `--host` flag.
+
+ 
