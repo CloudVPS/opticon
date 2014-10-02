@@ -461,4 +461,104 @@ issue the `watcher-delete` command with the proper `--meter` provided.
 If you want to view or change watchers only for a specific host, specify the
 host with the `--host` flag.
 
+Creating custom meters
+----------------------
+
+Opticon allows you to fully customize the meters that are being transmitted
+between the agent and the collector. Before we start designing our own custom
+meter, first some bits about the data model. By running the client with the
+`--json` flag, you can get an idea of the structure:
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+$ opticon host-show --host 2b331038-aac4-4d8b-a7cd-5271b603bd1e -j
+{
+    "agent": {
+        "ip": "fe80::8a53:95ff:fe32:557"
+    },
+    "hostname": "Jander.local",
+    "loadavg": [
+        1.383000,
+        1.391000,
+        1.422000
+    ],
+    "os": {
+        "kernel": "Darwin",
+        "version": "13.3.0",
+        "arch": "x86_64"
+    },
+    "df": [
+        {
+            "device": "/dev/disk0s2",
+            "size": 475992,
+            "pused": 57.000000,
+            "mount": "/",
+            "fs": "hfs"
+        },
+        {
+            "device": "/dev/disk1s2",
+            "size": 953541,
+            "pused": 20.000000,
+            "mount": "/Volumes/Audio",
+            "fs": "hfs"
+        }
+    },
+...
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+This looks deceptively structured. But opticon data is not free form. The limits
+imposed by UDP packet sizes necessitate some engineering compromises. To keep
+bandwidth from exploding, the underlying data is actually implemented as a flat
+list of values and arrays, with dictionary/hashes at the JSON level being purely
+an illusion limited to two levels. The data above, represented internally, would
+look like this:
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+{
+    "agent/ip": "fe80::8a53:95ff:fe32:557",
+    "hostname": "Jander.local",
+    "loadavg": [1.383, 1.391, 1.422],
+    "os/kernel": "Darwin",
+    "os/version": "13.3.0",
+    "os/arch": "x86_64",
+    "df/device": ["/dev/disk0s2", "/dev/disk1s2"],
+    "df/size": [475992, 953541],
+    "df/pused": [57.000, 20.000],
+    "df/mount": ["/", "/Volumes/Audio"],
+    "df/fs": ["hfs", "hfs"]
+}
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+This representation, as noted, allows for a limited set of JSON constructs
+involving dictionaries:
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+"key": "string" # obviously
+
+"key": 18372 # unsigned 63-bit integer
+
+"key": 1.3 # fractional number, range 0.000 - 255.999
+
+# grouped values
+"key": {
+    "key": "value",
+    "other": 42
+}
+
+"key": ["string", "string"] # array of strings
+
+"key": [13, 37, 42] # array of unsigned integers
+
+"key": [1.0, 2.07, 3.14] # array of fractional numbers
+
+#table
+"key": [
+    {"key1": "value", "key2": 42},
+    {"key2": "value", "key2": 64}
+]
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+A further limitation is length of the keys. The maximum size of a key name is
+11. If you’re at a second level, the sum of the length of the key name and its
+parent key name cannot be larger than 10 (one is lost for the ‘/‘).
+
  
