@@ -668,7 +668,7 @@ for it. Let’s set up some sensible levels:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 $ opticon watcher-set --meter power/level --level warning --match lt --value 30
-$ opticon watcher-set --meter power/level --level alert --match lt --value 15$ 
+$ opticon watcher-set --meter power/level --level alert --match lt --value 15
 $ opticon watcher-list | grep power/level
 tenant   power/level  warning   lt                     30.00                1.0
 tenant   power/level  alert     lt                     15.00                1.0
