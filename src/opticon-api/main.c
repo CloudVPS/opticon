@@ -68,7 +68,7 @@ int handle_openstack_token (req_context *ctx) {
     var *data = var_alloc();
     var *res = http_call ("GET",
                           "https://identity.stack.cloudvps.com/v2.0/tenants",
-                          hdr, data, NULL);
+                          hdr, data, NULL, NULL);
 
     if (ctx->auth_tenants) {
         free (ctx->auth_tenants);

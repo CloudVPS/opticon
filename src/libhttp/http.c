@@ -2,6 +2,7 @@
 #include <libopticon/ioport_buffer.h>
 #include <libopticon/parse.h>
 #include <libopticon/dump.h>
+#include <libopticon/log.h>
 #include <curl/curl.h>
 
 size_t curlwrite (char *ptr, size_t sz, size_t n, void *pport) {
@@ -22,10 +23,11 @@ size_t curlread (void *ptr, size_t sz, size_t nm, void *pport) {
 }
 
 var *http_call (const char *mth, const char *url, var *hdr, var *data,
-                var *resphdr) {
+                var *errinfo, var *resphdr) {
     CURL *curl;
     CURLcode curlres;
     struct curl_slist *chunk = NULL;
+    long http_status = 0;
     
     curl = curl_easy_init();
     if (! curl) return NULL;
@@ -78,10 +80,26 @@ var *http_call (const char *mth, const char *url, var *hdr, var *data,
     curlres = curl_easy_perform (curl);
     
     if (curlres == CURLE_OK) {
-        parse_json (res, ioport_get_buffer (indata));
+        curl_easy_getinfo (curl, CURLINFO_RESPONSE_CODE, &http_status);
+        if (http_status == 200) {
+            parse_json (res, ioport_get_buffer (indata));
+        } else {
+            if (errinfo) {
+                parse_json (errinfo, ioport_get_buffer (indata));
+            }
+            var_free (res);
+            res = NULL;
+        }
     }
     else {
-        printf ("%s\n", curl_easy_strerror (curlres));
+        if (errinfo) {
+            var_set_str_forkey (errinfo, "error",
+                                curl_easy_strerror (curlres));
+        }
+        log_warn ("HTTP %s %s cURL error %s", mth, url,
+                  curl_easy_strerror (curlres));
+        var_free (res);
+        res = NULL;
     }
     
     ioport_close (indata);

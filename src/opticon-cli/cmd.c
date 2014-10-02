@@ -32,6 +32,7 @@ var *api_call (const char *mth, var *data, const char *fmt, ...)
     
     char tmpurl[1024];
     var *outhdr = var_alloc();
+    var *errinfo = var_alloc();
     if (OPTIONS.keystone_token[0]) {
         var_set_str_forkey (outhdr, "X-Auth-Token", OPTIONS.keystone_token);
     }
@@ -45,8 +46,15 @@ var *api_call (const char *mth, var *data, const char *fmt, ...)
     if (tmpurl[len-1] == '/') tmpurl[len-1] = 0;
     strncat (tmpurl, path, 1023);
     tmpurl[1023] = 0;
-    var *res = http_call (mth, tmpurl, outhdr, data, NULL);
+    var *res = http_call (mth, tmpurl, outhdr, data, errinfo, NULL);
+    if (! res) {
+        const char *errstr = var_get_str_forkey (errinfo, "error");
+        if (! errstr) errstr = "Unknown error";
+        fprintf (stderr, "%% %s\n", errstr);
+        exit (1);
+    }
     var_free (outhdr);
+    var_free (errinfo);
     return res;
 }
 
@@ -60,6 +68,7 @@ var *api_get (const char *fmt, ...) {
     
     char tmpurl[1024];
     var *outhdr = var_alloc();
+    var *errinfo = var_alloc();
     var *data = var_alloc();
     if (OPTIONS.keystone_token[0]) {
         var_set_str_forkey (outhdr, "X-Auth-Token", OPTIONS.keystone_token);
@@ -78,8 +87,15 @@ var *api_get (const char *fmt, ...) {
     if (tmpurl[len-1] == '/') tmpurl[len-1] = 0;
     strncat (tmpurl, path, 1023);
     tmpurl[1023] = 0;
-    var *res = http_call ("GET", tmpurl, outhdr, data, NULL);
+    var *res = http_call ("GET", tmpurl, outhdr, data, errinfo, NULL);
+    if (! res) {
+        const char *errstr = var_get_str_forkey (errinfo, "error");
+        if (! errstr) errstr = "Unknown error";
+        fprintf (stderr, "%% %s\n", errstr);
+        exit (1);
+    }
     var_free (outhdr);
+    var_free (errinfo);
     var_free (data);
     return res;
 }
@@ -789,6 +805,7 @@ int cmd_get_record (int argc, const char *argv[]) {
     print_value ("OS/Hardware","%s %s (%s)", VDstr("os","kernel"),
                  VDstr("os","version"), VDstr("os","arch"));
     
+    /* -------------------------------------------------------------*/
     print_hdr ("RESOURCES");
     print_value ("Processes","%llu (%llu running, %llu stuck)",
                              VDint("proc","total"),
@@ -826,6 +843,7 @@ int cmd_get_record (int argc, const char *argv[]) {
     print_value ("Disk i/o", "%i rdops / %i wrops",
                  VDint("io","rdops"), VDint("io","wrops"));
     
+    /* -------------------------------------------------------------*/
     print_hdr ("PROCESS LIST");
     
     const char *top_hdr[] = {"USER","PID","CPU","MEM","NAME",NULL};
@@ -849,6 +867,7 @@ int cmd_get_record (int argc, const char *argv[]) {
     int df_div[] = {0, (1024), 0, 0, 0, 0};
     const char *df_suf[] = {""," GB", "", " %", "", ""};
     
+    /* -------------------------------------------------------------*/
     print_hdr ("STORAGE");
     
     var *v_df = var_get_array_forkey (apires, "df");
