@@ -470,7 +470,7 @@ meter, first some bits about the data model. By running the client with the
 `--json` flag, you can get an idea of the structure:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-$ opticon host-show --host 2b331038-aac4-4d8b-a7cd-5271b603bd1e -j
+$ opticon host-show --host 2b331038-aac4-4d8b-a7cd-5271b603bd1e --json
 {
     "agent": {
         "ip": "fe80::8a53:95ff:fe32:557"
@@ -552,8 +552,8 @@ involving dictionaries:
 
 #table
 "key": [
-    {"key1": "value", "key2": 42},
-    {"key2": "value", "key2": 64}
+    {"key1": "valueA", "key2": 42},
+    {"key1": "valueB", "key2": 64}
 ]
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -561,4 +561,115 @@ A further limitation is length of the keys. The maximum size of a key name is
 11. If you’re at a second level, the sum of the length of the key name and its
 parent key name cannot be larger than 10 (one is lost for the ‘/‘).
 
- 
+Writing a custom probe
+----------------------
+
+With all this fresh knowledge in hand, let’s try to write a real world probe.
+For this example, we will query the battery level of a MacBook and start
+transmitting this as a meter.
+
+The battery level can be queried from the command line using the `pmset`
+utility. Its output looks like this:
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+$ pmset -g batt
+Now drawing from 'AC Power'
+ -InternalBattery-0     97%; charged; 0:00 remaining
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+We’ll write an ugly script to turn that information into JSON:
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+$ cat /usr/local/scripts/getpower.sh
+#!/bin/sh
+charge=$(pmset -g batt | grep InternalBattery | cut -f2 | cut -f1 -d'%')
+source=$(pmset -g batt | head -1 | cut -f2 -d "'" | sed -e "s/ Power//")
+printf '{"power":{"level":%.2f,"src":"%s"}}\n' "$charge" "$source"
+
+$ /usr/local/scripts/getpower.sh
+{"power":{"level":96.00,"src":"AC"}}
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Now we can add this script to the `probes` section of `opticon-agent.conf`:
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+probes {
+    power {
+        type: exec
+        call: /usr/local/scripts/getpower.sh
+        interval: 60
+    }
+    ...
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+After restarting the agent, and waiting for the next minute mark to pass, and
+collector to write out its data, the value should be visible in the `host-show`
+JSON output:
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+...
+    "uptime": 117581,
+    "power": {
+        "level": 96.000000,
+        "src": "AC"
+    },
+    "status": "OK",
+...
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Et voila, an extra meter was born.
+
+### Configuring the meter for the tenant
+
+If you want your meter to show up less cryptically, you should add information
+the meter to the tenant’s database using the command line tool:
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+$ opticon meter-create --meter power/level --type frac \
+  --description "Battery Level" --unit "%"
+$ opticon meter-create --meter power/src --type string \
+  --description "Power Source"
+$ opticon meter-list
+From     Meter        Type      Unit    Description
+--------------------------------------------------------------------------------
+default  agent/ip     string            Remote IP Address
+default  os/kernel    string            Version
+default  os/arch      string            CPU Architecture
+default  df/device    string            Device
+default  df/size      integer   KB      Size
+default  df/pused     frac      %       In Use
+default  uptime       integer   s       Uptime
+default  top/pid      integer           PID
+default  top/name     string            Name
+default  top/pcpu     frac      %       CPU Usage
+default  top/pmem     frac      %       RAM Usage
+default  pcpu         frac      %       CPU Usage
+default  loadavg      frac              Load Average
+default  proc/total   integer           Total processes
+default  proc/run     integer           Running processes
+default  proc/stuck   integer           Stuck processes
+default  net/in_kbs   integer   Kb/s    Network data in
+default  net/in_pps   integer   pps     Network packets in
+default  net/out_kbs  integer   Kb/s    Network data out
+default  net/out_pps  integer   pps     Network packets out
+default  io/rdops     integer   iops    Disk I/O (read)
+default  io/wrops     integer   iops    Disk I/O (write)
+default  mem/total    integer   KB      Total RAM
+default  mem/free     integer   KB      Free RAM
+default  hostname     string            Hostname
+tenant   mailq        integer           Mail queue size
+tenant   power/level  frac      %       Battery Level
+tenant   power/src    string            Power Source
+--------------------------------------------------------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Now that the meter exists in the database, it’s also possible to set up watchers
+for it. Let’s set up some sensible levels:
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+$ opticon watcher-set --meter power/level --level warning --match lt --value 30
+$ opticon watcher-set --meter power/level --level alert --match lt --value 15$ 
+$ opticon watcher-list | grep power/level
+tenant   power/level  warning   lt                     30.00                1.0
+tenant   power/level  alert     lt                     15.00                1.0
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
