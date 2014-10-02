@@ -259,6 +259,8 @@ void setup_matches (void) {
     #undef _T_
 }
 
+/** Daemon runner. Basically kicks microhttpd in action, then sits
+  * back and enjoys the show. */
 int daemon_main (int argc, const char *argv[]) {
     if (strcmp (OPTIONS.logpath, "@syslog") == 0) {
         log_open_syslog ("opticon-api", OPTIONS.loglevel);
@@ -319,6 +321,7 @@ int set_loglevel (const char *i, const char *v) {
     return 1;
 }
 
+/** Handle --admin-token */
 int conf_admin_token (const char *id, var *v, updatetype tp) {
     OPTIONS.admintoken = mkuuid (var_get_str (v));
     if (! uuidvalid (OPTIONS.admintoken)) {
@@ -328,21 +331,25 @@ int conf_admin_token (const char *id, var *v, updatetype tp) {
     return 1;
 }
 
+/** Handle auth/admin_host config */
 int conf_admin_host (const char *id, var *v, updatetype tp) {
     OPTIONS.adminhost = var_get_str (v);
     return 1;
 }
 
+/** Handle auth/keystone_url config */
 int conf_keystone_url (const char *id, var *v, updatetype tp) {
     OPTIONS.keystone_url = var_get_str (v);
     return 1;
 }
 
+/** Handle network/port config */
 int conf_port (const char *id, var *v, updatetype tp) {
     OPTIONS.port = var_get_int (v);
     return 1;
 }
 
+/** Handle database/path config */
 int conf_dbpath (const char *id, var *v, updatetype tp) {
     OPTIONS.dbpath = var_get_str (v);
     return 1;
@@ -350,6 +357,7 @@ int conf_dbpath (const char *id, var *v, updatetype tp) {
 
 apioptions OPTIONS;
 
+/** Command line flags */
 cliopt CLIOPT[] = {
     {"--foreground","-f",OPT_FLAG,NULL,set_foreground},
     {"--pidfile","-p",OPT_VALUE,
@@ -363,6 +371,8 @@ cliopt CLIOPT[] = {
     {NULL,NULL,0,NULL,NULL}
 };
 
+/** Application main. Handle command line flags, load configurations,
+  * initialize, then kick off into daemon mode. */
 int main (int _argc, const char *_argv[]) {
     int argc = _argc;
     const char **argv = cliopt_dispatch (CLIOPT, _argv, &argc);

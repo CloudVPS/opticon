@@ -219,6 +219,14 @@ int err_server_error (req_context *ctx, req_arg *arg,
     return 1;
 }
 
+/** Utility function for sending either JSON-encoded or straight
+  * data to the client.
+  * \param conn The MHD connection handler.
+  * \param res JSON data, if any.
+  * \param status HTTP status code to use
+  * \param out The ioport to use (may already contain data)
+  * \param txt If 1, skip JSON encoding, send out ioport as-is.
+  */
 void req_write_response (struct MHD_Connection *conn,
                          var *res, int status, ioport *out, int txt) {
     /* if no text data was sent into the ioport, encode the

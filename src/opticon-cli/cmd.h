@@ -4,6 +4,11 @@
 #include <time.h>
 #include <libopticon/var.h>
 
+/* =============================== TYPES =============================== */
+
+/** Configuration and flags obtained from the configuration file and
+  * command line.
+  */
 typedef struct optinfo {
     const char  *tenant;
     const char  *key;
@@ -28,7 +33,11 @@ typedef struct optinfo {
     var         *conf;
 } optinfo;
 
+/* ============================== GLOBALS ============================== */
+
 extern optinfo OPTIONS;
+
+/* ============================= FUNCTIONS ============================= */
 
 int cmd_tenant_list (int argc, const char *argv[]);
 int cmd_tenant_get_metadata (int argc, const char *argv[]);

@@ -192,6 +192,7 @@ int cmd_list_tenants (req_context *ctx, req_arg *a, var *env, int *status) {
     return 1;
 }
 
+/** GET /token */
 int cmd_token (req_context *ctx, req_arg *a, var *env, int *status) {
     var *env_token = var_get_dict_forkey (env, "token");
     switch (ctx->userlevel) {
@@ -390,6 +391,18 @@ int cmd_tenant_list_meters (req_context *ctx, req_arg *a,
     return 1;
 }
 
+/** Utility function for getting a meterid string out of the
+  * argument list. Because meterids can contain slashes, the
+  * actual id is sometimes 1, sometimes 2 arguments long.
+  * This function combines them and puts them into a single
+  * string.
+  * \param meterid String to write to (should be > size 12)
+  * \param a The request argument list
+  * \param pos The position of the first half of the id in the
+  *            argument list.
+  * \return 1 on success, 0 if a valid meterid couldn't be
+  *         extracted.
+  */
 int set_meterid (char *meterid, req_arg *a, int pos) {
     const char *meterpart = a->argv[pos];
     if (a->argc == (pos+1)) {
@@ -501,6 +514,11 @@ int cmd_tenant_list_watchers (req_context *ctx, req_arg *a,
     return 1;
 }
 
+/** POST /$TENANT/watcher/$METERID
+  * watcher {
+  *     warning { cmp: gt, value: 10, weight:1.0 } # optional
+  * }
+  */
 int cmd_tenant_set_watcher (req_context *ctx, req_arg *a, 
                             var *env, int *status) {
     if (a->argc < 2) return err_server_error (ctx, a, env, status);
@@ -536,6 +554,7 @@ int cmd_tenant_set_watcher (req_context *ctx, req_arg *a,
     return 1;
 }
 
+/** DELETE /$TENANT/watcher/$METERID */
 int cmd_tenant_delete_watcher (req_context *ctx, req_arg *a, 
                                var *env, int *status) {
     if (a->argc < 2) return err_server_error (ctx, a, env, status);
@@ -573,6 +592,7 @@ static char *timfmt (time_t w, int json) {
     return res;
 }
 
+/** GET /$TENANT/host */
 int cmd_tenant_list_hosts (req_context *ctx, req_arg *a, 
                             var *env, int *status) {
     db *DB = localdb_create (OPTIONS.dbpath);

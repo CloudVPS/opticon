@@ -18,6 +18,8 @@
 
 optinfo OPTIONS;
 
+/* Convenience macro's for setting up a shitload of command line flag
+   handlers */
 #define CONCAT(a,b) a##b
 
 #define STRINGOPT(xoptname) \
@@ -139,6 +141,7 @@ int set_time (const char *o, const char *v) {
     return 0;
 }
 
+/** Write a token to the cache-file in the user's homedir */
 void write_cached_token (const char *token) {
     char *home = getenv ("HOME");
     if (! home) return;
@@ -154,6 +157,9 @@ void write_cached_token (const char *token) {
     var_free (cache);
 }
 
+/** Load a cached token from the cache-file in the user's homedir.
+  * If the token is older than an hour, re-validate it against the
+  * API server and refresh. */
 int load_cached_token (void) {
     char *home = getenv ("HOME");
     if (! home) return 0;
@@ -194,6 +200,10 @@ int load_cached_token (void) {
     return res;
 }
 
+/** Convenience function for getting the host+domainname from a url.
+  * \param url The url
+  * \return Allocated string, caller should free().
+  */
 char *domain_from_url (const char *url) {
     char *c = strchr (url, '/');
     while (*c == '/') c++;
@@ -205,6 +215,10 @@ char *domain_from_url (const char *url) {
     return res;
 }
 
+/** Ask for keystone credentials and use them to attempt to
+  * log into the keystone server. Write the resulting token
+  * to the cache-file if succesful.
+  */
 int keystone_login (void) {
     char username[256];
     printf ("%% Login required\n\n");
@@ -298,16 +312,21 @@ clicmd CLICMD[] = {
     {NULL,NULL}
 };
 
+/** Set up the api endpoint from configuration */
 int conf_endpoint_api (const char *id, var *v, updatetype tp) {
     OPTIONS.api_url = var_get_str(v);
     return 1;
 }
 
+/** Set up the keystone endpoint from configuration */
 int conf_endpoint_keystone (const char *id, var *v, updatetype tp) {
     OPTIONS.keystone_url = var_get_str(v);
     return 1;
 }
 
+/** Set up the default --tenant argument from configuration.
+  * No-op if an explicit --tenant flag was already provided.
+  */
 int conf_default_tenant (const char *id, var *v, updatetype tp) {
     if (OPTIONS.tenant[0] == 0) {
         OPTIONS.tenant = var_get_str (v);

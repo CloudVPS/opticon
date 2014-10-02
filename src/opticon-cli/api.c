@@ -20,6 +20,15 @@
 #include "api.h"
 #include "cmd.h"
 
+/** Send a non-get call to the API backend with JSON-encoded
+  * data.
+  * \param mth The HTTP method to use
+  * \param data The data to JSON-enocde
+  * \param fmt The path of the API call.
+  * \return Parsed JSON result data. HTTP errors will not come back
+  *         to the caller, they are printed, and the application
+  *         is terminated.
+  */
 var *api_call (const char *mth, var *data, const char *fmt, ...)
 {
     char path[1024];
@@ -57,6 +66,13 @@ var *api_call (const char *mth, var *data, const char *fmt, ...)
     return res;
 }
 
+/** Perform a GET request against the API, parsing any JSON data
+  * returned.
+  * \param fmt The path of the API call
+  * \return Parsed JSON result data. HTTP errors will not come back
+  *         to the caller, they are printed, and the application
+  *         is terminated.
+  */
 var *api_get (const char *fmt, ...) {
     char path[1024];
     path[0] = 0;

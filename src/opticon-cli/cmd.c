@@ -86,6 +86,7 @@ int cmd_tenant_set_metadata (int argc, const char *argv[]) {
     return 0;
 }
 
+/** The meter-create command */
 int cmd_meter_create (int argc, const char *argv[]) {
     if (OPTIONS.tenant[0] == 0) {
         fprintf (stderr, "%% No tenantid provided\n");
@@ -114,6 +115,7 @@ int cmd_meter_create (int argc, const char *argv[]) {
     return 0;
 }
 
+/** The meter-delete command */
 int cmd_meter_delete (int argc, const char *argv[]) {
     if (OPTIONS.tenant[0] == 0) {
         fprintf (stderr, "%% No tenantid provided\n");
@@ -132,6 +134,7 @@ int cmd_meter_delete (int argc, const char *argv[]) {
     return 0;
 }
 
+/** The meter-list command */
 int cmd_meter_list (int argc, const char *argv[]) {
     if (OPTIONS.tenant[0] == 0) {
         fprintf (stderr, "%% No tenantid provided\n");
@@ -166,6 +169,7 @@ int cmd_meter_list (int argc, const char *argv[]) {
     return 0;
 }
 
+/** The watcher-set command */
 int cmd_watcher_set (int argc, const char *argv[]) {
     if (OPTIONS.tenant[0] == 0) {
         fprintf (stderr, "%% No tenantid provided\n");
@@ -228,6 +232,7 @@ int cmd_watcher_set (int argc, const char *argv[]) {
     return 0;
 }
 
+/** The watcher-delete command */
 int cmd_watcher_delete (int argc, const char *argv[]) {
     if (OPTIONS.tenant[0] == 0) {
         fprintf (stderr, "%% No tenantid provided\n");
@@ -254,98 +259,7 @@ int cmd_watcher_delete (int argc, const char *argv[]) {
     return 0;    
 }
 
-var *collect_meterdefs (uuid tenant, uuid host) {
-    db *DB = localdb_create (OPTIONS.path);
-    if (! db_open (DB, tenant, NULL)) {
-        fprintf (stderr, "%% Could not open %s\n", OPTIONS.tenant);
-        db_free (DB);
-        return NULL;
-    }
-    
-    const char *triggers[3] = {"warning","alert","critical"};
-    
-    var *tenantmeta = db_get_metadata (DB);
-    if (!tenantmeta) tenantmeta = var_alloc();
-    var *hostmeta = db_get_hostmeta (DB, host);
-    if (!hostmeta) hostmeta = var_alloc();
-    
-    var *conf = var_alloc();
-    var *cmeters = var_get_dict_forkey (conf, "meter");
-    var_copy (cmeters, get_default_meterdef());
-    var *tmeters = var_get_dict_forkey (tenantmeta, "meter");
-    var *hmeters = var_get_dict_forkey (hostmeta, "meter");
-    const char *tstr;
-    uint64_t tint;
-    double tfrac;
-    var *tvar;
-    
-    var *tc = tmeters->value.arr.first;
-    while (tc) {
-        var *cc = var_get_dict_forkey (cmeters, tc->id);
-        tstr = var_get_str_forkey (tc, "type");
-        if (tstr) var_set_str_forkey (cc, "type", tstr);
-        tstr = var_get_str_forkey (tc, "description");
-        if (tstr) var_set_str_forkey (cc, "description", tstr);
-        tstr = var_get_str_forkey (tc, "unit");
-        if (tstr) var_set_str_forkey (cc, "unit", tstr);
-        
-        for (int tr=0; tr<3; ++tr) {
-            tvar = var_find_key (tc, triggers[tr]);
-            if (tvar) {
-                var *ctrig = var_get_dict_forkey (cc, triggers[tr]);
-                var_copy (ctrig, tvar);
-                var_set_str_forkey (ctrig, "origin", "tenant");
-            }
-        }
-        tc = tc->next;
-    }
-    var *hc = NULL;
-    if (host.msb || host.lsb) {
-        hc = hmeters->value.arr.first;
-    }
-    while (hc) {
-        var *cc = var_get_dict_forkey (cmeters, hc->id);
-        tstr = var_get_str_forkey (hc, "type");
-        if (! tstr) {
-            fprintf (stderr, "%% No type set for meter %s in "
-                             "host watchers\n", hc->id);
-            return NULL;
-        }
-        const char *origtype = var_get_str_forkey (cc, "type");
-        if (strcmp (tstr, origtype) != 0) {
-            fprintf (stderr, "%% Type %s set for watcher %s in host "
-                             "doesn't match definition %s\n", 
-                             tstr, hc->id, origtype);
-            return NULL;
-        }
-        
-        for (int tr=0; tr<3; ++tr) {
-            tvar = var_find_key (hc, triggers[tr]);
-            if (tvar) {
-                var *cdef = var_find_key (cc, triggers[tr]);
-                var *val = var_find_key (tvar, "val");
-                var *cval = var_find_key (cdef, "val");
-                if (! cval) {
-                    fprintf (stderr, "%% Ill-defined value in cdef "
-                                     "of %s at %s\n", hc->id, triggers[tr]);
-                    return NULL;
-                }
-                if (val) {
-                    var_copy (cval, val);
-                }
-                var_set_str_forkey (cdef, "origin", "host");
-                var_set_double_forkey (cdef, "weight",
-                            var_get_double_forkey (tvar, "weight"));
-            }
-        }
-        
-        hc = hc->next;
-    }
-    var_free (tenantmeta);
-    var_free (hostmeta);
-    return conf;
-}
-
+/** Screen display function for watcher-related data */
 void print_data (const char *meterid, const char *trig, var *v) {
     const char *origin = var_get_str_forkey (v, "origin");
     if (! origin) origin = "default";
@@ -377,6 +291,7 @@ void print_data (const char *meterid, const char *trig, var *v) {
             var_get_double_forkey (v, "weight"));
 }
 
+/** The watcher-list command */
 int cmd_watcher_list (int argc, const char *argv[]) {
     uuid tenant;
     uuid host;
@@ -538,6 +453,7 @@ int cmd_host_list (int argc, const char *argv[]) {
     return 0;
 }
 
+/** Display function for host-show section headers */
 void print_hdr (const char *hdr) {
     const char *mins = "-----------------------------------------------"
                       "-----------------------------------------------"
@@ -556,6 +472,7 @@ void print_hdr (const char *hdr) {
     putc ('\n', stdout);
 }
 
+/** Display function for host-show data */
 void print_value (const char *key, const char *fmt, ...) {
     char val[4096];
     val[0] = 0;
@@ -574,6 +491,7 @@ void print_value (const char *key, const char *fmt, ...) {
     printf ("\n");
 }
 
+/** Print out an array as a comma-separated list */
 void print_array (const char *key, var *arr) {
     char out[4096];
     out[0] = 0;
@@ -607,12 +525,26 @@ void print_array (const char *key, var *arr) {
     print_value (key, "%s", out);   
 }
 
+/** Table alignment indicator */
 typedef enum {
     CA_NULL,
     CA_L,
     CA_R
 } columnalign;
 
+/** Print out tabular data (like top, df) with headers, bells and
+  * whistles.
+  * \param arr The array-of-dicts to print
+  * \param hdr Array of strings containing column headers. NULL terminated.
+  * \param fld Array of strings representing column field ids.
+  * \param align Array of columnalign for left/right alignment of columns.
+  * \param typ Array of data types.
+  * \param wid Array of integers representing column widths.
+  * \param suffx Array of suffixes to print after specific column cells.
+  * \param div Number to divide a VAR_INT value by prior to printing. The
+  *            resulting number will be represented as a float with two
+  *            decimals.
+  */
 void print_table (var *arr, const char **hdr, const char **fld,
                   columnalign *align, vartype *typ, int *wid,
                   const char **suffx, int *div) {
