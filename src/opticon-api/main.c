@@ -199,7 +199,19 @@ int flt_check_tenant (req_context *ctx, req_arg *a, var *out, int *status) {
     if (! uuidvalid (ctx->tenantid)) { 
         return err_server_error (ctx, a, out, status);
     }
-    return 0;
+    
+    /* Admin user is ok now */
+    if (ctx->userlevel == AUTH_ADMIN) return 0;
+    
+    /* Other users need to match the tenant */
+    if (! ctx->auth_tenantcount) {
+        return err_not_allowed (ctx, a, out, status);
+    }
+    for (int i=0; i<ctx->auth_tenantcount; ++i) {
+        if (uuidcmp (ctx->auth_tenants[i], ctx->tenantid)) return 0;
+    }
+    
+    return err_not_allowed (ctx, a, out, status);
 }
 
 /** Filter that extracts the host uuid argument from a url. */
