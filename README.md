@@ -133,8 +133,8 @@ inform users of the actual defaults active.
 Configuring the opticon client
 ------------------------------
 
-The client gets its configuration from both /etc/opticon/opticon-cli.conf and
-\$HOME/.opticonrc (the latter having precedence, but both files are parsed and
+The client gets its configuration from both `/etc/opticon/opticon-cli.conf` and
+`$HOME/.opticonrc` (the latter having precedence, but both files are parsed and
 merged). Here is what it looks like:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
