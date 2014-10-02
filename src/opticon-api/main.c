@@ -204,9 +204,6 @@ int flt_check_tenant (req_context *ctx, req_arg *a, var *out, int *status) {
     if (ctx->userlevel == AUTH_ADMIN) return 0;
     
     /* Other users need to match the tenant */
-    if (! ctx->auth_tenantcount) {
-        return err_not_allowed (ctx, a, out, status);
-    }
     for (int i=0; i<ctx->auth_tenantcount; ++i) {
         if (uuidcmp (ctx->auth_tenants[i], ctx->tenantid)) return 0;
     }
