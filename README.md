@@ -625,10 +625,8 @@ If you want your meter to show up less cryptically, you should add information
 the meter to the tenant’s database using the command line tool:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-$ opticon meter-create --meter power/level --type frac \
-  --description "Battery Level" --unit "%"
-$ opticon meter-create --meter power/src --type string \
-  --description "Power Source"
+$ opticon meter-create --meter power/level --type frac --description "Battery Level" --unit "%"
+$ opticon meter-create --meter power/src --type string --description "Power Source"
 $ opticon meter-list
 From     Meter        Type      Unit    Description
 --------------------------------------------------------------------------------
