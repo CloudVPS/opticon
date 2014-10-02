@@ -4,6 +4,7 @@
 #include <libopticon/util.h>
 #include <libopticon/datatypes.h>
 #include <libopticon/codec_json.h>
+#include <libopticon/dump.h>
 #include <microhttpd.h>
 #include "req_context.h"
 #include "cmd.h"
@@ -192,4 +193,43 @@ int cmd_host_get_time (req_context *ctx, req_arg *a,
     host_delete (h);
     db_free (DB);
     return 0;
+}
+
+int cmd_dancing_bears (req_context *ctx, req_arg *a, var *env, int *status) {
+    const char *B = "    _--_     _--_    _--_     _--_     "
+                    "_--_     _--_     _--_     _--_\n"
+                    "   (    )~~~(    )  (    )~~~(    )   ("
+                    "    )~~~(    )   (    )~~~(    )\n"
+                    "    \\           /    \\           /   "
+                    "  \\           /     \\           /\n"
+                    "     (  ' _ `  )      (  ' _ `  )      "
+                    " (  ' _ `  )       (  ' _ `  )\n"
+                    "      \\       /        \\       /     "
+                    "    \\       /         \\       /\n"
+                    "    .__( `-' )          ( `-' )        "
+                    "   ( `-' )        .__( `-' )  ___\n"
+                    "   / !  `---' \\      _--'`---_        "
+                    "  .--`---'\\       /   /`---'`-'   \\\n"
+                    "  /  \\         !    /         \\___   "
+                    "  /        _>\\    /   /          ._/   __\n"
+                    " !   /\\        )   /   /       !  \\  "
+                    " /  /-___-'   ) /'   /.-----\\___/     /  )\n"
+                    " !   !_\\       ). (   <        !__/ /'"
+                    "  (        _/  \\___//          `----'   !\n"
+                    "  \\    \\       ! \\ \\   \\      /\\ "
+                    "   \\___/`------' )       \\            ______/\n"
+                    "   \\___/   )  /__/  \\--/   \\ /  \\  "
+                    "._    \\      `<         `--_____----'\n"
+                    "     \\    /   !       `.    )-   \\/  "
+                    ") ___>-_     \\   /-\\    \\    /\n"
+                    "     /   !   /         !   !  `.    / /"
+                    "      `-_   `-/  /    !   !\n"
+                    "    !   /__ /___       /  /__   \\__/ ("
+                    "  \\---__/ `-_    /     /  /__\n"
+                    "    (______)____)     (______)        \\"
+                    "__)         `-_/     (______)\n";
+    
+    var_set_str_forkey (env, "bear", B);
+    *status = 200;
+    return 1;
 }

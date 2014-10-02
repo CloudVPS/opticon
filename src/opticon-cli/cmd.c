@@ -756,3 +756,10 @@ int cmd_get_record (int argc, const char *argv[]) {
     var_free (apires);
     return 0;    
 }
+
+int cmd_bears (int argc, const char *argv[]) {
+    var *v = api_get ("/obligatory-dancing-bears");
+    puts (var_get_str_forkey (v,"bear"));
+    var_free (v);
+    return 0;
+}
