@@ -12,10 +12,11 @@ ifeq (freebsd,$(OSNAME))
 endif
 
 LIBS = ../../lib/libopticon.a ../../lib/libopticondb.a ../../lib/libhttp.a
+LIBCURL = -lcurl
 
 ifeq (darwin,$(OSNAME))
   CFLAGS+=-I/usr/local/include 
-  LIBS+=/usr/local/lib/libmicrohttpd.a /usr/local/lib/libcurl.a
+  LIBS+=/usr/local/lib/libmicrohttpd.a
 endif
 
 CFLAGS+=-DOSNAME=$(OSNAME) -DOSREL=$(OSREL) -DOSRELMAJOR=$(OSRELMAJOR)
@@ -27,7 +28,7 @@ all: ../../bin/opticon-api
 
 ../../bin/opticon-api: $(OBJS_OPTICONAPI) $(LIBS)
 	@echo "[LINK ] opticon-api"
-	@$(CC) $(LDFLAGS) -o ../../bin/opticon-api $(OBJS_OPTICONAPI) $(LIBS) -lz -L/opt/local/lib -lidn -lssl -lcrypto -lssl -lcrypto -lldap -lz
+	@$(CC) $(LDFLAGS) -o ../../bin/opticon-api $(OBJS_OPTICONAPI) $(LIBS) $(LIBCURL) -lz 
 
 clean:
 	rm -f *.o ../../bin/opticon-api
