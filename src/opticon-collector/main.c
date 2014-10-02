@@ -460,6 +460,11 @@ int set_confpath (const char *i, const char *v) {
     return 1;
 }
 
+int set_mconfpath (const char *i, const char *v) {
+    APP.mconfpath = v;
+    return 1;
+}
+
 /** Set up pidfile path */
 int set_pidfile (const char *i, const char *v) {
     APP.pidfile = v;
@@ -535,6 +540,8 @@ cliopt CLIOPT[] = {
     {"--loglevel","-L",OPT_VALUE, "INFO", set_loglevel},
     {"--config-path","-c",OPT_VALUE,
         "/etc/opticon/opticon-collector.conf", set_confpath},
+    {"--meter-config-path","-m",OPT_VALUE,
+        "/etc/opticon/opticon-meter.conf", set_mconfpath},
     {NULL,NULL,0,NULL,NULL}
 };
 
@@ -559,6 +566,13 @@ int main (int _argc, const char *_argv[]) {
     var *defmeters = get_default_meterdef();
     sprintf (defmeters->id, "meter");
     var_link (defmeters, APP.conf);
+    
+    /* Load other meters from meter.conf */
+    if (! load_json (defmeters, APP.mconfpath)) {
+        log_error ("Error loading %s: %s\n",
+                   APP.confpath, parse_error());
+        return 1;
+    }
     
     /* Now load the main config in the same var space */
     if (! load_json (APP.conf, APP.confpath)) {

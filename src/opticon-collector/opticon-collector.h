@@ -30,6 +30,7 @@ typedef struct appcontext_s {
     int              loglevel;
     const char      *logpath;
     const char      *confpath;
+    const char      *mconfpath;
     const char      *pidfile;
     int              foreground;
     int              listenport;

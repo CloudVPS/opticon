@@ -39,7 +39,7 @@ var *collect_meterdefs (uuid tenant, uuid host, int watchonly) {
     
     var *conf = var_alloc();
     var *cmeters = var_get_dict_forkey (conf, watchonly?"watcher":"meter");
-    var_copy (cmeters, get_default_meterdef());
+    var_copy (cmeters, OPTIONS.mconf);
     var *tmeters = var_get_dict_forkey (tenantmeta, "meter");
     var *hmeters = var_get_dict_forkey (hostmeta, "meter");
     const char *tstr;

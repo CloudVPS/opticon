@@ -7,6 +7,7 @@
 #include <libopticon/ioport_buffer.h>
 #include <libopticon/parse.h>
 #include <libopticon/dump.h>
+#include <libopticon/defaultmeters.h>
 #include <libhttp/http.h>
 #include <microhttpd.h>
 #include "req_context.h"
@@ -231,6 +232,14 @@ int main() {
     OPTIONS.dbpath = "/Users/pi/var";
     OPTIONS.port = 8888;
     OPTIONS.admintoken = mkuuid ("a1bc7681-b616-4805-90c2-f9a08ce460d3");
+    
+    OPTIONS.mconf = get_default_meterdef();
+    if (! load_json (OPTIONS.mconf, "meter.conf")) {
+        log_error ("Error loading %s: %s\n",
+                   "meter.conf", parse_error());
+        return 1;
+    }
+    
     tokencache_init();
     setup_matches();
     struct MHD_Daemon *daemon;
