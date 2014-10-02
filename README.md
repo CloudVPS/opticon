@@ -176,7 +176,7 @@ admin API. The tool will spit out the UUID for the newly created tenant, as well
 as the tenant AES256 key to be used in the configuration of this tenant’s
 *opticon-agent* instances.
 
-If you want to create a tenant with a predefined UUID, you can use the `--tenant`
+If you want to create a tenant with a predefined UUID, you can use the --tenant
 command line flag:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -215,6 +215,72 @@ $ opticon --opticon-token a666ed1e-24dc-4533-acab-1efb2bb55081 \
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 that should teach them.
+
+Configuring opticon-agent
+-------------------------
+
+With a tenantid and access key in hand, you can now go around and install
+opticon-agent on servers that you would like to monitor. The agent reads its
+configuration from `/etc/opticon/opticon-agent.conf`. First let’s take a look at
+a rather straightforward configuration:
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+collector {
+    config: manual
+    address: 192.168.1.1
+    port: 1047
+    key: "nwKT5sfGa+OlYHwa7rZZ7WQaMsAIEWKQii0iuSUPfG0="
+    tenant: "001b71534f4b4f1cb281cc06b134f98f"
+    host: "0d19d114-55c8-4077-9cab-348579c70612"
+}
+probes {
+    top {
+        type: built-in
+        call: probe_top
+        interval: 60
+    }
+    hostname {
+        type: built-in
+        call: probe_hostname
+        interval: 300
+    }
+    uname {
+        type: built-in
+        call: probe_uname
+        interval: 300
+    }
+    df {
+        type: built-in
+        call: probe_df
+        interval: 300
+    }
+    uptime {
+        type: built-in
+        call: probe_uptime
+        interval: 60
+    }
+}
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The `collector` section tells the agent how to reach the opticon-collector, and
+how to identify itself. If the server runs in an OpenStack cloud, you can change
+the `config` setting from `manual` to `metadata`. This will tell the agent to
+get the connection information out of the OpenStack metadata service, instead.
+It will try to read the following metadata fields: `opticon_collector_address`,
+`opticon_collector_port`, `opticon_tenant_key`, `opticon_tenant_id`, and
+`opticon_host_id`.
+
+If you are using manual configuration, be sure to use a unique, random, UUID for
+the `host` field. You can use the `uuidgen` tool on most UNIX command lines to
+get a fresh one.
+
+The `probes` section defines the metering probes that the agent shall run and
+the frequency of updates. The agent sends out metering data over two channels:
+The fast lane, and the slow lane. Data that isn’t subject to rapid change should
+take the slow lane path, that gets sent out every 300 seconds. The `interval`
+setting determines the amount of seconds between individual samples for a probe.
+Note that this probing happens independently of packet scheduling, so setting up
+intervals other than `60` or `300` is of limited use.
 
 Accessing opticon as a user
 ---------------------------
