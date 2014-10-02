@@ -150,7 +150,7 @@ defaults {
 At some time in the future, the opticon endpoint will be available directly
 through keystone, and the `opticon` endpoint definition will become optional,
 but for now it has to be in there. The tenant set up in defaults is the tenant
-that will be used for any commands that aren’t given with an explicit `—tenant`
+that will be used for any commands that aren’t given with an explicit `--tenant`
 flag
 
 Managing the tenant database
@@ -171,12 +171,12 @@ Tenant created:
 ------------------------------------------------------------------
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The `—opticon-token` flag is used to bypass KeyStone authentication and use the
+The `--opticon-token` flag is used to bypass KeyStone authentication and use the
 admin API. The tool will spit out the UUID for the newly created tenant, as well
 as the tenant AES256 key to be used in the configuration of this tenant’s
 *opticon-agent* instances.
 
-If you want to create a tenant with a predefined UUID, you can use the —tenant
+If you want to create a tenant with a predefined UUID, you can use the --tenant
 command line flag:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -221,7 +221,7 @@ Accessing opticon as a user
 
 After you used the admin API to create a tenant, you should be able to access
 the rest of the functionality from any machine running an opticon client. If you
-invoke *opticon* without a `—opticon-token` flag, the first time it wants to
+invoke *opticon* without a `--opticon-token` flag, the first time it wants to
 make contact with the API server, it will ask you for keystone credentials:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -245,7 +245,7 @@ issues with your key, you can remove the cache file manually, it is stored in
 
 Since this account only has one tenant, for the rest of this documentation, we
 will assume that this tenant-id is specified in `.opticonrc`. In situations
-where you have to deal with multiple tenants, the `—tenant` flag can added to
+where you have to deal with multiple tenants, the `--tenant` flag can added to
 any command to indicate a specific tenant.
 
 ### Manipulating tenant metadata
