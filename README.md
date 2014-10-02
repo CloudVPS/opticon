@@ -657,7 +657,6 @@ default  io/wrops     integer   iops    Disk I/O (write)
 default  mem/total    integer   KB      Total RAM
 default  mem/free     integer   KB      Free RAM
 default  hostname     string            Hostname
-tenant   mailq        integer           Mail queue size
 tenant   power/level  frac      %       Battery Level
 tenant   power/src    string            Power Source
 --------------------------------------------------------------------------------
