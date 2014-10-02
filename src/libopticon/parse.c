@@ -333,7 +333,7 @@ int parse_json_level (var *v, const char **buf, parse_state st) {
                         st = PSTATE_COMMENT;
                         break;
                     }
-                    if (*c == '}') {
+                    if (*c == ']') {
                         *buf = c;
                         return 1;
                     }

@@ -6,6 +6,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdarg.h>
+#include <ctype.h>
 
 #include <libopticon/datatypes.h>
 #include <libopticon/aes.h>
@@ -591,50 +592,269 @@ int cmd_host_list (int argc, const char *argv[]) {
     return 0;
 }
 
+void print_hdr (const char *hdr) {
+    const char *mins = "-----------------------------------------------"
+                      "-----------------------------------------------"
+                      "-----------------------------------------------";
+    
+    int minspos = strlen(mins) - 73;
+    const char *crsr = hdr;
+    printf ("---( ");
+    while (*crsr) {
+        putc (toupper (*crsr), stdout);
+        minspos++;
+        crsr++;
+    }
+    printf (" )");
+    printf ("%s", mins + minspos);
+    putc ('\n', stdout);
+}
+
+void print_value (const char *key, const char *fmt, ...) {
+    char val[4096];
+    val[0] = 0;
+    va_list ap;
+    va_start (ap, fmt);
+    vsnprintf (val, 4096, fmt, ap);
+    va_end (ap);
+
+    const char *dots = "....................";
+    int dotspos = strlen(dots) - 16;
+    printf ("%s", key);
+    dotspos += strlen (key);
+    if (dotspos < strlen (dots)) printf ("%s", dots+dotspos);
+    printf (": ");
+    printf ("%s", val);
+    printf ("\n");
+}
+
+void print_array (const char *key, var *arr) {
+    char out[4096];
+    out[0] = 0;
+    int cnt=0;
+    var *crsr = arr->value.arr.first;
+    while (crsr) {
+        if (cnt) strncat (out, ",", 4096);
+        switch (crsr->type) {
+            case VAR_INT:
+                snprintf (out+strlen(out), 4095-strlen(out), "%llu",
+                          var_get_int (crsr));
+                break;
+            
+            case VAR_DOUBLE:
+                snprintf (out+strlen(out), 4095-strlen(out), "%.2f",
+                          var_get_double (crsr));
+                break;
+            
+            case VAR_STR:
+                strncat (out, var_get_str (crsr), 4096);
+                break;
+            
+            default:
+                strncat (out, "?", 4096);
+                break;
+        }
+        crsr = crsr->next;
+        cnt++;
+    }
+    
+    print_value (key, "%s", out);   
+}
+
+typedef enum {
+    CA_NULL,
+    CA_L,
+    CA_R
+} columnalign;
+
+void print_table (var *arr, const char **hdr, const char **fld,
+                  columnalign *align, vartype *typ, int *wid,
+                  const char **suffx, int *div) {
+    char fmt[16];
+    char buf[1024];
+    
+    int col = 0;
+    while (hdr[col]) {
+        strcpy (fmt, "%");
+        if (align[col] == CA_L) strcat (fmt, "-");
+        if (wid[col]) sprintf (fmt+strlen(fmt), "%i", wid[col]);
+        strcat (fmt, "s ");
+        printf (fmt, hdr[col]);
+        col++;
+    }
+    printf ("\n");
+    
+    var *node = arr->value.arr.first;
+    while (node) {
+        col = 0;
+        while (hdr[col]) {
+            switch (typ[col]) {
+                case VAR_STR:
+                    strncpy (buf, var_get_str_forkey (node, fld[col]),512);
+                    buf[512] = 0;
+                    break;
+                
+                case VAR_INT:
+                    if (div[col]) {
+                        double nval =
+                            (double) var_get_int_forkey (node, fld[col]);
+                        
+                        nval = nval / ((double) div[col]);
+                        sprintf (buf, "%.2f", nval);
+                    }
+                    else {
+                        sprintf (buf, "%llu",
+                                 var_get_int_forkey (node, fld[col]));
+                    }
+                    break;
+                
+                case VAR_DOUBLE:
+                    sprintf (buf, "%.2f",
+                             var_get_double_forkey (node, fld[col]));
+                    break;
+                
+                default:
+                    buf[0] = 0;
+                    break;
+            }
+            strcat (buf, suffx[col]);
+            strcpy (fmt, "%");
+            if (align[col] == CA_L) strcat (fmt, "-");
+            if (wid[col]) sprintf (fmt+strlen(fmt), "%i", wid[col]);
+            strcat (fmt, "s ");
+            printf (fmt, buf);
+            col++;
+        }
+        printf ("\n");
+        node = node->next;
+    }
+}
+
 /** The get-recrod command */
 int cmd_get_record (int argc, const char *argv[]) {
-    uuid tenantid, hostid;
-    
     if (OPTIONS.tenant[0] == 0) {
         fprintf (stderr, "%% No tenantid provided\n");
         return 1;
     }
-    
-    tenantid = mkuuid (OPTIONS.tenant);
-
     if (OPTIONS.host[0] == 0) {
         fprintf (stderr, "%% No hostid provided\n");
         return 1;
     }
-    
-    hostid = mkuuid (OPTIONS.host);
 
-    host *H = host_alloc();
-    H->uuid = hostid;
-    db *DB = localdb_create (OPTIONS.path);
-    if (! db_open (DB, tenantid, NULL)) {    
-        fprintf (stderr, "%% Could not open database for "
-                 "tenant %s\n", OPTIONS.tenant);
-        host_delete (H);
-        db_free (DB);
-        return 1;
+    var *apires = api_get ("/%s/host/%s", OPTIONS.tenant, OPTIONS.host);
+    
+    if (OPTIONS.json) {
+        dump_var (apires, stdout);
+        var_free (apires);
+        return 0;
     }
     
-    if (! db_get_record (DB, OPTIONS.time, H)) {
-        fprintf (stderr, "%% Error loading record\n");
-        host_delete (H);
-        db_free (DB);
-        return 1;
+    #define Arr(x) var_get_array_forkey(apires,x)
+    #define Vint(x) var_get_int_forkey(apires,x)
+    #define Vstr(x) var_get_str_forkey(apires,x)
+    #define Vfrac(x) var_get_double_forkey(apires,x)
+    #define VDint(x,y) var_get_int_forkey(var_get_dict_forkey(apires,x),y)
+    #define VDstr(x,y) var_get_str_forkey(var_get_dict_forkey(apires,x),y)
+    #define VDfrac(x,y) var_get-double_forkey(var_get_dict_forkey(apires,x),y)
+    #define VAfrac(x,y) var_get_double_atindex(var_get_array_forkey(apires,x),y)
+    /* -------------------------------------------------------------*/
+    print_hdr ("HOST");
+    print_value ("UUID", "%s", OPTIONS.host);
+    print_value ("Hostname", "%s", Vstr("hostname"));
+    print_value ("Address", "%s", VDstr("agent","ip"));
+    print_value ("Status", "%s", Vstr("status"));
+    
+    print_array ("Problems", Arr("problems"));
+    
+    char uptimestr[128];
+    uint64_t uptime = Vint("uptime");
+    uint64_t u_days = uptime / 86400ULL;
+    uint64_t u_hours = (uptime - (86400 * u_days)) / 3600ULL;
+    uint64_t u_mins = (uptime - (86400 * u_days) - (3600 * u_hours)) / 60ULL;
+    uint64_t u_sec = uptime % 60;
+    
+    if (u_days) {
+        sprintf (uptimestr, "%llu day%s, %llu:%02llu:%02llu", u_days,
+                 (u_days==1)?"":"s", u_hours, u_mins, u_sec);
+    }
+    else if (u_hours) {
+        sprintf (uptimestr, "%llu:%02llu:%02llu", u_hours, u_mins, u_sec);
+    }
+    else {
+        sprintf (uptimestr, "%llu minute%s, %llu second%s",
+                 u_mins, (u_mins==1)?"":"s", u_sec, (u_sec==1)?"":"s");
     }
     
-    ioport *out = ioport_create_filewriter (stdout);
-    codec *c = codec_create_json();
+    print_value ("Uptime","%s",uptimestr);
+    print_value ("OS/Hardware","%s %s (%s)", VDstr("os","kernel"),
+                 VDstr("os","version"), VDstr("os","arch"));
     
-    codec_encode_host (c, out, H);
-    codec_release (c);
-    ioport_close (out);
-    db_close (DB);
-    db_free (DB);
-    host_delete (H);
-    return 0;
+    print_hdr ("RESOURCES");
+    print_value ("Processes","%llu (%llu running, %llu stuck)",
+                             VDint("proc","total"),
+                             VDint("proc","run"),
+                             VDint("proc","stuck"));
+    
+    char cpubuf[128];
+    sprintf (cpubuf, "%.2f (%.2f %%)", VAfrac("loadavg",0), Vfrac("pcpu"));
+    
+    char meter[32];
+    strcpy (meter, "-[                      ]+");
+    
+    double pcpu = Vfrac("pcpu");
+    double level = 4.99;
+    
+    int pos = 2;
+    while (level < 100.0 && pos < 22) {
+        if (level < pcpu) meter[pos++] = '#';
+        else meter[pos++] = ' ';
+        level += 5.0;
+    }
+    
+    print_value ("Load/CPU", "%-32s %s", cpubuf, meter);
+    print_value ("Available RAM", "%.2f MB",
+                 ((double)VDint("mem","total"))/1024.0);
+    print_value ("Free RAM", "%.2f MB",
+                 ((double)VDint("mem","free"))/1024.0);
+    
+    print_value ("Network in/out", "%i Kb/s (%i pps) / %i Kb/s (%i pps)",
+                                   VDint("net","in_kbs"),
+                                   VDint("net","in_pps"),
+                                   VDint("net","out_kbs"),
+                                   VDint("net","out_pps"));
+    
+    print_value ("Disk i/o", "%i rdops / %i wrops",
+                 VDint("io","rdops"), VDint("io","wrops"));
+    
+    print_hdr ("PROCESS LIST");
+    
+    const char *top_hdr[] = {"USER","PID","CPU","MEM","NAME",NULL};
+    const char *top_fld[] = {"user","pid","pcpu","pmem","name",NULL};
+    columnalign top_align[] = {CA_L, CA_R, CA_R, CA_R, CA_L, CA_NULL};
+    vartype top_tp[] =
+        {VAR_STR,VAR_INT,VAR_DOUBLE,VAR_DOUBLE,VAR_STR,VAR_NULL};
+    int top_wid[] = {15, 7, 9, 9, 0, 0};
+    int top_div[] = {0, 0, 0, 0, 0, 0};
+    const char *top_suf[] = {"",""," %", " %", "", NULL};
+    
+    var *v_top = var_get_array_forkey (apires, "top");
+    print_table (v_top, top_hdr, top_fld, 
+                 top_align, top_tp, top_wid, top_suf, top_div);
+    
+    const char *df_hdr[] = {"DEVICE","SIZE","FS","USED","MOUNTPOINT",NULL};
+    const char *df_fld[] = {"device","size","fs","pused","mount",NULL};
+    columnalign df_aln[] = {CA_L,CA_R,CA_L,CA_R,CA_L,CA_NULL};
+    vartype df_tp[] = {VAR_STR,VAR_INT,VAR_STR,VAR_DOUBLE,VAR_STR,VAR_NULL};
+    int df_wid[] = {12, 14, 6, 8, 0};
+    int df_div[] = {0, (1024), 0, 0, 0, 0};
+    const char *df_suf[] = {""," GB", "", " %", "", ""};
+    
+    print_hdr ("STORAGE");
+    
+    var *v_df = var_get_array_forkey (apires, "df");
+    print_table (v_df, df_hdr, df_fld,
+                 df_aln, df_tp, df_wid, df_suf, df_div);
+    
+    var_free (apires);
+    return 0;    
 }
