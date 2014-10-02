@@ -31,9 +31,14 @@ daemons.
 Access to the timestamp-indexed opticon disk database that tracks metering
 samples.
 
-**opticon-db**
+**opticon-api**
 
-Query and maintenance tool for the opticon database backend.
+A HTTP service that offers a local and remote API for manipulating and querying
+the opticon database.
+
+**opticon-cli**
+
+A command line client for opticon-api.
 
 **opticon-agent**
 
@@ -50,15 +55,108 @@ Configuring opticon-collector
 There are two levels of configuration at play for the collector daemon. The
 first level is its configuration file, which sets up some of the basics, and
 defines the default set of meters, and alert levels. The second level of
-configuration is the tenant database.
+configuration is the tenant database. The latter has to be configured through
+the opticon cli, so we’ll get to that after setting up the API server.
 
-### Creating a new tenant
+### The configuration file
 
-The *opticon-db* tool can be used to add tenants to the database. Use the
+The collector has a very simple base configuration in
+/etc/opticon/opticon-collector.conf, only dealing with system resources:
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+network {
+    port: 1047
+    address: *
+}
+database {
+    path: "/var/db/opticon"
+}
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Additionally, system-wide custom meters and watchers can be configured in
+/etc/opticon/opticon-meter.conf, like this:
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Custom meter and watcher definitions
+"pcpu" {
+    type: frac
+    description: "CPU Usage"
+    unit: "%"
+    warning { cmp: gt, val: 30.0, weight: 1.0 }
+    alert { cmp: gt, val: 50.0, weight: 1.0 }
+}
+"hostname" {
+    type: string
+    description: "Hostname"
+}
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The configuration files are in a ’sloppy’ JSON format. You can use strict JSON
+formatting, but you can also leave out any colons, commas, or quotes around
+strings that have no whitespace or odd characters.
+
+Configuring opticon-api
+-----------------------
+
+The API server keeps its configuration in /etc/opticon/opticon-api.conf. This is
+how it typically looks:
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+network {
+    port: 8888
+}
+auth {
+    admin_token: a666ed1e-24dc-4533-acab-1efb2bb55081
+    admin_host: 127.0.0.1
+    keystone_url: "https://identity.stack.cloudvps.com/v2.0"
+}
+database {
+    path: "/var/db/opticon"
+}
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Generate a random UUID for the **admin\_token** setting. Requests with this
+token coming from the IP address specified by **admin\_host** will be granted
+administrative privileges.
+
+The **keystone\_url** should point to an OpenStack Keystone server.
+Authorization tokens sent to the Opticon API using the Openstack X-Auth-Token
+header will be verified against this service, and any OpenStack tenants the
+token is said to have access to will be open to the local session.
+
+Note that, in order to keep latency at a minimum, opticon-api will cache valid
+and invalid tokens, and their associated tenant lists, for up to an hour.
+
+The API server will also reference /etc/opticon/opticon-meter.conf, so it can
+inform users of the actual defaults active.
+
+Configuring the opticon client
+------------------------------
+
+The client gets its configuration from both /etc/opticon/opticon-cli.conf and
+\$HOME/.opticonrc (the latter having precedence, but both files are parsed and
+merged). Here is what it looks like:
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+endpoints {
+  keystone: "https://identity.stack.cloudvps.com/v2.0"
+  opticon: "http://127.0.0.1:8888/"
+}
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+At some time in the future, the opticon endpoint will be available directly
+through keystone, and the **opticon** endpoint definition will become optional,
+but for now it has to be in there.
+
+Managing the tenant database
+----------------------------
+
+Now that the collector and API-server are active, and the client knows how to
+talk to them, the admin API can be used to add tenants to the database. Use the
 following command to create a new tenant:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-$ opticon-db tenant-create --name "Acme"
+$ opticon --opticon-token a666ed1e-24dc-4533-acab-1efb2bb55081 tenant-create --name "Acme"
 Tenant created:
 ------------------------------------------------------------------
      Name: Acme
@@ -67,36 +165,99 @@ Tenant created:
 ------------------------------------------------------------------
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The tool will spit out the UUID for the newly created tenant, as well as the
-tenant AES256 key to be used in the configuration of this tenant’s
+The **—opticon-token** flag is used to bypass KeyStone authentication and use
+the admin API. The tool will spit out the UUID for the newly created tenant, as
+well as the tenant AES256 key to be used in the configuration of this tenant’s
 *opticon-agent* instances.
 
 If you want to create a tenant with a predefined UUID, you can use the —tenant
 command line flag:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-$ opticon-db tenant-create --name "Acme" --tenant 0296d893-8187-4f44-a31b-bf3b4c19fc10 
+$ opticon --opticon-token a666ed1e-24dc-4533-acab-1efb2bb55081 tenant-create --name "Acme" --tenant 0296d893-8187-4f44-a31b-bf3b4c19fc10 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+This will be followed by the same information as the first example.
+
+### Getting an overview of tenants
+
+If accessed through the admin API, the **tenant-list** sub-command will show
+information about all tenants on the system:
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+$ opticon --opticon-token a666ed1e-24dc-4533-acab-1efb2bb55081 tenant-list
+UUID                                 Hosts  Name
+--------------------------------------------------------------------------------
+001b7153-4f4b-4f1c-b281-cc06b134f98f     2  compute-pim
+0296d893-8187-4f44-a31b-bf3b4c19fc10     0  Acme
+6c0606c4-97e6-37dc-14fc-b7c1c61effef     0  compute-demo
+--------------------------------------------------------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The same command issued to the regular API will restrict this list to tenants
+accessible to the user.
+
+### Deleting a tenant
+
+To get rid of a tenant (and reclaim all associated storage), use the
+**tenant-delete **sub-command:
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+$ opticon --opticon-token a666ed1e-24dc-4533-acab-1efb2bb55081 tenant-delete --tenant 0296d893-8187-4f44-a31b-bf3b4c19fc10
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+that should teach them.
+
+Using opticon as a user
+-----------------------
+
+After you used the admin API to create a tenant, you should be able to access
+the rest of the functionality from any machine running an opticon client. If you
+invoke *opticon* without a —opticon-token flag, the first time it wants to make
+contact with the API server, it will ask you for keystone credentials:
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+$ opticon tenant-list
+% Login required
+
+  Openstack Domain: identity.stack.cloudvps.com
+  Username........: pi
+  Password........: 
+
+UUID                                 Hosts  Name
+--------------------------------------------------------------------------------
+001b7153-4f4b-4f1c-b281-cc06b134f98f     2  compute-pim
+--------------------------------------------------------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The next time you issue a request, the client will use a cached version of the
+Keystone token it acquired with your username and password. If you’re having
+issues with your key, you can remove the cache file manually, it is stored in
+\$HOME/.opticon-token-cache.
 
 ### Manipulating tenant metadata
 
 Every tenant object in the opticon database has freeform metadata. Some of it is
-used internally, like the tenant AES key. Use the *tenant-get-metadata
-*sub-command to view a tenant’s metadata in JSON format:
+used internally, like the tenant AES key. Use the *tenant-get-metadata*
+sub-command to view a tenant’s metadata in JSON format:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-$ opticon-db tenant-get-metadata --tenant 0296d893-8187-4f44-a31b-bf3b4c19fc10
-"key": "nwKT5sfGa+OlYHwa7rZZ7WQaMsAIEWKQii0iuSUPfG0=",
-"name": "Acme"
+$ opticon tenant-get-metadata --tenant 001b7153-4f4b-4f1c-b281-cc06b134f98f
+{
+    "metadata": {
+    }
+}
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 You can add keys to the metadata, or change the value of existing keys, by using
-the obviously name *tenant-set-metadata* sub-command:
+the obviously named *tenant-set-metadata* sub-command:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-$ opticon-db tenant-set-metadata --tenant 0296d893-8187-4f44-a31b-bf3b4c19fc10 storpel "extra crispy"
-$ opticon-db tenant-get-metadata --tenant 0296d893-8187-4f44-a31b-bf3b4c19fc10
-"key": "nwKT5sfGa+OlYHwa7rZZ7WQaMsAIEWKQii0iuSUPfG0=",
-"name": "Acme",
-"storpel": "extra crispy"
+$ opticon tenant-set-metadata --tenant 001b7153-4f4b-4f1c-b281-cc06b134f98f sleep optional
+$ opticon tenant-get-metadata --tenant 001b7153-4f4b-4f1c-b281-cc06b134f98f
+{
+    "metadata": {
+        "sleep": "optional"
+    }
+}
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
