@@ -26,7 +26,7 @@
 int cmd_tenant_list (int argc, const char *argv[]) {
     printf ("UUID                                 Hosts  Name\n");
     printf ("---------------------------------------------"
-            "----------------------------------\n");
+            "-----------------------------------\n");
 
     var *res = api_get ("/");
     if (res) {
@@ -41,6 +41,8 @@ int cmd_tenant_list (int argc, const char *argv[]) {
                 crsr = crsr->next;
             }
         }
+        printf ("----------------------------------------------"
+                "----------------------------------\n");
     }
     var_free (res);
     return 0;
@@ -139,8 +141,8 @@ int cmd_meter_list (int argc, const char *argv[]) {
     var *apires = api_get ("/%s/meter", OPTIONS.tenant);
     var *res_meter = var_get_dict_forkey (apires, "meter");
     if (var_get_count (res_meter)) {
-        printf ("From    Meter        Type     Unit    Description\n");
-        printf ("---------------------------------------"
+        printf ("From     Meter        Type      Unit    Description\n");
+        printf ("----------------------------------------"
                 "----------------------------------------\n");
         var *crsr = res_meter->value.arr.first;
         while (crsr) {
@@ -153,10 +155,12 @@ int cmd_meter_list (int argc, const char *argv[]) {
             if (!unit) unit = "";
             if (!org) org = "default";
             
-            printf ("%-7s %-12s %-7s  %-7s %s\n", org, crsr->id,
+            printf ("%-8s %-12s %-8s  %-7s %s\n", org, crsr->id,
                     type, unit, desc);
             crsr = crsr->next;
         }
+        printf ("---------------------------------------------"
+                "-----------------------------------\n");
     }
     var_free (apires);
     return 0;
@@ -384,7 +388,7 @@ int cmd_watcher_list (int argc, const char *argv[]) {
     printf ("From     Meter        Trigger   Match                  "
             "Value             Weight\n"
             "-------------------------------------------------------"
-            "------------------------\n");
+            "-------------------------\n");
 
     var *apires;
     
@@ -406,6 +410,8 @@ int cmd_watcher_list (int argc, const char *argv[]) {
                         var_get_dict_forkey (crsr, "critical"));
             crsr = crsr->next;
         }
+        printf ("---------------------------------------------"
+                "-----------------------------------\n");
     }
     var_free (apires);
     return 0;
@@ -456,12 +462,12 @@ int cmd_tenant_create (int argc, const char *argv[]) {
         var *r = var_get_dict_forkey (apires, "tenant");
         printf ("Tenant created:\n"
                 "---------------------------------------------"
-                "----------------------------------\n"
+                "-----------------------------------\n"
                 "     Name: %s\n"
                 "     UUID: %s\n"
                 "  AES Key: %s\n"
                 "---------------------------------------------"
-                "----------------------------------\n",
+                "-----------------------------------\n",
                 var_get_str_forkey (r, "name"),
                 OPTIONS.tenant,
                 var_get_str_forkey (r, "key"));
@@ -497,7 +503,7 @@ int cmd_host_list (int argc, const char *argv[]) {
         printf ("UUID                                    Size "
                 "First record      Last record\n");
         printf ("---------------------------------------------"
-                "----------------------------------\n");
+                "-----------------------------------\n");
         var *crsr = v_hosts->value.arr.first;
         
         while (crsr) {
@@ -524,6 +530,8 @@ int cmd_host_list (int argc, const char *argv[]) {
                     usage, unit, start, end);
             crsr = crsr->next;
         }
+        printf ("---------------------------------------------"
+                "-----------------------------------\n");
     }
 
     var_free (apires);
@@ -796,6 +804,9 @@ int cmd_get_record (int argc, const char *argv[]) {
     print_table (v_df, df_hdr, df_fld,
                  df_aln, df_tp, df_wid, df_suf, df_div);
     
+    printf ("---------------------------------------------"
+            "-----------------------------------\n");
+
     var_free (apires);
     return 0;    
 }

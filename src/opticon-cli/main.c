@@ -191,13 +191,31 @@ int load_cached_token (void) {
     return res;
 }
 
+char *domain_from_url (const char *url) {
+    char *c = strchr (url, '/');
+    while (*c == '/') c++;
+    char *cc = c;
+    if (! (c = strchr (c, '@'))) c = cc;
+    char *res = strdup (c);
+    c = strchr(res, '/');
+    if (c) *c = 0;
+    return res;
+}
+
 int keystone_login (void) {
     char username[256];
-    printf ("Keystone Username...: ");
+    printf ("%% Login required\n\n");
+    char *domain = domain_from_url (OPTIONS.keystone_url);
+    printf ("  Openstack Domain: %s\n", domain);
+    free (domain);
+    printf ("  Username........: ");
     fflush (stdout);
     fgets (username, 255, stdin);
     if (username[0]) username[strlen(username)-1] = 0;
-    const char *password = getpass ("Password............: ");
+    const char *password = getpass ("  Password........: ");
+
+    printf ("\n");
+
     char *kurl = (char *) malloc (strlen (OPTIONS.keystone_url) + 10);
     sprintf (kurl, "%s/tokens", OPTIONS.keystone_url);
     var *req = var_alloc();
@@ -211,8 +229,7 @@ int keystone_login (void) {
     var *err = var_alloc();
     var *kres = http_call ("POST", kurl, hdr, req, err, NULL);
     if (! kres) {
-        printf ("%% Login failed");
-        dump_var (err, stdout);
+        printf ("%% Login failed\n");
         var_free (hdr);
         var_free (req);
         var_free (err);
