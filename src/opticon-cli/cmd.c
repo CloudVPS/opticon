@@ -789,6 +789,9 @@ int cmd_get_record (int argc, const char *argv[]) {
     print_table (v_top, top_hdr, top_fld, 
                  top_align, top_tp, top_wid, top_suf, top_div);
     
+    /* -------------------------------------------------------------*/
+    print_hdr ("STORAGE");
+    
     const char *df_hdr[] = {"DEVICE","SIZE","FS","USED","MOUNTPOINT",NULL};
     const char *df_fld[] = {"device","size","fs","pused","mount",NULL};
     columnalign df_aln[] = {CA_L,CA_R,CA_L,CA_R,CA_L,CA_NULL};
@@ -796,9 +799,6 @@ int cmd_get_record (int argc, const char *argv[]) {
     int df_wid[] = {12, 14, 6, 8, 0};
     int df_div[] = {0, (1024), 0, 0, 0, 0};
     const char *df_suf[] = {""," GB", "", " %", "", ""};
-    
-    /* -------------------------------------------------------------*/
-    print_hdr ("STORAGE");
     
     var *v_df = var_get_array_forkey (apires, "df");
     print_table (v_df, df_hdr, df_fld,
