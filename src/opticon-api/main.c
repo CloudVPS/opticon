@@ -243,8 +243,7 @@ int main() {
     tokencache_init();
     setup_matches();
     struct MHD_Daemon *daemon;
-    unsigned int flags = MHD_USE_THREAD_PER_CONNECTION |
-                         MHD_USE_IPv6;
+    unsigned int flags = MHD_USE_THREAD_PER_CONNECTION;
     daemon = MHD_start_daemon (flags, OPTIONS.port, NULL, NULL,
                                &answer_to_connection, NULL,
                                MHD_OPTION_CONNECTION_LIMIT,
