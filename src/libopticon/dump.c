@@ -104,11 +104,17 @@ int write_var_indented (var *v, ioport *into, int _indent) {
 int dump_var (var *v, FILE *into) {
     int res = 0;
     ioport *io = ioport_create_filewriter (into);
-    res = write_var_indented (v, io, 0);
+    ioport_write (io, "{\n", 2);
+    res = write_var_indented (v, io, 4);
+    ioport_write (io, "}\n", 2);
     ioport_close (io);
     return res;
 }
 
 int write_var (var *v, ioport *into) {
-    return write_var_indented (v, into, 0);
+    int res = 0;
+    ioport_write (into, "{\n", 2);
+    res = write_var_indented (v, into, 4);
+    ioport_write (into, "}\n", 2);
+    return res;
 }
