@@ -10,6 +10,7 @@
 #include <sys/file.h>
 #include <dirent.h>
 #include <unistd.h>
+#include <errno.h>
 
 #define LOCALDB_OFFS_INVALID 0xffffffffffffffffULL
 #define LOCALDB_FLAG_NOCREATE 0x0000001
@@ -478,16 +479,25 @@ int localdb_create_tenant (db *d, uuid tenant, var *meta) {
     sprintf (insertpos, "%c%c", uuidstr[0], uuidstr[1]);
     insertpos += 2;
     if (stat (tmppath, &st) != 0) {
-        if (mkdir (tmppath, 0750) != 0) return 0;
+        if (mkdir (tmppath, 0750) != 0) {
+            log_error ("(db_local) Error creating %s: %s", tmppath, strerror(errno));
+            return 0;
+        }
     }
     sprintf (insertpos, "/%c%c", uuidstr[2], uuidstr[3]);
     insertpos += 3;
     if (stat (tmppath, &st) != 0) {
-        if (mkdir (tmppath, 0750) != 0) return 0;
+        if (mkdir (tmppath, 0750) != 0) {
+            log_error ("(db_local) Error creating %s", tmppath);
+            return 0;
+        }
     }
     sprintf (insertpos, "/%s", uuidstr);
     if (stat (tmppath, &st) != 0) {
-        if (mkdir (tmppath, 0750) != 0) return 0;
+        if (mkdir (tmppath, 0750) != 0) {
+            log_error ("(db_local) Error creating %s", tmppath);
+            return 0;
+        }
     }
     
     if (! meta) {
