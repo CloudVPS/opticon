@@ -11,7 +11,7 @@ ifeq (freebsd,$(OSNAME))
   LDFLAGS+=-lkvm
 endif
 
-LIBS = ../../lib/libopticon.a ../../lib/libopticondb.a ../../lib/libhttp.a
+LIBS = ../../lib/libopticondb.a ../../lib/libhttp.a ../../lib/libopticon.a 
 LIBCURL = -lcurl
 
 ifeq (darwin,$(OSNAME))
@@ -24,6 +24,7 @@ CFLAGS+=-DOSNAME=$(OSNAME) -DOSREL=$(OSREL) -DOSRELMAJOR=$(OSRELMAJOR)
 
 ifeq (linux,$(OSNAME))
   CFLAGS+=-std=c99 -D_GNU_SOURCE
+  LIBS+=-lm
 endif
 
 OBJS_OPTICONCLI = cmd.o main.o api.o

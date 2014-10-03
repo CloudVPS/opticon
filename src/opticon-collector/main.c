@@ -14,6 +14,7 @@
 #include <libopticon/defaultmeters.h>
 #include <arpa/inet.h>
 #include <syslog.h>
+#include <signal.h>
 
 /** Look up a session by netid and sessionid. If it's a valid session,
   * return its current AES session key.
