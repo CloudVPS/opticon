@@ -527,10 +527,18 @@ typedef enum {
     CA_R
 } columnalign;
 
+/** Print out any non-grid values in a var.
+  * \param apires The var
+  * \param pfx Path prefix (used for recursion)
+  * \param mdef Meter definitions (used for recursion)
+  */
 void print_values (var *apires, const char *pfx, var *mdef) {
     if (! mdef) mdef = api_get ("/%s/meter", OPTIONS.tenant);
     var *meters = var_get_dict_forkey (mdef, "meter");
     var *crsr = apires->value.arr.first;
+    if ( (!pfx) && (crsr) ) {
+        print_hdr ("MISC");
+    }
     while (crsr) {
         char valbuf[1024];
         const char *name = NULL;
@@ -544,7 +552,10 @@ void print_values (var *apires, const char *pfx, var *mdef) {
         if (! name) name = crsr->id;
         switch (crsr->type) {
             case VAR_ARRAY:
-                print_array (name, crsr);
+                if (crsr->value.arr.first &&
+                    crsr->value.arr.first->type != VAR_DICT) {
+                    print_array (name, crsr);
+                }
                 break;
             
             case VAR_STR:
@@ -646,6 +657,93 @@ void print_table (var *arr, const char **hdr, const char **fld,
         }
         printf ("\n");
         node = node->next;
+    }
+}
+
+/** Prepare data for print_table on a generic table */
+void print_generic_table (var *table) {
+    int rowcount = var_get_count (table);
+    if (rowcount < 1) return;
+    var *crsr = table->value.arr.first;
+    int count = var_get_count (crsr);
+    if (count < 1) return;
+    int sz = count+1;
+    int slen;
+    int i;
+    char *c;
+    
+    char **header = (char **) calloc (sz, sizeof(char *));
+    char **field = (char **) calloc (sz, sizeof(char *));
+    columnalign *align = (columnalign *) calloc (sz, sizeof(columnalign));
+    vartype *type = (vartype *) calloc (sz, sizeof(vartype));
+    int *width = (int *) calloc (sz, sizeof (int));
+    int *div = (int *) calloc (sz, sizeof (int));
+    char **suffix = (char **) calloc (sz, sizeof (char *));
+    
+    var *node = crsr->value.arr.first;
+    for (i=0; node && (i<count); node=node->next, ++i) {
+        type[i] = node->type;
+        field[i] = (char *) node->id;
+        width[i] = strlen (node->id);
+        header[i] = strdup (node->id);
+        for (c = header[i]; *c; ++c) *c = toupper (*c);
+        if (node->type == VAR_DOUBLE || node->type == VAR_INT) {
+            align[i] = i ? CA_R : CA_L;
+            if (node->type == VAR_DOUBLE) {
+                if (width[i] < 8) width[i] = 8;
+            }
+            else if (width[i] < 10) width[i] = 10;
+            
+        }
+        else {
+            align[i] = CA_L;
+            if (node->type == VAR_STR) {
+                slen = strlen (var_get_str(node)) + 1;
+                if (slen > width[i]) width[i] = slen;
+            }
+        }
+        suffix[i] = "";
+    }
+    
+    crsr = crsr->next;
+    while (crsr) {
+        node = crsr->value.arr.first;
+        for (i=0; node && (i<count); node=node->next, ++i) {
+            if (node->type == VAR_STR) {
+                slen = strlen (var_get_str(node)) +1;
+                if (slen > width[i]) width[i] = slen;
+            }
+        }
+    
+        crsr = crsr->next;
+    }
+    
+    print_hdr (table->id);
+    print_table (table, (const char **) header, (const char **) field,
+                 align, type, width, (const char **) suffix, div);
+    
+    for (i=0; i<count; ++i) free (header[i]);
+    free (header);
+    free (field);
+    free (align);
+    free (type);
+    free (width);
+    free (suffix);
+    free (div);
+}
+
+/** Print out any tables found in a var dictionary. This will be called 
+  * by cmd_get_record() for any table-like value not already printed.
+  */
+void print_tables (var *apires) {
+    var *crsr = apires->value.arr.first;
+    while (crsr) {
+        if (crsr->type == VAR_ARRAY && var_get_count(crsr)) {
+            if (crsr->value.arr.first->type == VAR_DICT) {
+                print_generic_table (crsr);
+            }
+        }
+        crsr = crsr->next;
     }
 }
 
@@ -757,6 +855,9 @@ int cmd_get_record (int argc, const char *argv[]) {
     Vdone("mem");
     Vdone("net");
     Vdone("io");
+    Vdone("badness");
+
+    print_values (apires, NULL, NULL);
     
     /* -------------------------------------------------------------*/
     print_hdr ("PROCESS LIST");
@@ -787,17 +888,17 @@ int cmd_get_record (int argc, const char *argv[]) {
     const char *df_suf[] = {""," GB", "", " %", "", ""};
     
     var *v_df = var_get_array_forkey (apires, "df");
+    
+    /*print_generic_table (v_df);*/
+    
     print_table (v_df, df_hdr, df_fld,
                  df_aln, df_tp, df_wid, df_suf, df_div);
     
     Vdone("df");
-    Vdone("badness");
     
-    if (var_get_count (apires)) {
-        print_hdr ("OTHER");
-        print_values (apires, NULL, NULL);
-    }
-    
+    /** Print any remaining table data */
+    print_tables (apires);
+        
     printf ("---------------------------------------------"
             "-----------------------------------\n");
 
