@@ -616,7 +616,6 @@ Hostname........: giskard.local
 DEVICE                 SIZE FS         USED MOUNTPOINT 
 /dev/disk2        147.08 GB hfs     90.00 % / 
 /dev/disk1s2      465.44 GB hfs     91.00 % /Volumes/Giskard Data 
-/dev/disk3s2       95.05 GB hfs     68.00 % /Volumes/VDXInstaller 
 ---( OTHER )--------------------------------------------------------------------
 Battery Level...: 96.00
 Power Source....: AC
