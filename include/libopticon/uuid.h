@@ -1,6 +1,8 @@
 #ifndef _UUID_H
 #define _UUID_H 1
 
+#include <inttypes.h>
+
 /** UUIDs are normally passed by value */
 typedef struct { uint64_t msb; uint64_t lsb; } uuid;
 

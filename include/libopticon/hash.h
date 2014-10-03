@@ -6,6 +6,7 @@
 #include <ctype.h>
 #include <assert.h>
 #include <fcntl.h>
+#include <inttypes.h>
 
 uint32_t hash_token (const char *);
 

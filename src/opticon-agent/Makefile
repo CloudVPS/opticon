@@ -16,6 +16,11 @@ ifeq (freebsd,$(OSNAME))
   LDFLAGS+=-lkvm
 endif
 
+ifeq (linux,$(OSNAME))
+  CFLAGS+=-std=c99 -D_GNU_SOURCE
+  LDFLAGS+=-lpthread -lm
+endif
+
 CFLAGS+=-DOS_$(OSDEF) -DOSNAME=$(OSNAME) -DOSREL=$(OSREL) -DOSRELMAJOR=$(OSRELMAJOR)
 
 OBJS_OPTICONAGENT = main.o probelist.o probes.o resender.o
@@ -25,7 +30,7 @@ all: ../../bin/opticon-agent
 
 ../../bin/opticon-agent: $(OBJS_OPTICONAGENT) $(LIBS)
 	@echo "[LINK ] opticon-agent"
-	@$(CC) $(LDFLAGS) -o ../../bin/opticon-agent \
+	$(CC) $(LDFLAGS) -o ../../bin/opticon-agent \
 		$(OBJS_OPTICONAGENT) $(LIBS) -lz
 
 clean:

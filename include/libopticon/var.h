@@ -4,6 +4,7 @@
 #include <sys/types.h>
 #include <stdlib.h>
 #include <libopticon/uuid.h>
+#include <inttypes.h>
 
 /* =============================== TYPES =============================== */
 
