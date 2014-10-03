@@ -223,7 +223,7 @@ int keystone_login (void) {
     char username[256];
     printf ("%% Login required\n\n");
     char *domain = domain_from_url (OPTIONS.keystone_url);
-    printf ("  Openstack Domain: %s\n", domain);
+    printf ("  OpenStack Domain: %s\n", domain);
     free (domain);
     printf ("  Username........: ");
     fflush (stdout);

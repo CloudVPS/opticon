@@ -61,7 +61,7 @@ the opticon cli, so we’ll get to that after setting up the API server.
 ### The configuration file
 
 The collector has a very simple base configuration in
-/etc/opticon/opticon-collector.conf, only dealing with system resources:
+`/etc/opticon/opticon-collector.conf`, only dealing with system resources:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 network {
@@ -74,7 +74,7 @@ database {
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Additionally, system-wide custom meters and watchers can be configured in
-/etc/opticon/opticon-meter.conf, like this:
+`/etc/opticon/opticon-meter.conf`, like this:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Custom meter and watcher definitions
@@ -98,8 +98,8 @@ strings that have no whitespace or odd characters.
 Configuring opticon-api
 -----------------------
 
-The API server keeps its configuration in /etc/opticon/opticon-api.conf. This is
-how it typically looks:
+The API server keeps its configuration in `/etc/opticon/opticon-api.conf`. This
+is how it typically looks:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 network {
@@ -120,7 +120,7 @@ coming from the IP address specified by `admin_host` will be granted
 administrative privileges.
 
 The `keystone_url` should point to an OpenStack Keystone server. Authorization
-tokens sent to the Opticon API using the Openstack `X-Auth-Token` header will be
+tokens sent to the Opticon API using the OpenStack `X-Auth-Token` header will be
 verified against this service, and any OpenStack tenants the token is said to
 have access to will be open to the local session.
 
@@ -176,8 +176,8 @@ admin API. The tool will spit out the UUID for the newly created tenant, as well
 as the tenant AES256 key to be used in the configuration of this tenant’s
 *opticon-agent* instances.
 
-If you want to create a tenant with a predefined UUID, you can use the --tenant
-command line flag:
+If you want to create a tenant with a predefined UUID, you can use the
+`--tenant` command line flag:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 $ opticon --opticon-token a666ed1e-24dc-4533-acab-1efb2bb55081 \
@@ -294,7 +294,7 @@ make contact with the API server, it will ask you for keystone credentials:
 $ opticon tenant-list
 % Login required
 
-  Openstack Domain: identity.stack.cloudvps.com
+  OpenStack Domain: identity.stack.cloudvps.com
   Username........: pi
   Password........: 
 
