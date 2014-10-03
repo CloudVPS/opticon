@@ -665,6 +665,11 @@ tenant   power/src    string            Power Source
 --------------------------------------------------------------------------------
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+Note that the type indicated with `--type` is a hint about how watchers should
+interpret the value. The agent may end up encoding a `frac` value as an
+`integer` if there’s no decimal point, this will not stop a watcher set to type
+`frac` from correctly noticing it going over or under the limit.
+
 Now that the meter exists in the database, it’s also possible to set up watchers
 for it. Let’s set up some sensible levels:
 
