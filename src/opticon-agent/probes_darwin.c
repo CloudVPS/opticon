@@ -256,9 +256,6 @@ var *runprobe_top (probe *self) {
     var_set_int_forkey (res, "io/wrops", ti.iops_write/30);
     var_set_int_forkey (res, "mem/total", ti.kmem_avail);
     var_set_int_forkey (res, "mem/free", ti.kmem_free);
-    FILE *out = fopen ("toprec.json","w");
-    dump_var (res, out);
-    fclose (out);
     return res;
 }
 

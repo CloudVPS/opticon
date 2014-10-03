@@ -8,3 +8,4 @@ test/tmpdb
 test/*.db
 test/*.idx
 lib/*.a
+playground/
