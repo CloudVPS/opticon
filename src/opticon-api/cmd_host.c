@@ -5,6 +5,7 @@
 #include <libopticon/datatypes.h>
 #include <libopticon/codec_json.h>
 #include <libopticon/dump.h>
+#include <libopticon/hash.h>
 #include <microhttpd.h>
 #include "req_context.h"
 #include "cmd.h"
@@ -109,6 +110,7 @@ int cmd_host_set_watcher (req_context *ctx, req_arg *a,
             if (! wval) {
                 wval = var_alloc();
                 strcpy (wval->id, "val");
+                wval->hashcode = hash_token ("val");
                 var_copy (wval, nval);
                 var_link (wval, w);
             }
