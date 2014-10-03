@@ -527,8 +527,8 @@ typedef enum {
     CA_R
 } columnalign;
 
-void print_values (var *apires, const char *pfx) {
-    var *mdef = api_get ("/%s/meter", OPTIONS.tenant);
+void print_values (var *apires, const char *pfx, var *mdef) {
+    if (! mdef) mdef = api_get ("/%s/meter", OPTIONS.tenant);
     var *meters = var_get_dict_forkey (mdef, "meter");
     var *crsr = apires->value.arr.first;
     while (crsr) {
@@ -562,7 +562,7 @@ void print_values (var *apires, const char *pfx) {
                 break;
             
             case VAR_DICT:
-                print_values (crsr, crsr->id);
+                print_values (crsr, crsr->id, mdef);
                 break;
                 
             default:
@@ -570,7 +570,7 @@ void print_values (var *apires, const char *pfx) {
         }
         crsr = crsr->next;
     }
-    var_free (mdef);
+    if (! pfx) var_free (mdef);
 }
 
 /** Print out tabular data (like top, df) with headers, bells and
@@ -795,7 +795,7 @@ int cmd_get_record (int argc, const char *argv[]) {
     
     if (var_get_count (apires)) {
         print_hdr ("OTHER");
-        print_values (apires, NULL);
+        print_values (apires, NULL, NULL);
     }
     
     printf ("---------------------------------------------"
