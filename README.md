@@ -675,7 +675,7 @@ interpret the value. The agent may end up encoding a `frac` value as an
 `frac` from correctly noticing it going over or under the limit.
 
 With the extra information provided, your meter should now also show up in the
-`host show` non-JSON output:
+`host-show` non-JSON output:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 $ opticon host-show --host 0d19d114-55c8-4077-9cab-348579c70612
