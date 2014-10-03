@@ -19,6 +19,11 @@ ifeq (darwin,$(OSNAME))
   LIBS+=/usr/local/lib/libmicrohttpd.a
 endif
 
+ifeq (linux,$(OSNAME))
+  CFLAGS+=-std=c99 -D_GNU_SOURCE
+  LDFLAGS+=-lpthread -lm
+endif
+
 CFLAGS+=-DOSNAME=$(OSNAME) -DOSREL=$(OSREL) -DOSRELMAJOR=$(OSRELMAJOR)
 
 OBJS_OPTICONAPI = cmd_err.o cmd_host.o cmd_tenant.o \

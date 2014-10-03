@@ -22,6 +22,10 @@ endif
 
 CFLAGS+=-DOSNAME=$(OSNAME) -DOSREL=$(OSREL) -DOSRELMAJOR=$(OSRELMAJOR)
 
+ifeq (linux,$(OSNAME))
+  CFLAGS+=-std=c99 -D_GNU_SOURCE
+endif
+
 OBJS_OPTICONCLI = cmd.o main.o api.o
 				  
 all: ../../bin/opticon

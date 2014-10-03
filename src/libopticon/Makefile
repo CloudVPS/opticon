@@ -15,6 +15,10 @@ ifeq (freebsd,$(OSNAME))
   LDFLAGS+=-lkvm
 endif
 
+ifeq (linux,$(OSNAME))
+  CFLAGS+=-std=c99 -D_GNU_SOURCE
+endif
+
 CFLAGS+=-DOSNAME=$(OSNAME) -DOSREL=$(OSREL) -DOSRELMAJOR=$(OSRELMAJOR)
 
 OBJS_TEST = test/test_roundtrip_encoding.o

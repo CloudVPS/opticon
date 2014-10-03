@@ -17,6 +17,10 @@ endif
 
 CFLAGS+=-DOSNAME=$(OSNAME) -DOSREL=$(OSREL) -DOSRELMAJOR=$(OSRELMAJOR)
 
+ifeq (linux,$(OSNAME))
+  CFLAGS+=-std=c99 -D_GNU_SOURCE
+endif
+
 OBJS_LIBOPTICONDB = db.o db_local.o
 				  
 all: ../../lib/libopticondb.a

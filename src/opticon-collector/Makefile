@@ -15,6 +15,11 @@ ifeq (freebsd,$(OSNAME))
   LDFLAGS+=-lkvm
 endif
 
+ifeq (linux,$(OSNAME))
+  CFLAGS+=-std=c99 -D_GNU_SOURCE
+  LDFLAGS+=-lpthread -lm
+endif
+
 CFLAGS+=-DOSNAME=$(OSNAME) -DOSREL=$(OSREL) -DOSRELMAJOR=$(OSRELMAJOR)
 
 OBJS_OPTICONCOLLECTOR = main.o watcher.o
