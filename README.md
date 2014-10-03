@@ -559,7 +559,14 @@ involving dictionaries:
 
 A further limitation is length of the keys. The maximum size of a key name is
 11. If you’re at a second level, the sum of the length of the key name and its
-parent key name cannot be larger than 10 (one is lost for the ‘/‘).
+parent key name cannot be larger than 10 (one is lost for the ‘/‘). There’s also
+a very limited character set to choose from for keys:
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+<SPACE> a b c d e f g h i j k l m n o p q r s t u v w x y z . - _ / @
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+In addition, arrays are limited in size to a maximum of 29 items.
 
 Writing a custom probe
 ----------------------
@@ -604,22 +611,19 @@ probes {
 
 After restarting the agent, and waiting for the next minute mark to pass, and
 collector to write out its data, the value should be visible in the `host-show`
-output:
+JSON output:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-$ opticon host-show --host 0d19d114-55c8-4077-9cab-348579c70612
----( HOST )---------------------------------------------------------------------
-UUID............: 0d19d114-55c8-4077-9cab-348579c70612
-Hostname........: giskard.local
-...
----( STORAGE )------------------------------------------------------------------
-DEVICE                 SIZE FS         USED MOUNTPOINT 
-/dev/disk2        147.08 GB hfs     90.00 % / 
-/dev/disk1s2      465.44 GB hfs     91.00 % /Volumes/Giskard Data 
----( OTHER )--------------------------------------------------------------------
-Battery Level...: 96.00
-Power Source....: AC
---------------------------------------------------------------------------------
+    "mem": {
+        "total": 8386560,
+        "free": 6928384
+    },
+    "uptime": 184495,
+    "power": {
+        "level": 96.000000,
+        "src": "AC"
+    },
+    "status": "WARN",
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Et voila, an extra meter was born.
@@ -669,6 +673,25 @@ Note that the type indicated with `--type` is a hint about how watchers should
 interpret the value. The agent may end up encoding a `frac` value as an
 `integer` if there’s no decimal point, this will not stop a watcher set to type
 `frac` from correctly noticing it going over or under the limit.
+
+With the extra information provided, your meter should now also show up in the
+`host show` non-JSON output:
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+$ opticon host-show --host 0d19d114-55c8-4077-9cab-348579c70612
+---( HOST )---------------------------------------------------------------------
+UUID............: 0d19d114-55c8-4077-9cab-348579c70612
+Hostname........: giskard.local
+...
+---( STORAGE )------------------------------------------------------------------
+DEVICE                 SIZE FS         USED MOUNTPOINT 
+/dev/disk2        147.08 GB hfs     90.00 % / 
+/dev/disk1s2      465.44 GB hfs     91.00 % /Volumes/Giskard Data 
+---( OTHER )--------------------------------------------------------------------
+Battery Level...: 96.00
+Power Source....: AC
+--------------------------------------------------------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Now that the meter exists in the database, it’s also possible to set up watchers
 for it. Let’s set up some sensible levels:
