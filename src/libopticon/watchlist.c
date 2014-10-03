@@ -2,11 +2,18 @@
 #include <unistd.h>
 #include <stdlib.h>
 
+/** Initialize list header and thread lock for a watchlist.
+  * \param self The watchlist ot initialize.
+  */
 void watchlist_init (watchlist *self) {
     self->first = self->last = NULL;
     pthread_mutex_init (&self->mutex, NULL);
 }
 
+/** Add a meterwatch to the list.
+  * \param self The watchlist
+  * \param m The watcher to add.
+  */
 void watchlist_add (watchlist *self, meterwatch *m) {
     if (self->last) {
         m->prev = self->last;
@@ -18,6 +25,14 @@ void watchlist_add (watchlist *self, meterwatch *m) {
     }
 }
 
+/** Create, and add, a new integer-based meterwatch to the watchlist.
+  * \param self The watchlist
+  * \param id The meterid to watch
+  * \param tp The type of watcher
+  * \param val The value to compare to
+  * \param bad Weight/badness.
+  * \param trig Alert tigger level.
+  */
 void watchlist_add_uint (watchlist *self, meterid_t id, watchtype tp,
                          uint64_t val, double bad, watchtrigger trig) {
     meterwatch *w = (meterwatch *) malloc (sizeof (meterwatch));
@@ -30,6 +45,14 @@ void watchlist_add_uint (watchlist *self, meterid_t id, watchtype tp,
     watchlist_add (self, w);
 }
 
+/** Create, and add, a new fractional-based meterwatch to the watchlist.
+  * \param self The watchlist
+  * \param id The meterid to watch
+  * \param tp The type of watcher
+  * \param val The value to compare to
+  * \param bad Weight/badness.
+  * \param trig Alert tigger level.
+  */
 void watchlist_add_frac (watchlist *self, meterid_t id, watchtype tp,
                          double val, double bad, watchtrigger trig) {
     meterwatch *w = (meterwatch *) malloc (sizeof (meterwatch));
@@ -42,6 +65,14 @@ void watchlist_add_frac (watchlist *self, meterid_t id, watchtype tp,
     watchlist_add (self, w);
 }
 
+/** Create, and add, a new string-based meterwatch to the watchlist.
+  * \param self The watchlist
+  * \param id The meterid to watch
+  * \param tp The type of watcher
+  * \param val The value to compare to
+  * \param bad Weight/badness.
+  * \param trig Alert tigger level.
+  */
 void watchlist_add_str (watchlist *self, meterid_t id, watchtype tp,
                         const char *val, double bad, watchtrigger trig) {
                         
@@ -56,6 +87,9 @@ void watchlist_add_str (watchlist *self, meterid_t id, watchtype tp,
     watchlist_add (self, w);
 }
 
+/** Remove, and deallocate, all meters associated with a watchlist.
+  * \param self The list to clear
+  */
 void watchlist_clear (watchlist *self) {
     meterwatch *w;
     meterwatch *nw;
