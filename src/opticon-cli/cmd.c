@@ -543,6 +543,52 @@ typedef enum {
     CA_R
 } columnalign;
 
+void print_values (var *apires, const char *pfx) {
+    var *mdef = api_get ("/%s/meter", OPTIONS.tenant);
+    var *meters = var_get_dict_forkey (mdef, "meter");
+    var *crsr = apires->value.arr.first;
+    while (crsr) {
+        char valbuf[1024];
+        const char *name = NULL;
+        var *meter;
+        if (pfx) {
+            sprintf (valbuf, "%s/%s", pfx, crsr->id);
+            meter = var_get_dict_forkey (meters, valbuf);
+        }
+        else meter = var_get_dict_forkey (meters, crsr->id);
+        name = var_get_str_forkey (meter, "description");
+        if (! name) name = crsr->id;
+        switch (crsr->type) {
+            case VAR_ARRAY:
+                print_array (name, crsr);
+                break;
+            
+            case VAR_STR:
+                print_value (name, var_get_str(crsr));
+                break;
+            
+            case VAR_INT:
+                sprintf (valbuf, "%llu", var_get_int(crsr));
+                print_value (name, valbuf);
+                break;
+            
+            case VAR_DOUBLE:
+                sprintf (valbuf, "%.2f", var_get_double(crsr));
+                print_value (name, valbuf);
+                break;
+            
+            case VAR_DICT:
+                print_values (crsr, crsr->id);
+                break;
+                
+            default:
+                break;
+        }
+        crsr = crsr->next;
+    }
+    var_free (mdef);
+}
+
 /** Print out tabular data (like top, df) with headers, bells and
   * whistles.
   * \param arr The array-of-dicts to print
@@ -646,6 +692,7 @@ int cmd_get_record (int argc, const char *argv[]) {
     #define VDstr(x,y) var_get_str_forkey(var_get_dict_forkey(apires,x),y)
     #define VDfrac(x,y) var_get-double_forkey(var_get_dict_forkey(apires,x),y)
     #define VAfrac(x,y) var_get_double_atindex(var_get_array_forkey(apires,x),y)
+    #define Vdone(x) var_delete_key(apires,x)
     /* -------------------------------------------------------------*/
     print_hdr ("HOST");
     print_value ("UUID", "%s", OPTIONS.host);
@@ -655,8 +702,13 @@ int cmd_get_record (int argc, const char *argv[]) {
     
     print_array ("Problems", Arr("problems"));
     
+    Vdone("hostname");
+    Vdone("agent");
+    Vdone("status");
+    Vdone("problems");
+    
     char uptimestr[128];
-    uint64_t uptime = Vint("uptime");
+    uint64_t uptime = Vint("uptime"); Vdone("uptime");
     uint64_t u_days = uptime / 86400ULL;
     uint64_t u_hours = (uptime - (86400 * u_days)) / 3600ULL;
     uint64_t u_mins = (uptime - (86400 * u_days) - (3600 * u_hours)) / 60ULL;
@@ -677,6 +729,7 @@ int cmd_get_record (int argc, const char *argv[]) {
     print_value ("Uptime","%s",uptimestr);
     print_value ("OS/Hardware","%s %s (%s)", VDstr("os","kernel"),
                  VDstr("os","version"), VDstr("os","arch"));
+    Vdone("os");
     
     /* -------------------------------------------------------------*/
     print_hdr ("RESOURCES");
@@ -684,14 +737,15 @@ int cmd_get_record (int argc, const char *argv[]) {
                              VDint("proc","total"),
                              VDint("proc","run"),
                              VDint("proc","stuck"));
-    
+    Vdone("proc");
     char cpubuf[128];
     sprintf (cpubuf, "%.2f (%.2f %%)", VAfrac("loadavg",0), Vfrac("pcpu"));
+    Vdone("loadavg");
     
     char meter[32];
     strcpy (meter, "-[                      ]+");
     
-    double pcpu = Vfrac("pcpu");
+    double pcpu = Vfrac("pcpu"); Vdone("pcpu");
     double level = 4.99;
     
     int pos = 2;
@@ -716,6 +770,10 @@ int cmd_get_record (int argc, const char *argv[]) {
     print_value ("Disk i/o", "%i rdops / %i wrops",
                  VDint("io","rdops"), VDint("io","wrops"));
     
+    Vdone("mem");
+    Vdone("net");
+    Vdone("io");
+    
     /* -------------------------------------------------------------*/
     print_hdr ("PROCESS LIST");
     
@@ -732,6 +790,7 @@ int cmd_get_record (int argc, const char *argv[]) {
     print_table (v_top, top_hdr, top_fld, 
                  top_align, top_tp, top_wid, top_suf, top_div);
     
+    Vdone("top");
     /* -------------------------------------------------------------*/
     print_hdr ("STORAGE");
     
@@ -746,6 +805,14 @@ int cmd_get_record (int argc, const char *argv[]) {
     var *v_df = var_get_array_forkey (apires, "df");
     print_table (v_df, df_hdr, df_fld,
                  df_aln, df_tp, df_wid, df_suf, df_div);
+    
+    Vdone("df");
+    Vdone("badness");
+    
+    if (var_get_count (apires)) {
+        print_hdr ("OTHER");
+        print_values (apires, NULL);
+    }
     
     printf ("---------------------------------------------"
             "-----------------------------------\n");

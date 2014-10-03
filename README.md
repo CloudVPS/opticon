@@ -604,17 +604,23 @@ probes {
 
 After restarting the agent, and waiting for the next minute mark to pass, and
 collector to write out its data, the value should be visible in the `host-show`
-JSON output:
+output:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+$ opticon host-show --host 0d19d114-55c8-4077-9cab-348579c70612
+---( HOST )---------------------------------------------------------------------
+UUID............: 0d19d114-55c8-4077-9cab-348579c70612
+Hostname........: giskard.local
 ...
-    "uptime": 117581,
-    "power": {
-        "level": 96.000000,
-        "src": "AC"
-    },
-    "status": "OK",
-...
+---( STORAGE )------------------------------------------------------------------
+DEVICE                 SIZE FS         USED MOUNTPOINT 
+/dev/disk2        147.08 GB hfs     90.00 % / 
+/dev/disk1s2      465.44 GB hfs     91.00 % /Volumes/Giskard Data 
+/dev/disk3s2       95.05 GB hfs     68.00 % /Volumes/VDXInstaller 
+---( OTHER )--------------------------------------------------------------------
+Battery Level...: 96.00
+Power Source....: AC
+--------------------------------------------------------------------------------
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Et voila, an extra meter was born.
