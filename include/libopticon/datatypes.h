@@ -196,6 +196,7 @@ meter       *host_set_meter_frac (host *h, meterid_t id,
 meter       *host_set_meter_str  (host *h, meterid_t id,
                                   unsigned int count,
                                   const fstring *str);
+meter       *host_find_prefix (host *h, meterid_t prefix, meter *prev);
 
 meter       *meter_next_sibling (meter *m);
 void         meter_set_empty (meter *m);

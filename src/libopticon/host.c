@@ -150,6 +150,19 @@ meter *host_get_meter (host *h, meterid_t id) {
     return NULL;
 }
 
+meter *host_find_prefix (host *h, meterid_t prefix, meter *prev) {
+    meter *crsr = prev ? prev : h->first;
+    meterid_t mask = id2mask (prefix);
+    crsr = crsr->next;
+    while (crsr) {
+        if ((crsr->id & mask) == (prefix & MMASK_NAME)) {
+            if (idisprefix (prefix, crsr->id, mask)) return crsr;
+        }
+        crsr = crsr->next;
+    }
+    return NULL;
+}
+
 /** Get a specific indexed integer value out of a meter */
 uint64_t meter_get_uint (meter *m, unsigned int pos) {
     uint64_t res = 0ULL;

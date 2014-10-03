@@ -47,6 +47,33 @@ meterid_t makeid (const char *label, metertype_t type, int pos) {
     return res;
 }
 
+/** Convert an id to a bitmask representing the non-0 caracters */
+meterid_t id2mask (meterid_t id) {
+    meterid_t res = 0;
+    int bshift = 57;
+    while (bshift > 2) {
+        uint64_t msk = 31 << bshift;
+        if (! (id & msk)) return res;
+        res |= msk;
+        bshift -= 5;
+    }
+    return res;
+}
+
+int idisprefix (meterid_t potential, meterid_t prefixfor, meterid_t mask) {
+    if ((prefixfor&mask) != (potential&mask)) return 0;
+    int bshift = 57;
+    while (bshift > 2) {
+        uint64_t msk = 31 << bshift;
+        if (! (mask & msk)) {
+            if (((prefixfor & msk) >> bshift) == ASCIITABLE['/']) return 1;
+            return 0;
+        }
+        bshift -= 5;
+    }
+    return 0;
+}
+
 /** Extract an ASCII name from a meterid_t value.
   * \param id The meterid to parse.
   * \param into String to copy the ASCII data into (minimum size of 12).

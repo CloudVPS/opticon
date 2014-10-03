@@ -45,8 +45,21 @@ int pktcodec_decode_host (ioport *io, host *h) {
         mid = ioport_read_u64 (io);
         if (mid == 0) break;
         
-        M = host_get_meter (h, mid);
+        // SZ_EMPTY_ARRAY should go about and find children and
+        // empty those instead, if they exist.
         count = mid & MMASK_COUNT;
+        if (count == SZ_EMPTY_ARRAY) {
+            meter *crsr = host_find_prefix (h, mid, NULL);
+            if (crsr) {
+                while (crsr) {
+                    meter_set_empty_array (crsr);
+                    crsr = host_find_prefix (h, mid, crsr);
+                }
+                continue;
+            }
+        }
+        
+        M = host_get_meter (h, mid);
         meter_setcount (M, count);
         if (! count) count=1;
         if (count >= SZ_EMPTY_VAL) continue;

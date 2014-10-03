@@ -133,7 +133,7 @@ int daemon_main (int argc, const char *argv[]) {
                 else {
                     if (tnow - p->lastreply > (2*(p->interval))) {
                         log_warn ("Probe '%s' seems stuck after %i seconds",
-                                  tnow - p->lastreply);
+                                  p->call, tnow - p->lastreply);
                     }
                 }
                 p = p->next;
