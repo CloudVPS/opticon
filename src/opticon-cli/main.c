@@ -180,7 +180,7 @@ int load_cached_token (void) {
             /* re-validate after an hour */
             if (tnow - st.st_mtime > 3600) {
                 OPTIONS.keystone_token = token;
-                var *vres = api_get ("/token");
+                var *vres = api_get_raw ("/token", 0);
                 if (vres) {
                     OPTIONS.keystone_token = strdup (token);
                     res = 1;

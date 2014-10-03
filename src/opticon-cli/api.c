@@ -66,21 +66,12 @@ var *api_call (const char *mth, var *data, const char *fmt, ...)
     return res;
 }
 
-/** Perform a GET request against the API, parsing any JSON data
-  * returned.
-  * \param fmt The path of the API call
-  * \return Parsed JSON result data. HTTP errors will not come back
-  *         to the caller, they are printed, and the application
-  *         is terminated.
+/** Variant of api_get call with no string formatting, but the option to
+  * suppress the error exit.
+  * \param path The URI path
+  * \param exiterror If 1, exit on HTTP errors.
   */
-var *api_get (const char *fmt, ...) {
-    char path[1024];
-    path[0] = 0;
-    va_list ap;
-    va_start (ap, fmt);
-    vsnprintf (path, 1023, fmt, ap);
-    va_end (ap);
-    
+var *api_get_raw (const char *path, int exiterror) {
     char tmpurl[1024];
     var *outhdr = var_alloc();
     var *errinfo = var_alloc();
@@ -104,6 +95,7 @@ var *api_get (const char *fmt, ...) {
     tmpurl[1023] = 0;
     var *res = http_call ("GET", tmpurl, outhdr, data, errinfo, NULL);
     if (! res) {
+        if (! exiterror) return NULL;
         const char *errstr = var_get_str_forkey (errinfo, "error");
         if (! errstr) errstr = "Unknown error";
         fprintf (stderr, "%% %s\n", errstr);
@@ -113,5 +105,23 @@ var *api_get (const char *fmt, ...) {
     var_free (errinfo);
     var_free (data);
     return res;
+}
+
+/** Perform a GET request against the API, parsing any JSON data
+  * returned.
+  * \param fmt The path of the API call
+  * \return Parsed JSON result data. HTTP errors will not come back
+  *         to the caller, they are printed, and the application
+  *         is terminated.
+  */
+var *api_get (const char *fmt, ...) {
+    char path[1024];
+    path[0] = 0;
+    va_list ap;
+    va_start (ap, fmt);
+    vsnprintf (path, 1023, fmt, ap);
+    va_end (ap);
+    
+    return api_get_raw (path, 1);
 }
 

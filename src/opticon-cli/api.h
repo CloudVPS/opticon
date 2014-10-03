@@ -6,6 +6,7 @@
 /* ============================= FUNCTIONS ============================= */
 
 var *api_call (const char *mth, var *data, const char *fmt, ...);
+var *api_get_raw (const char *path, int exiterror);
 var *api_get (const char *fmt, ...);
 
 #endif
