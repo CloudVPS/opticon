@@ -60,7 +60,6 @@ void watchdog_main (int argc, const char *argv[], main_f call) {
         }
         
         sleep (1); /* Prevent a respawn bomb */
-        pid_t w;
         
         while (wait (&retval) != SERVICE_PID) {
             if (WATCHDOG_EXIT) break;

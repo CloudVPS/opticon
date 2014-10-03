@@ -43,8 +43,6 @@ var *collect_meterdefs (uuid tenant, uuid host, int watchonly) {
     var *tmeters = var_get_dict_forkey (tenantmeta, "meter");
     var *hmeters = var_get_dict_forkey (hostmeta, "meter");
     const char *tstr;
-    uint64_t tint;
-    double tfrac;
     var *tvar;
     
     var *tc = tmeters->value.arr.first;

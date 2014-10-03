@@ -1,4 +1,5 @@
 #include <libopticon/log.h>
+#include <libopticon/dump.h>
 #include <ctype.h>
 #include <time.h>
 #include <errno.h>

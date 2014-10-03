@@ -1,5 +1,6 @@
 #include <libopticon/var.h>
 #include <libopticon/parse.h>
+#include <libopticon/log.h>
 #include <assert.h>
 
 static const char *DEFMETERS = 

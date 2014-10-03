@@ -7,7 +7,6 @@ int udp_outtransport_setremote (outtransport *t, const char *addr,
                                 int port) {
     udp_outtransport *self = (udp_outtransport *) t;
     struct addrinfo hints;
-    socklen_t sin_size;
     char portstr[16];
     
     if (self->peeraddr) free (self->peeraddr);
@@ -66,7 +65,6 @@ int udp_intransport_setlistenport (intransport *t, const char *addr,
                                    int port) {
     udp_intransport *self = (udp_intransport *) t;
     struct addrinfo hints;
-    socklen_t sin_size;
     char portstr[16];
     
     if (self->listenaddr) free (self->listenaddr);

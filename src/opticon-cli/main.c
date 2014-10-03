@@ -75,7 +75,7 @@ int set_time (const char *o, const char *v) {
     }
     
     struct tm tm;
-    int year,month,day,hour,minute;
+    int hour,minute;
     
     /* HH:MM */
     if (strlen (v) == 5 && v[2] == ':') {

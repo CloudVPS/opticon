@@ -290,8 +290,6 @@ void print_data (const char *meterid, const char *trig, var *v) {
 
 /** The watcher-list command */
 int cmd_watcher_list (int argc, const char *argv[]) {
-    uuid tenant;
-    uuid host;
     if (OPTIONS.tenant[0] == 0) {
         fprintf (stderr, "%% No tenantid provided\n");
         return 1;
@@ -339,8 +337,6 @@ void disregard_default_tenant (void) {
 
 /** The tenant-delete command */
 int cmd_tenant_delete (int argc, const char *argv[]) {
-    uuid tenant;
-
     /* Avoid using the default tenant in this case */
     disregard_default_tenant();
 
@@ -359,8 +355,6 @@ int cmd_tenant_delete (int argc, const char *argv[]) {
 /** The tenant-create command */
 int cmd_tenant_create (int argc, const char *argv[]) {
     uuid tenant;
-    aeskey key;
-    char *strkey;
     
     /* Avoid using the default tenant in this case */
     disregard_default_tenant();
@@ -402,16 +396,6 @@ int cmd_tenant_create (int argc, const char *argv[]) {
     var_free (req);
     var_free (apires);
     return 0;
-}
-
-/** Format a timestamp for output */
-static char *timfmt (time_t w, int json) {
-    struct tm tm;
-    if (json) gmtime_r (&w, &tm);
-    else localtime_r (&w, &tm);
-    char *res = (char *) malloc (24);
-    strftime (res, 23, json ? "%FT%H:%M:%S" : "%F %H:%M", &tm);
-    return res;
 }
 
 /** The host-list command */

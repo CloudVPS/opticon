@@ -1,4 +1,5 @@
 #include <libopticon/var.h>
+#include <libopticon/hash.h>
 #include <string.h>
 #include <assert.h>
 
@@ -645,8 +646,6 @@ void var_set_uuid (var *v, uuid u) {
 
 /** Set the direct string value of a var */
 void var_set_str (var *v, const char *val) {
-    int is_orig = 0;
-    
     if (v->type == VAR_NULL) {
         v->type = VAR_STR;
         v->value.sval = strdup (val);

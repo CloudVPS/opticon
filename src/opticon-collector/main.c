@@ -55,7 +55,6 @@ aeskey *resolve_sessionkey (uint32_t netid, uint32_t sid, uint32_t serial,
   */
 void make_watcher (watchlist *w, meterid_t id, metertype_t mtp,
                    var *v, double vweight, watchtrigger tr) {
-    watchtype wtp;
     const char *cmp = var_get_str_forkey (v, "cmp");
     double weight = var_get_double_forkey (v, "weight");
     uint64_t ival = var_get_int_forkey (v, "val");
