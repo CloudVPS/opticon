@@ -9,6 +9,7 @@ var *var_alloc (void) {
     
     self->next = self->prev = self->parent = self->root = NULL;
     self->id[0] = '\0';
+    self->hashcode = 0;
     self->type = VAR_NULL;
     self->generation = 0;
     self->lastmodified = 0;
@@ -118,6 +119,7 @@ void var_copy (var *self, var *orig) {
             while (crsr) {
                 var *nvar = var_alloc();
                 nvar->id[0] = 0;
+                nvar->hashcode = 0;
                 var_copy (nvar, crsr);
                 var_link (nvar, self);
                 crsr = crsr->next;
@@ -133,6 +135,7 @@ void var_copy (var *self, var *orig) {
             while (crsr) {
                 var *nvar = var_alloc();
                 strcpy (nvar->id, crsr->id);
+                nvar->hashcode = crsr->hashcode;
                 var_copy (nvar, crsr);
                 var_link (nvar, self);
                 crsr = crsr->next;
@@ -200,11 +203,16 @@ var *var_find_key (var *self, const char *key) {
         self->value.arr.first = self->value.arr.last = NULL;
         self->value.arr.count = 0;
         self->value.arr.cachepos = -1;
+        return NULL;
     }
     if (self->type != VAR_DICT) return NULL;
+
+    uint32_t hash = hash_token (key);
     var *c = self->value.arr.first;
     while (c) {
-        if (strcmp (c->id, key) == 0) return c;
+        if (c->hashcode == 0 || (c->hashcode == hash)) {
+            if (strcmp (c->id, key) == 0) return c;
+        }
         c = c->next;
     }
     return NULL;
@@ -225,6 +233,7 @@ var *var_get_dict_forkey (var *self, const char *key) {
         res->value.arr.cachepos = -1;
         strncpy (res->id, key, 127);
         res->id[127] = 0;
+        res->hashcode = hash_token (key);
         var_link (res, self);
     }
     if (res->type == VAR_DICT) return res;
@@ -246,6 +255,7 @@ var *var_get_array_forkey (var *self, const char *key) {
         res->value.arr.cachepos = -1;
         strncpy (res->id, key, 127);
         res->id[127] = 0;
+        res->hashcode = hash_token (key);
         var_link (res, self);
     }
     if (res->type == VAR_ARRAY) return res;
@@ -395,6 +405,7 @@ var *var_get_dict_atindex (var *self, int idx) {
         res->value.arr.count = 0;
         res->value.arr.cachepos = -1;
         res->id[0] = 0;
+        res->hashcode = 0;
         var_link (res, self);
     }
     if (res->type != VAR_DICT) return NULL;
@@ -416,6 +427,7 @@ var *var_get_array_atindex (var *self, int idx) {
         res->value.arr.count = 0;
         res->value.arr.cachepos = -1;
         res->id[0] = 0;
+        res->hashcode = 0;
         var_link (res, self);
     }
     if (res->type != VAR_ARRAY) return NULL;
@@ -518,6 +530,7 @@ var *var_get_or_make (var *self, const char *key, vartype tp) {
         res = var_alloc();
         strncpy (res->id, key, 127);
         res->id[127] = 0;
+        res->hashcode = hash_token (key);
         var_link (res, self);
     }
     return res;
@@ -708,6 +721,7 @@ void var_add_int (var *self, uint64_t nval) {
     var *nvar = var_alloc();
     nvar->type = VAR_INT;
     nvar->id[0] = 0;
+    nvar->hashcode = 0;
     nvar->value.ival = nval;
     var_link (nvar, self);
 }
@@ -721,6 +735,7 @@ void var_add_double (var *self, double nval) {
     var *nvar = var_alloc();
     nvar->type = VAR_DOUBLE;
     nvar->id[0] = 0;
+    nvar->hashcode = 0;
     nvar->value.dval = nval;
     var_link (nvar, self);
 }
@@ -744,6 +759,7 @@ void var_add_str (var *self, const char *nval) {
     var *nvar = var_alloc();
     nvar->type = VAR_STR;
     nvar->id[0] = 0;
+    nvar->hashcode = 0;
     nvar->value.sval = strdup (nval);
     var_link (nvar, self);
 }
@@ -757,6 +773,7 @@ var *var_add_array (var *self) {
     var *nvar = var_alloc();
     nvar->type = VAR_ARRAY;
     nvar->id[0] = 0;
+    nvar->hashcode = 0;
     nvar->value.arr.first = nvar->value.arr.last = NULL;
     nvar->value.arr.count = 0;
     nvar->value.arr.cachepos = -1;
@@ -773,6 +790,7 @@ var *var_add_dict (var *self) {
     var *nvar = var_alloc();
     nvar->type = VAR_DICT;
     nvar->id[0] = 0;
+    nvar->hashcode = 0;
     nvar->value.arr.first = nvar->value.arr.last = NULL;
     nvar->value.arr.count = 0;
     nvar->value.arr.cachepos = -1;

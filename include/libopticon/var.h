@@ -43,6 +43,7 @@ typedef struct var_s {
     struct var_s    *parent; /**< Link to parent node */
     struct var_s    *root; /**< Link to root of variable space */
     char             id[128]; /**< Key, or "" for numbered item */
+    uint32_t         hashcode; /**< hash of key, or 0 */
     vartype          type; /**< Value type */
     varvalue         value; /**< Value */
     uint32_t         generation; /**< Last generation var was seen */
