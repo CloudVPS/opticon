@@ -563,7 +563,7 @@ parent key name cannot be larger than 10 (one is lost for the ‘/‘). There’
 a very limited character set to choose from for keys:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-<SPACE> a b c d e f g h i j k l m n o p q r s t u v w x y z . - _ / @
+a b c d e f g h i j k l m n o p q r s t u v w x y z . - _ / @
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 In addition, arrays are limited in size to a maximum of 29 items.

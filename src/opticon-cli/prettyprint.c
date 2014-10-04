@@ -102,6 +102,7 @@ void print_values (var *apires, const char *pfx, var *mdef) {
     while (crsr) {
         char valbuf[1024];
         const char *name = NULL;
+        const char *unit = NULL;
         var *meter;
         if (pfx) {
             sprintf (valbuf, "%s/%s", pfx, crsr->id);
@@ -110,6 +111,8 @@ void print_values (var *apires, const char *pfx, var *mdef) {
         else meter = var_get_dict_forkey (meters, crsr->id);
         name = var_get_str_forkey (meter, "description");
         if (! name) name = crsr->id;
+        unit = var_get_str_forkey (meter, "unit");
+        if (! unit) unit = "";
         switch (crsr->type) {
             case VAR_ARRAY:
                 if (crsr->value.arr.first &&
@@ -119,17 +122,17 @@ void print_values (var *apires, const char *pfx, var *mdef) {
                 break;
             
             case VAR_STR:
-                print_value (name, var_get_str(crsr));
+                print_value (name, "%s", var_get_str(crsr));
                 break;
             
             case VAR_INT:
-                sprintf (valbuf, "%llu", var_get_int(crsr));
-                print_value (name, valbuf);
+                sprintf (valbuf, "%llu %s", var_get_int(crsr), unit);
+                print_value (name, "%s", valbuf);
                 break;
             
             case VAR_DOUBLE:
-                sprintf (valbuf, "%.2f", var_get_double(crsr));
-                print_value (name, valbuf);
+                sprintf (valbuf, "%.2f %s", var_get_double(crsr), unit);
+                print_value (name, "%s", valbuf);
                 break;
             
             case VAR_DICT:
