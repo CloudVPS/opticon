@@ -56,6 +56,8 @@ int pktcodec_decode_host (ioport *io, host *h) {
             meter *crsr = host_find_prefix (h, mid, NULL);
             if (crsr) {
                 while (crsr) {
+                    id2str (crsr->id, strbuf);
+                    log_debug ("(decode) emptying %s", strbuf);
                     meter_set_empty_array (crsr);
                     crsr = host_find_prefix (h, mid, crsr);
                 }
@@ -71,6 +73,8 @@ int pktcodec_decode_host (ioport *io, host *h) {
             lastpfx = pfx;
             meter *crsr = host_find_meter_name (h, pfx);
             while (crsr) {
+                id2str (crsr->id, strbuf);
+                log_debug ("(decode) replacing %s with subtree", strbuf);
                 host_delete_meter (h, crsr);
                 crsr = host_find_meter_name (h, pfx);
             }
