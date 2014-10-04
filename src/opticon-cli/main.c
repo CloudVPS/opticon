@@ -427,7 +427,7 @@ int main (int _argc, const char *_argv[]) {
         fprintf (stderr, "%% No opticon endpoint found\n");
         return 1;
     }
-    if (OPTIONS.keystone_url[0] == 0) {
+    if (OPTIONS.keystone_url[0] == 0 && OPTIONS.opticon_token[0] == 0) {
         fprintf (stderr, "%% No keystone endpoint found\n");
         return 1;
     }
