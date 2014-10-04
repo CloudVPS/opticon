@@ -181,6 +181,7 @@ int main (int argc, const char *argv[]) {
     M = host_find_prefix (H, M_TOP, NULL);
     assert (M);
     assert ((M->id & MMASK_NAME) == (M_TOP_PID & MMASK_NAME));
+    assert (idgetprefix (M_TOP_PID));
     
     host_end_update (H);
     struct sockaddr_storage sstor;

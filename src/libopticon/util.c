@@ -81,7 +81,7 @@ meterid_t idgetprefix (meterid_t id) {
     while (bshift > 2) {
         uint64_t msk = 31ULL << bshift;
         uint64_t ch = (id&msk) >> bshift;
-        if (ASCIITABLE[ch] == '/') return res;
+        if (IDTABLE[ch] == '/') return res;
         res |= (id & msk);
         bshift -= 5;
     }
