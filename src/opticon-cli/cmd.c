@@ -23,12 +23,15 @@
 
 /** The tenant-list command */
 int cmd_tenant_list (int argc, const char *argv[]) {
-    printf ("UUID                                 Hosts  Name\n");
-    printf ("---------------------------------------------"
-            "-----------------------------------\n");
-
     var *res = api_get ("/");
-    if (res) {
+    if (OPTIONS.json) {
+        dump_var (res, stdout);
+    }
+    else {
+        printf ("UUID                                 Hosts  Name\n");
+        printf ("---------------------------------------------"
+                "-----------------------------------\n");
+
         var *res_tenant = var_get_array_forkey (res, "tenant");
         if (var_get_count (res_tenant)) {
             var *crsr = res_tenant->value.arr.first;
@@ -141,28 +144,33 @@ int cmd_meter_list (int argc, const char *argv[]) {
     }
     
     var *apires = api_get ("/%s/meter", OPTIONS.tenant);
-    var *res_meter = var_get_dict_forkey (apires, "meter");
-    if (var_get_count (res_meter)) {
-        printf ("From     Meter        Type      Unit    Description\n");
-        printf ("----------------------------------------"
-                "----------------------------------------\n");
-        var *crsr = res_meter->value.arr.first;
-        while (crsr) {
-            const char *desc = var_get_str_forkey (crsr, "description");
-            const char *type = var_get_str_forkey (crsr, "type");
-            const char *unit = var_get_str_forkey (crsr, "unit");
-            const char *org = var_get_str_forkey (crsr, "origin");
+    if (OPTIONS.json) {
+        dump_var (apires, stdout);
+    }
+    else {
+        var *res_meter = var_get_dict_forkey (apires, "meter");
+        if (var_get_count (res_meter)) {
+            printf ("From     Meter        Type      Unit    Description\n");
+            printf ("----------------------------------------"
+                    "----------------------------------------\n");
+            var *crsr = res_meter->value.arr.first;
+            while (crsr) {
+                const char *desc = var_get_str_forkey (crsr, "description");
+                const char *type = var_get_str_forkey (crsr, "type");
+                const char *unit = var_get_str_forkey (crsr, "unit");
+                const char *org = var_get_str_forkey (crsr, "origin");
             
-            if (!desc) desc = "-";
-            if (!unit) unit = "";
-            if (!org) org = "default";
+                if (!desc) desc = "-";
+                if (!unit) unit = "";
+                if (!org) org = "default";
             
-            printf ("%-8s %-12s %-8s  %-7s %s\n", org, crsr->id,
-                    type, unit, desc);
-            crsr = crsr->next;
+                printf ("%-8s %-12s %-8s  %-7s %s\n", org, crsr->id,
+                        type, unit, desc);
+                crsr = crsr->next;
+            }
+            printf ("---------------------------------------------"
+                    "-----------------------------------\n");
         }
-        printf ("---------------------------------------------"
-                "-----------------------------------\n");
     }
     var_free (apires);
     return 0;
@@ -295,11 +303,6 @@ int cmd_watcher_list (int argc, const char *argv[]) {
         return 1;
     }
     
-    printf ("From     Meter        Trigger   Match                  "
-            "Value             Weight\n"
-            "-------------------------------------------------------"
-            "-------------------------\n");
-
     var *apires;
     
     if (OPTIONS.host[0]) {
@@ -308,6 +311,17 @@ int cmd_watcher_list (int argc, const char *argv[]) {
     else {
         apires = api_get ("/%s/watcher", OPTIONS.tenant);
     }
+    if (OPTIONS.json) {
+        dump_var (apires, stdout);
+        var_free (apires);
+        return 0;
+    }
+
+    printf ("From     Meter        Trigger   Match                  "
+            "Value             Weight\n"
+            "-------------------------------------------------------"
+            "-------------------------\n");
+
     var *apiwatch = var_get_dict_forkey (apires, "watcher");
     if (var_get_count (apiwatch)) {
         var *crsr = apiwatch->value.arr.first;
@@ -408,6 +422,13 @@ int cmd_host_list (int argc, const char *argv[]) {
     const char *unit;
     
     var *apires = api_get ("/%s/host", OPTIONS.tenant);
+    
+    if (OPTIONS.json) {
+        dump_var (apires, stdout);
+        var_free (apires);
+        return 0;
+    }
+    
     var *v_hosts = var_get_array_forkey (apires, "host");
     if (var_get_count (v_hosts)) {
         printf ("UUID                                    Size "
@@ -609,14 +630,19 @@ int cmd_get_record (int argc, const char *argv[]) {
 
 int cmd_session_list (int argc, const char *argv[]) {
     var *v = api_get ("/session");
-    var *v_session = var_get_array_forkey (v, "session");
 
+    if (OPTIONS.json) {
+        dump_var (v, stdout);
+        var_free (v);
+        return 0;
+    }   
+    
     printf ("---------------------------------------------"
             "-----------------------------------\n");
-
     printf ("Session ID         Sender"
             "                                 Last Refresh\n");
     
+    var *v_session = var_get_array_forkey (v, "session");
     var *crsr = v_session->value.arr.first;
     while (crsr) {
         printf ("%08x-%08x %-39s %s\n",
