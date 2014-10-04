@@ -56,8 +56,8 @@ void sessionlist_restore (var *list) {
         session *s = session_alloc();
         s->tenantid = var_get_uuid_forkey (crsr, "tenantid");
         s->hostid = var_get_uuid_forkey (crsr, "hostid");
-        s->addr = (uint32_t) var_get_int_forkey (crsr, "addr");
-        s->sessid = (uint32_t) var_get_int_forkey (crsr, "sessid");
+        s->addr = (uint32_t) (var_get_int_forkey (crsr, "addr") & 0xffffffff);
+        s->sessid = (uint32_t) (var_get_int_forkey (crsr, "sessid") & 0xffffffff);
         s->lastcycle = utcstr2time (var_get_str_forkey (crsr, "lastcycle"));
         s->lastserial = (uint32_t) var_get_int_forkey (crsr, "lastserial");
         s->key = aeskey_from_base64 (var_get_str_forkey (crsr, "key"));

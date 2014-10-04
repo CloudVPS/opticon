@@ -620,8 +620,8 @@ int cmd_session_list (int argc, const char *argv[]) {
     var *crsr = v_session->value.arr.first;
     while (crsr) {
         printf ("%08x-%08x %-39s %s\n",
-                (uint32_t) var_get_int_forkey (crsr, "sessid"),
-                (uint32_t) var_get_int_forkey (crsr, "addr"),
+                (uint32_t) (var_get_int_forkey (crsr, "sessid") & 0xffffffff),
+                (uint32_t) (var_get_int_forkey (crsr, "addr") & 0xffffffff)
                 var_get_str_forkey (crsr, "remote"),
                 var_get_str_forkey (crsr, "lastcycle"));
         crsr = crsr->next;
