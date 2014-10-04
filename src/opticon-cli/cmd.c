@@ -615,11 +615,11 @@ int cmd_session_list (int argc, const char *argv[]) {
             "-----------------------------------\n");
 
     printf ("Session ID         Sender"
-            "                                  Last Refresh\n");
+            "                                 Last Refresh\n");
     
     var *crsr = v_session->value.arr.first;
     while (crsr) {
-        printf ("%08x-%08x %-38s %s\n",
+        printf ("%08x-%08x %-39s %s\n",
                 (uint32_t) var_get_int_forkey (crsr, "sessid"),
                 (uint32_t) var_get_int_forkey (crsr, "addr"),
                 var_get_str_forkey (crsr, "remote"),
