@@ -285,6 +285,9 @@ void print_generic_table (var *table) {
         if (! add) add = 1;
         for (i=0; i<count; ++i) width[i] += add;
     }
+    else if (twidth<60) {
+        for (i=0; i<count; ++i) width[i]++;
+    }
     
     print_hdr (table->id);
     print_table (table, (const char **) header, (const char **) field,
