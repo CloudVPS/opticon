@@ -160,6 +160,7 @@ void tokencache_store_invalid (const char *token) {
             into = crsr;
         }
     }
+    
     if (! into) into = &TOKENCACHE.invalids[rand()&15];
     into->hashcode = hash_token (token);
     strncpy (into->token, token, 1023);
@@ -169,6 +170,15 @@ void tokencache_store_invalid (const char *token) {
     into->tenantlist = NULL;
     into->tenantcount = 0;
     into->ctime = into->lastref = tnow;
+
+    /* Invalidate any open entries in the positive cache */
+    for (i=0; i<TOKENCACHE.count; ++i) {
+        crsr = &TOKENCACHE.nodes[i];
+        if (crsr->hashcode == into->hashcode) {
+            tcache_node_clear (&crsr, 1);
+        }
+    }
+    
     
     pthread_rwlock_unlock (&TOKENCACHE.lock);
 }
