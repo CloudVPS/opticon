@@ -768,6 +768,12 @@ void var_add_str (var *self, const char *nval) {
   * \return The new empty array (or NULL).
   */
 var *var_add_array (var *self) {
+    if (self->type == VAR_NULL) {
+        self->type = VAR_ARRAY;
+        self->value.arr.first = self->value.arr.last = NULL;
+        self->value.arr.count = 0;
+        self->value.arr.cachepos = -1;
+    }
     if (self->type != VAR_ARRAY) return NULL;
     var *nvar = var_alloc();
     nvar->type = VAR_ARRAY;
@@ -785,6 +791,12 @@ var *var_add_array (var *self) {
   * \return The new empty dictionary (or NULL).
   */
 var *var_add_dict (var *self) {
+    if (self->type == VAR_NULL) {
+        self->type = VAR_ARRAY;
+        self->value.arr.first = self->value.arr.last = NULL;
+        self->value.arr.count = 0;
+        self->value.arr.cachepos = -1;
+    }
     if (self->type != VAR_ARRAY) return NULL;
     var *nvar = var_alloc();
     nvar->type = VAR_DICT;
