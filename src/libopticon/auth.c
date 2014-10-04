@@ -23,6 +23,7 @@ void sessionlist_init (void) {
 /** Encode the sessionlist ready for JSON export */
 var *sessionlist_save (void) {
     var *v_root = var_alloc();
+    var *v_session = var_get_array_forkey (v_root, "session");
     session *crsr;
     for (int i=0; i<256; ++i) {
         crsr = SESSIONS[i].first;
@@ -49,7 +50,8 @@ var *sessionlist_save (void) {
 }
 
 void sessionlist_restore (var *list) {
-    var *crsr = list->value.arr.first;
+    var *v_session = var_get_array_forkey (list, "session");
+    var *crsr = v_session->value.arr.first;
     while (crsr) {
         session *s = session_alloc();
         s->tenantid = var_get_uuid_forkey (crsr, "tenantid");
