@@ -399,7 +399,7 @@ int main (int _argc, const char *_argv[]) {
     opticonf_add_reaction ("endpoints/keystone", conf_endpoint_keystone);
     opticonf_add_reaction ("endpoints/opticon", conf_endpoint_api);
     opticonf_add_reaction ("defaults/tenant", conf_default_tenant);
-    opticonf_add_reaction ("default/admin_token", conf_admin_token);
+    opticonf_add_reaction ("defaults/admin_token", conf_admin_token);
 
     OPTIONS.conf = var_alloc();
     
