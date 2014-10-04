@@ -52,7 +52,7 @@ meterid_t id2mask (meterid_t id) {
     meterid_t res = 0;
     int bshift = 57;
     while (bshift > 2) {
-        uint64_t msk = 31 << bshift;
+        uint64_t msk = 31ULL << bshift;
         if (! (id & msk)) return res;
         res |= msk;
         bshift -= 5;
@@ -64,7 +64,7 @@ int idisprefix (meterid_t potential, meterid_t prefixfor, meterid_t mask) {
     if ((prefixfor&mask) != (potential&mask)) return 0;
     int bshift = 57;
     while (bshift > 2) {
-        uint64_t msk = 31 << bshift;
+        uint64_t msk = 31ULL << bshift;
         if (! (mask & msk)) {
             if (((prefixfor & msk) >> bshift) == ASCIITABLE['/']) return 1;
             return 0;
@@ -72,6 +72,20 @@ int idisprefix (meterid_t potential, meterid_t prefixfor, meterid_t mask) {
         bshift -= 5;
     }
     return 0;
+}
+
+meterid_t idgetprefix (meterid_t id) {
+    if (! (id & MMASK_NAME)) return 0ULL;
+    meterid_t res = 0ULL;
+    int bshift = 57;
+    while (bshift > 2) {
+        uint64_t msk = 31ULL << bshift;
+        uint64_t ch = (id&msk) >> bshift;
+        if (ASCIITABLE[ch] == '/') return res;
+        res |= (id & msk);
+        bshift -= 5;
+    }
+    return 0ULL;
 }
 
 /** Extract an ASCII name from a meterid_t value.

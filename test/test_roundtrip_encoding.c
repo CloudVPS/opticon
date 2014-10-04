@@ -53,6 +53,7 @@ int main (int argc, const char *argv[]) {
     meterid_t M_TOP_PCPU = makeid ("top/pcpu",MTYPE_FRAC,0);
     meterid_t M_TOP_PMEM = makeid ("top/pmem",MTYPE_FRAC,0);
     meterid_t M_TOP_NAME = makeid ("top/name",MTYPE_STR,0);
+    meterid_t M_TOP = makeid ("top",MTYPE_INT,0);
     
     meterid_t M_MEM_SIZE = makeid ("mem/size",MTYPE_INT,0);
     meterid_t M_MEM_FREE = makeid ("mem/free",MTYPE_INT,0);
@@ -176,6 +177,10 @@ int main (int argc, const char *argv[]) {
     M = host_get_meter (H, M_TOP_NAME);
     meter_setcount (M, 11);
     for (i=0; i<11; ++i) meter_set_str (M, i, D_TOP_NAME[i]);
+    
+    M = host_find_prefix (H, M_TOP, NULL);
+    assert (M);
+    assert ((M->id & MMASK_NAME) == (M_TOP_PID & MMASK_NAME));
     
     host_end_update (H);
     struct sockaddr_storage sstor;

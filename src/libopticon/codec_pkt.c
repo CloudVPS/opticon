@@ -1,4 +1,5 @@
 #include <libopticon/codec_pkt.h>
+#include <libopticon/util.h>
 #include <stdlib.h>
 
 /** Write out a meter value */
@@ -38,6 +39,8 @@ int pktcodec_encode_host (ioport *io, host *h) {
 /** Decode packet data into a host */
 int pktcodec_decode_host (ioport *io, host *h) {
     meterid_t mid;
+    meterid_t pfx;
+    meterid_t lastpfx = 0ULL;
     uint8_t count;
     char strbuf[128];
     meter *M;
@@ -45,8 +48,9 @@ int pktcodec_decode_host (ioport *io, host *h) {
         mid = ioport_read_u64 (io);
         if (mid == 0) break;
         
-        // SZ_EMPTY_ARRAY should go about and find children and
-        // empty those instead, if they exist.
+        /* SZ_EMPTY_ARRAY should go about and find children and
+         * empty those instead, if they exist.
+         */
         count = mid & MMASK_COUNT;
         if (count == SZ_EMPTY_ARRAY) {
             meter *crsr = host_find_prefix (h, mid, NULL);
@@ -56,6 +60,19 @@ int pktcodec_decode_host (ioport *io, host *h) {
                     crsr = host_find_prefix (h, mid, crsr);
                 }
                 continue;
+            }
+        }
+        
+        /* If the id has a prefix, get rid of a possible node that
+         * has the prefix for its name.
+         */
+        pfx = idgetprefix (mid);
+        if (pfx && (pfx != lastpfx)) {
+            lastpfx = pfx;
+            meter *crsr = host_find_meter_name (h, pfx);
+            while (crsr) {
+                host_delete_meter (h, crsr);
+                crsr = host_find_meter_name (h, pfx);
             }
         }
         

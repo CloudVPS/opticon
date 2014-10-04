@@ -17,6 +17,7 @@ meterid_t    makeid (const char *label, metertype_t type, int pos);
 meterid_t    id2mask (meterid_t);
 int          idisprefix (meterid_t potential, meterid_t prefixfor,
                          meterid_t mask);
+meterid_t    idgetprefix (meterid_t);
 char        *load_file (const char *);
 void         ip2str (struct sockaddr_storage *, char *);
 

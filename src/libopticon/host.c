@@ -117,6 +117,17 @@ int host_has_meter (host *h, meterid_t id) {
     return res;
 }
 
+/** Find a meter only by its name, regardless of type */
+meter *host_find_meter_name (host *h, meterid_t id) {
+    meterid_t rid = (id & MMASK_NAME);
+    meter *m = h->first;
+    while (m) {
+        if ((m->id & MMASK_NAME) == rid) return m;
+        m = m->next;
+    }
+    return NULL;
+}
+
 /** Get (or create) a specific meter for a host.
   * \param host The host structure.
   * \param id The meterid (label and type).
@@ -155,6 +166,8 @@ meter *host_find_prefix (host *h, meterid_t prefix, meter *prev) {
     meterid_t mask = id2mask (prefix);
     crsr = crsr->next;
     while (crsr) {
+        char meter[16];
+        id2str (crsr->id &mask, meter);
         if ((crsr->id & mask) == (prefix & MMASK_NAME)) {
             if (idisprefix (prefix, crsr->id, mask)) return crsr;
         }
@@ -206,6 +219,24 @@ fstring meter_get_str (meter *m, unsigned int pos) {
     return res;
 }
 
+/** Remove a meter from a host list and deallocate it */
+void host_delete_meter (host *h, meter *m) {
+    if (m->prev) {
+        m->prev->next = m->next;
+    }
+    else {
+        h->first = m->next;
+    }
+    if (m->next) {
+        m->next->prev = m->prev;
+    }
+    else {
+        h->last = m->prev;
+    }
+    meter_set_empty (m);
+    free (m);
+}
+
 /** Mark the beginning of a new update cycle. Saves the meters
   * from constantly asking the kernel for the current time.
   */
@@ -223,18 +254,7 @@ void host_end_update (host *h) {
         nm = m->next;
         if (m->lastmodified < last) {
             if ((m->lastmodified - last) > default_meter_timeout) {
-                if (m->prev) {
-                    m->prev->next = m->next;
-                }
-                else {
-                    h->first = m->next;
-                }
-                if (m->next) {
-                    m->next->prev = m->prev;
-                }
-                else {
-                    h->last = m->prev;
-                }
+                host_delete_meter (h, m);
             }
         }
         m = nm;
@@ -290,7 +310,8 @@ void meter_set_empty_array (meter *m) {
 void meter_setcount (meter *m, unsigned int count) {
     int cnt = count ? count : 1;
     assert (cnt <= SZ_EMPTY_ARRAY);
-    
+
+    /* Empty value/array shortcut: deallocate and be done */    
     if (cnt >= SZ_EMPTY_VAL) {
         m->count = cnt;
         m->lastmodified = m->host->lastmodified;
