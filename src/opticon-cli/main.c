@@ -340,6 +340,7 @@ int conf_admin_token (const char *id, var *v, updatetype tp) {
     if (OPTIONS.opticon_token[0] == 0) {
         OPTIONS.opticon_token = var_get_str (v);
     }
+    return 1;
 }
 
 /** Print usage information.
