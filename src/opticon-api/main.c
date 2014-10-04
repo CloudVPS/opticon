@@ -231,6 +231,8 @@ void setup_matches (void) {
     _P_ ("/",                         REQ_GET,    cmd_list_tenants);
     _P_ ("/",                         REQ_ANY,    err_method_not_allowed);
     _P_ ("/token",                    REQ_GET,    cmd_token);
+    _P_ ("/session",                  REQ_GET,    flt_check_admin);
+    _P_ ("/session",                  REQ_GET,    cmd_list_sessions);
     _P_ ("/%U*",                      REQ_ANY,    flt_check_tenant);
     _P_ ("/%U",                       REQ_GET,    cmd_tenant_get);
     _P_ ("/%U",                       REQ_POST,   cmd_tenant_create);

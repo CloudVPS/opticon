@@ -309,6 +309,7 @@ clicmd CLICMD[] = {
     {"watcher-delete",cmd_watcher_delete},
     {"watcher-list",cmd_watcher_list},
     {"host-show",cmd_get_record},
+    {"session-list",cmd_session_list},
     {"dancing-bears", cmd_bears},
     {NULL,NULL}
 };

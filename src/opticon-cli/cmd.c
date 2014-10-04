@@ -607,6 +607,29 @@ int cmd_get_record (int argc, const char *argv[]) {
     return 0;    
 }
 
+int cmd_session_list (int argc, const char *argv[]) {
+    var *v = api_get ("/session");
+    var *v_session = var_get_array_forkey (v, "session");
+
+    printf ("---------------------------------------------"
+            "-----------------------------------\n");
+
+    printf ("Session ID         Sender"
+            "                                  Last Refresh\n");
+    
+    var *crsr = v_session->value.arr.first;
+    while (crsr) {
+        printf ("%08llx-%08llx %-38s %s\n",
+                var_get_int_forkey (crsr, "sessid"),
+                var_get_int_forkey (crsr, "addr"),
+                var_get_str_forkey (crsr, "remote"),
+                var_get_str_forkey (crsr, "lastcycle"));
+        crsr = crsr->next;
+    }
+    var_free (v);
+    return 0;
+}
+
 int cmd_bears (int argc, const char *argv[]) {
     var *v = api_get ("/obligatory-dancing-bears");
     puts (var_get_str_forkey (v,"bear"));

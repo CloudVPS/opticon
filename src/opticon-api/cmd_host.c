@@ -197,6 +197,22 @@ int cmd_host_get_time (req_context *ctx, req_arg *a,
     return 0;
 }
 
+int cmd_list_sessions (req_context *ctx, req_arg *a, var *env, int *status) {
+    db *DB = localdb_create (OPTIONS.dbpath);
+    var *list = db_get_global (DB, "sessions");
+    var *list_s = var_get_array_forkey (list, "session");
+    var *crsr = list_s->value.arr.first;
+    while (crsr) {
+        /* Don't export the AES key */
+        var_delete_key (crsr, "key");
+        crsr = crsr->next;
+    }
+    var_copy (env, list);
+    var_free (list);
+    *status = 200;
+    return 1;
+}
+
 int cmd_dancing_bears (req_context *ctx, req_arg *a, var *env, int *status) {
     const char *B = "    _--_     _--_    _--_     _--_     "
                     "_--_     _--_     _--_     _--_\n"
