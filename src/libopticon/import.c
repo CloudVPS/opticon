@@ -155,6 +155,11 @@ int var_to_host (host *h, var *val) {
                     }
                 }
             }
+            else {
+                mid = makeid (v->id, MTYPE_INT, 0);
+                m = host_get_meter (h, mid);
+                meter_set_empty_array (m);
+            }
         }
         else if (v->type == VAR_DICT) {
             strcpy (firstlevel, v->id);

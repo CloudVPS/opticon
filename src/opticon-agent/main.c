@@ -11,6 +11,8 @@
 #include <libopticon/cliopt.h>
 #include <libopticon/transport_udp.h>
 #include <libopticon/import.h>
+#include <libopticon/ioport_file.h>
+#include <libopticon/codec_json.h>
 #include <arpa/inet.h>
 #include <syslog.h>
 
@@ -158,6 +160,19 @@ int daemon_main (int argc, const char *argv[]) {
                 host_delete (h);
                 continue;
             }
+
+            /*            
+            FILE *pktf = fopen ("packet.json","a");
+            fprintf (pktf, "\n--- %s ---\n\n", slowround?"Slow":"Fast");
+            ioport *dump = ioport_create_filewriter (pktf);
+            log_debug ("dump %llx", dump);
+            codec *jsonc = codec_create_json();
+            log_debug ("jsonc %llx", jsonc);
+            codec_encode_host (jsonc, dump, h);
+            codec_release (jsonc);
+            ioport_close (dump);
+            fclose (pktf);
+            */
         
             log_debug ("Encoded %i bytes", ioport_read_available (encoded));
 
