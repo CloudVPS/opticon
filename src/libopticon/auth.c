@@ -62,6 +62,9 @@ void sessionlist_restore (var *list) {
         s->lastserial = (uint32_t) var_get_int_forkey (crsr, "lastserial");
         s->key = aeskey_from_base64 (var_get_str_forkey (crsr, "key"));
         str2ip (var_get_str_forkey (crsr, "remote"), &s->remote);
+        host *h = host_find (s->tenantid, s->hostid);
+        if (! h) { free(s); continue; }
+        s->host = h;
         session_link (s);
         crsr = crsr->next;
     }
