@@ -626,6 +626,10 @@ int cmd_session_list (int argc, const char *argv[]) {
                 var_get_str_forkey (crsr, "lastcycle"));
         crsr = crsr->next;
     }
+
+    printf ("---------------------------------------------"
+            "-----------------------------------\n");
+
     var_free (v);
     return 0;
 }
