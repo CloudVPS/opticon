@@ -175,7 +175,7 @@ void tokencache_store_invalid (const char *token) {
     for (i=0; i<TOKENCACHE.count; ++i) {
         crsr = &TOKENCACHE.nodes[i];
         if (crsr->hashcode == into->hashcode) {
-            tcache_node_clear (&crsr, 1);
+            tcache_node_clear (crsr, 1);
         }
     }
     

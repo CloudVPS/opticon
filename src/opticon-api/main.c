@@ -87,8 +87,14 @@ int answer_to_connection (void *cls, struct MHD_Connection *connection,
 }
 
 int handle_openstack_token (req_context *ctx) {
+    if (! ctx->openstack_token) return 0;
     if (! ctx->openstack_token[0]) return 0;
     if (! ctx->openstack_token[1]) return 0;
+    if (! OPTIONS.keystone_url[0]) return 0;
+    char *url = (char *) malloc (strlen(OPTIONS.keystone_url)+40);
+    char l = OPTIONS.keystone_url[strlen(OPTIONS.keystone_url)-1];
+    sprintf (url, "%s%sv2.0/tenants", OPTIONS.keystone_url,
+                  (l == '/') ? "" : "/");  
     int retcode = 0;
     int i = 0;
     var *hdr = var_alloc();
@@ -127,9 +133,12 @@ int handle_openstack_token (req_context *ctx) {
         var_free (res);
     }
     
-    log_info ("%s Keystone token <%c%c...>", retcode?"Accepted":"Rejected",
+    log_info ("%s [KEYSTONE  ] %03i CALL %s %s <%c%c...>",
+              ctx->remote, retcode, url,
+              retcode?"ACCEPT":"REJECT",
               ctx->openstack_token[0], ctx->openstack_token[1]);
     
+    free (url);
     var_free (hdr);
     var_free (data);
     return retcode;;
