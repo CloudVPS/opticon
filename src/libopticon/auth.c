@@ -28,7 +28,7 @@ var *sessionlist_save (void) {
     for (int i=0; i<256; ++i) {
         crsr = SESSIONS[i].first;
         while (crsr) {
-            var *v_sess = var_add_dict (v_root);
+            var *v_sess = var_add_dict (v_session);
             var_set_uuid_forkey (v_sess, "tenantid", crsr->tenantid);
             var_set_uuid_forkey (v_sess, "hostid", crsr->hostid);
             var_set_int_forkey (v_sess, "addr", crsr->addr);
