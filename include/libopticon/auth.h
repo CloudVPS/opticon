@@ -4,6 +4,7 @@
 #include <libopticon/datatypes.h>
 #include <libopticon/ioport.h>
 #include <libopticon/aes.h>
+#include <libopticon/var.h>
 #include <time.h>
 #include <stdlib.h>
 #include <stddef.h>
@@ -39,6 +40,8 @@ extern sessionlist SESSIONS[256];
 /* ============================= FUNCTIONS ============================= */
 
 void         sessionlist_init (void);
+var         *sessionlist_save (void);
+void         sessionlist_restore (var *);
 session     *session_alloc (void);
 void         session_link (session *);
 

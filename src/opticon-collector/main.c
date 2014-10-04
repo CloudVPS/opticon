@@ -189,12 +189,12 @@ void handle_auth_packet (ioport *pktbuf, uint32_t netid,
                          struct sockaddr_storage *remote) {
     authinfo *auth = ioport_unwrap_authdata (pktbuf, resolve_tenantkey);
     
-    char addrbuf[64];
+    char addrbuf[INET6_ADDRSTRLEN];
     ip2str (remote, addrbuf);
     
     /* No auth means discarded by the crypto/decoding layer */
     if (! auth) {
-        log_warn ("Authentication failed on packet from >%s>", addrbuf);
+        log_warn ("Authentication failed on packet from <%s>", addrbuf);
         return;
     }
     
