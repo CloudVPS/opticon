@@ -193,6 +193,17 @@ int main (int argc, const char *argv[]) {
     
     S = session_find (0x0a000001, 0x31337666);
     assert (S != NULL);
+    
+    var *v = sessionlist_save();
+    var *vsessions = var_find_key (v, "session");
+    assert (vsessions);
+    var *vsess = var_get_dict_atindex (vsessions, 0);
+    assert (vsess);
+    assert (var_get_count(vsess));
+    uuid ut = var_get_uuid_forkey (vsess, "tenantid");
+    assert (uuidcmp (ut, tenantid));
+    var_free (v);
+    
     session_expire (time(NULL)+1);
     S = session_find (0x0a000001, 0x31337666);
     assert (S == NULL);
