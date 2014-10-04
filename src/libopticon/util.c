@@ -215,6 +215,19 @@ void ip2str (struct sockaddr_storage *remote, char *addrbuf) {
     }
 }
 
+void str2ip (const char *addrbuf, struct sockaddr_storage *remote) {
+    if (strchr (addrbuf, ':')) { /*v6*/
+        addrbuf->ss_family = AF_INET6;
+        struct sockaddr_in6 *in = (struct sockaddr_in6 *) remote;
+        inet_pton (AF_INET6, addrbuf, &in->sin6_addr);
+    }
+    else {
+        addrbuf->ss_family = AF_INET;
+        struct sockaddr_in *in = (struct sockaddr_in *) remote;
+        inet_pton (AF_INET, addrbuf, &in->sin_addr);
+    }
+}
+
 static char *tm2str (struct tm *tm, int zulu) {
     /* 1234-67-90T23:56:89Z */
     char *res = (char*) malloc (24);
