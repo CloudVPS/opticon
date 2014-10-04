@@ -248,9 +248,9 @@ void handle_auth_packet (ioport *pktbuf, uint32_t netid,
     session_expire (tnow - 905);
     var *vlist = sessionlist_save();
     FILE *sdat = fopen ("/tmp/opticon-session.db","w");
-    dump_var (list, sdat);
+    dump_var (vlist, sdat);
     fclose (sdat);
-    var_free (list);
+    var_free (vlist);
     free (auth);
 }
 
