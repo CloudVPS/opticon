@@ -21,4 +21,9 @@ meterid_t    idgetprefix (meterid_t);
 char        *load_file (const char *);
 void         ip2str (struct sockaddr_storage *, char *);
 
+char        *time2str (time_t);
+char        *time2utcstr (time_t);
+time_t       str2time (const char *);
+time_t       utcstr2time (const char *);
+
 #endif

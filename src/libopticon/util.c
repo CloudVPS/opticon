@@ -214,3 +214,47 @@ void ip2str (struct sockaddr_storage *remote, char *addrbuf) {
         inet_ntop (AF_INET6, &in->sin6_addr, addrbuf, 64);
     }
 }
+
+static char *tm2str (struct tm *tm, int zulu) {
+    /* 1234-67-90T23:56:89Z */
+    char *res = (char*) malloc (24);
+    sprintf (res, "%i-%02i-%02iT%02i:%02i:%02i%s",
+             tm->tm_year+1900, tm->tm_mon+1, tm->tm_mday,
+             tm->tm_hour, tm->tm_min, tm->tm_sec,
+             zulu ? "Z":"");
+    return res;
+}
+
+char *time2str (time_t ti) {
+    struct tm tm;
+    localtime_r (&ti, &tm);
+    return tm2str (&tm, 0);
+}
+
+char *time2utcstr (time_t ti) {
+    struct tm tm;
+    gmtime_r (&ti, &tm);
+    return tm2str (&tm, 1);
+}
+
+static void parsetime (const char *str, struct tm *into) {
+    if (strlen (str)<18) return;
+    into->tm_year = atoi (str) - 1900;
+    into->tm_mon = atoi (str+5) - 1;
+    into->tm_mday = atoi (str+8);
+    into->tm_hour = atoi (str+11);
+    into->tm_min = atoi (str+14);
+    into->tm_sec = atoi (str+17);
+}
+
+time_t str2time (const char *tstr) {
+    struct tm tm;
+    parsetime (tstr, &tm);
+    return mktime (&tm);
+}
+
+time_t utcstr2time (const char *tstr) {
+    struct tm tm;
+    parsetime (tstr, &tm);
+    return timegm (&tm);
+}
