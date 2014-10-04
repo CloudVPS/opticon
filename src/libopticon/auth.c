@@ -31,8 +31,8 @@ var *sessionlist_save (void) {
             var *v_sess = var_add_dict (v_session);
             var_set_uuid_forkey (v_sess, "tenantid", crsr->tenantid);
             var_set_uuid_forkey (v_sess, "hostid", crsr->hostid);
-            var_set_int_forkey (v_sess, "addr", crsr->addr);
-            var_set_int_forkey (v_sess, "sessid", crsr->sessid);
+            var_set_int_forkey (v_sess, "addr", (uint64_t) crsr->addr);
+            var_set_int_forkey (v_sess, "sessid", (uint64_t) crsr->sessid);
             char *timestr = time2utcstr (crsr->lastcycle);
             var_set_str_forkey (v_sess, "lastcycle", timestr);
             free (timestr);
