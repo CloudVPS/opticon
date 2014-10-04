@@ -56,6 +56,14 @@ var *api_call (const char *mth, var *data, const char *fmt, ...)
     tmpurl[1023] = 0;
     var *res = http_call (mth, tmpurl, outhdr, data, errinfo, NULL);
     if (! res) {
+        int st = var_get_int_forkey (errinfo, "status");
+        if (st == 401) {
+            if (keystone_login()) {
+                res = api_call (mth, data, "%s", path);
+            }
+        }
+    }
+    if (! res) {
         const char *errstr = var_get_str_forkey (errinfo, "error");
         if (! errstr) errstr = "Unknown error";
         fprintf (stderr, "%% %s\n", errstr);
@@ -94,6 +102,14 @@ var *api_get_raw (const char *path, int exiterror) {
     strncat (tmpurl, path, 1023);
     tmpurl[1023] = 0;
     var *res = http_call ("GET", tmpurl, outhdr, data, errinfo, NULL);
+    if (! res) {
+        int st = var_get_int_forkey (errinfo, "status");
+        if (st == 401) {
+            if (keystone_login()) {
+                res = api_get_raw (path, exiterror);
+            }
+        }
+    }
     if (! res) {
         if (! exiterror) return NULL;
         const char *errstr = var_get_str_forkey (errinfo, "error");

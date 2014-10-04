@@ -86,6 +86,7 @@ var *http_call (const char *mth, const char *url, var *hdr, var *data,
         } else {
             if (errinfo) {
                 parse_json (errinfo, ioport_get_buffer (indata));
+                var_set_int_forkey (errinfo, "status", http_status);
             }
             var_free (res);
             res = NULL;

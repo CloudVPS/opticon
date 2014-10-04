@@ -87,6 +87,8 @@ int answer_to_connection (void *cls, struct MHD_Connection *connection,
 }
 
 int handle_openstack_token (req_context *ctx) {
+    if (! ctx->openstack_token[0]) return 0;
+    if (! ctx->openstack_token[1]) return 0;
     int retcode = 0;
     int i = 0;
     var *hdr = var_alloc();
@@ -124,6 +126,10 @@ int handle_openstack_token (req_context *ctx) {
         }
         var_free (res);
     }
+    
+    log_info ("%s Keystone token <%c%c...>", retcode?"Accepted":"Rejected",
+              ctx->openstack_token[0], ctx->openstack_token[1]);
+    
     var_free (hdr);
     var_free (data);
     return retcode;;
