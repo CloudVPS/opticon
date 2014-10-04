@@ -43,8 +43,8 @@ void print_value (const char *key, const char *fmt, ...) {
     vsnprintf (val, 4096, fmt, ap);
     va_end (ap);
 
-    const char *dots = "....................";
-    int dotspos = strlen(dots) - 16;
+    const char *dots = "......................";
+    int dotspos = strlen(dots) - 18;
     printf ("%s", key);
     dotspos += strlen (key);
     if (dotspos < strlen (dots)) printf ("%s", dots+dotspos);
@@ -276,6 +276,14 @@ void print_generic_table (var *table) {
         }
     
         crsr = crsr->next;
+    }
+    
+    int twidth = 0;
+    for (i=0; i<count; ++i) twidth += width[i];
+    if (twidth<40) {
+        int add = (40 - twidth) / count;
+        if (! add) add = 1;
+        for (i=0; i<count; ++i) width[i] += add;
     }
     
     print_hdr (table->id);
