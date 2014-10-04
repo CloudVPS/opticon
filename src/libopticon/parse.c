@@ -214,7 +214,8 @@ int parse_json_level (var *v, const char **buf, parse_state st) {
                     (*c == '#')) {
                     if ((! value_nondigits) && (value_dots < 2)) {
                         if (value_dots == 0) {
-                            var_set_int_forkey (v, keybuf, atoi(valuebuf));
+                            var_set_int_forkey (v, keybuf,
+                                stroull(valuebuf, NULL, 10));
                         }
                         else {
                             var_set_double_forkey (v, keybuf,
@@ -321,7 +322,7 @@ int parse_json_level (var *v, const char **buf, parse_state st) {
                     (*c == ',') || (*c == '#')) {
                     if ((! value_nondigits) && (value_dots<2)) {
                         if (value_dots == 0) {
-                            var_add_int (v, atoi (valuebuf));
+                            var_add_int (v, strtoull (valuebuf, NULL, 10));
                         }
                         else {
                             var_add_double (v, atof (valuebuf));
