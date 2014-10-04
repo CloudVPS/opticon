@@ -881,7 +881,7 @@ db *localdb_create (const char *prefix) {
     self->db.create_tenant = localdb_create_tenant;
     self->db.remove_tenant = localdb_remove_tenant;
     self->db.get_global = localdb_get_global;
-    self->db.set_global = localdb.set_global;
+    self->db.set_global = localdb_set_global;
     self->db.free = localdb_free;
     self->db.opened = 0;
     self->db.tenant.lsb = 0;
