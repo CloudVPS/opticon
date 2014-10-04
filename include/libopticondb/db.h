@@ -33,6 +33,8 @@ typedef void (*close_db_f)(struct db_s *);
 typedef uuid *(*list_tenants_f)(struct db_s *, int *);
 typedef int (*create_tenant_f)(struct db_s *, uuid, var *);
 typedef int (*remove_tenant_f)(struct db_s *, uuid);
+typedef int (*set_global_f)(struct db_s *, const char *, var *);
+typedef var *(*get_global_f)(struct db_s *, const char *);
 typedef void (*free_db_f)(struct db_s *);
 
 /** Database handle virtual class */
@@ -53,6 +55,8 @@ typedef struct db_s {
     list_tenants_f   list_tenants; /** Unbound method */
     create_tenant_f  create_tenant; /** Unbound method */
     remove_tenant_f  remove_tenant; /** Unbound method */
+    set_global_f     set_global; /** Unbound method */
+    get_global_f     get_global; /** Unbound method */
     free_db_f        free; /** Unbound method */
     uuid             tenant; /** The bound tenant */
     int              opened; /** 1 if currently bound to a host */
@@ -81,5 +85,7 @@ void         db_free (db *d);
 uuid        *db_list_tenants (db *d, int *outsz);
 int          db_create_tenant (db *d, uuid tuuid, var *meta);
 int          db_remove_tenant (db *d, uuid u);
+int          db_set_global (db *d, const char *id, var *data);
+var         *db_get_global (db *d, const char *id);
 
 #endif

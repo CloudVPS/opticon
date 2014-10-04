@@ -144,6 +144,24 @@ void db_close (db *d) {
     d->opened = 0;
 }
 
+/** Set global metadata
+  * \param d The database handle
+  * \param id The id of the metadata to save
+  * \param v The metadata
+  */
+int db_set_global (db *d, const char *id, var *v) {
+    return d->set_global (d, id, v);
+}
+
+/** Get global metadata
+  * \param d The database handle
+  * \param id The id of the metadata to load
+  * \return Loaded metadata, or NULL.
+  */
+var *db_get_global (db *d, const char *id) {
+    return d->get_global (d, id);
+}
+
 /** Free up all resources associated with a db handle */
 void db_free (db *d) {
     if (d->opened) d->close (d);

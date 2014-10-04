@@ -247,9 +247,7 @@ void handle_auth_packet (ioport *pktbuf, uint32_t netid,
     /* Now's a good time to cut the dead wood */
     session_expire (tnow - 905);
     var *vlist = sessionlist_save();
-    FILE *sdat = fopen ("/tmp/opticon-session.db","w");
-    dump_var (vlist, sdat);
-    fclose (sdat);
+    db_set_global (APP.db, "sessions", vlist);
     var_free (vlist);
     free (auth);
 }

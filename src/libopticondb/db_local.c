@@ -789,7 +789,72 @@ int localdb_set_hostmeta (db *d, uuid hostid, var *v) {
     return res;
 }
 
+int localdb_set_global (db *d, const char *id, var *v) {
+    int res = 0;
+    FILE *F;
+    localdb *self = (localdb *) d;
+    size_t sz = strlen (self->path) + strlen (id);
+    char *metapath = (char *) malloc (sz+4);
+    char *tmppath = (char *) malloc (sz + 20);
+    sprintf (metapath, "%s%s.json", self->path, id);
+    sprintf (tmppath, "%s%s.json.new", self->path, id);
+    F = fopen (tmppath, "w");
+    if (F) {
+        res = dump_var (v, F);
+        fclose (F);
+        if (res) {
+            F = fopen (metapath, "r");
+            if (F) flock (fileno (F), LOCK_EX);
+            if (rename (tmppath, metapath) != 0) {
+                res = 0;
+            }
+            if (F) {
+                flock (fileno (F), LOCK_UN);
+                fclose (F);
+            }
+        }
+        if (! res) unlink (tmppath);
+    }
+    free (metapath);
+    free (tmppath);
+    return res;
+}
 
+var *localdb_get_global (db *d, const char *id) {
+    localdb *self = (localdb *) d;
+    char uuidstr[40];
+    struct stat st;
+    FILE *F;
+    
+    size_t sz = strlen (self->path) + strlen (id);
+    char *metapath = (char *) malloc (sz+16);
+    sprintf (metapath, "%s%s.json", self->path, id);
+    if (stat (metapath, &st) != 0) {
+        free (metapath);
+        return NULL;
+    }
+    F = fopen (metapath, "r");
+    if (! F) {
+        log_debug ("Could open stat: %s\n", metapath);
+        free (metapath);
+        return NULL;
+    }
+    flock (fileno (F), LOCK_SH);
+    char *data = (char *) malloc (st.st_size + 16);
+    fread (data, st.st_size, 1, F);
+    data[st.st_size] = 0;
+    flock (fileno (F), LOCK_UN);
+    fclose (F);
+    var *res = var_alloc();
+    if (! parse_json (res, data)) {
+        log_error ("Parse error: %s\n", parse_error());
+        var_free (res);
+        res = NULL;
+    }
+    free (metapath);
+    free (data);
+    return res;
+}
 
 /** Allocate an unbound localdb object.
   * \param prefix The path prefix for local storage.
