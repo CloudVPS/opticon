@@ -418,6 +418,15 @@ int daemon_main (int argc, const char *argv[]) {
 
     log_info ("--- Opticon-collector ready for action ---");
     
+    var *slist = db_get_global (APP.db, "sessions");
+    if (slist) {
+        log_info ("Restoring sessions");
+        sessionlist_restore (slist);
+        var_free (slist);
+        session_expire (time(NULL) - 905);
+    }
+    
+    
     /* Set up threads */
     APP.queue = packetqueue_create (1024, APP.transport);
     APP.reloader = conf_reloader_create();
