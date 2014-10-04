@@ -793,11 +793,11 @@ int localdb_set_global (db *d, const char *id, var *v) {
     int res = 0;
     FILE *F;
     localdb *self = (localdb *) d;
-    size_t sz = strlen (self->path) + strlen (id);
+    size_t sz = strlen (self->pathprefix) + strlen (id);
     char *metapath = (char *) malloc (sz+4);
     char *tmppath = (char *) malloc (sz + 20);
-    sprintf (metapath, "%s%s.json", self->path, id);
-    sprintf (tmppath, "%s%s.json.new", self->path, id);
+    sprintf (metapath, "%s/%s.json", self->pathprefix, id);
+    sprintf (tmppath, "%s/%s.json.new", self->pathprefix, id);
     F = fopen (tmppath, "w");
     if (F) {
         res = dump_var (v, F);
@@ -826,9 +826,9 @@ var *localdb_get_global (db *d, const char *id) {
     struct stat st;
     FILE *F;
     
-    size_t sz = strlen (self->path) + strlen (id);
+    size_t sz = strlen (self->pathprefix) + strlen (id);
     char *metapath = (char *) malloc (sz+16);
-    sprintf (metapath, "%s%s.json", self->path, id);
+    sprintf (metapath, "%s/%s.json", self->pathprefix, id);
     if (stat (metapath, &st) != 0) {
         free (metapath);
         return NULL;
