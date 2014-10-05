@@ -822,7 +822,6 @@ int localdb_set_global (db *d, const char *id, var *v) {
 
 var *localdb_get_global (db *d, const char *id) {
     localdb *self = (localdb *) d;
-    char uuidstr[40];
     struct stat st;
     FILE *F;
     
