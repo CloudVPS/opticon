@@ -518,6 +518,8 @@ POST /{TENANT}/host/{HOST}/watcher/{METER}
    is why there is no `cmp` field. If the watcher is not in the default
    list of watchers, it needs to be defined with the proper `cmp` function
    at the tenant level, before any host-level watchers make sense.
+2. Like in /{TENANT}/watcher, only the trigger levels that are posted
+   are updated.
 
 DELETE /{TENANT}/host/{HOST}/watcher/{METER}
 --------------------------------------------
