@@ -448,6 +448,7 @@ int cmd_tenant_set_meter (req_context *ctx, req_arg *a,
     tstr = var_get_str_forkey (req_meter, "type");
     if (!tstr || (strcmp (tstr, "integer") &&
                   strcmp (tstr, "frac") &&
+                  strcmp (tstr, "table") &&
                   strcmp (tstr, "string"))) {
         var_free (dbmeta);
         db_free (DB);
@@ -461,7 +462,7 @@ int cmd_tenant_set_meter (req_context *ctx, req_arg *a,
     
     copystr ("type");
     copystr ("description");
-    copystr ("unit");
+    if (strcmp (tstr, "table")) { copystr ("unit"); }
     
     #undef copystr
     
@@ -529,10 +530,17 @@ int cmd_tenant_set_watcher (req_context *ctx, req_arg *a,
         db_free (DB);
         return err_not_found (ctx, a, env, status);
     }
+    var *ctxwatcher = var_get_dict_forkey (ctx->bodyjson, "watcher");
     var *dbmeta = db_get_metadata (DB);
     var *dbmeta_meters = var_get_dict_forkey (dbmeta, "meter");
     var *dbmeta_meter = var_get_dict_forkey (dbmeta_meters, meterid);
-    var *ctxwatcher = var_get_dict_forkey (ctx->bodyjson, "watcher");
+    const char *meter_type = var_get_str_forkey (dbmeta_meter, "type");
+    if (meter_type && strcmp (meter_type, "table") == 0) {
+        var_free (dbmeta);
+        db_free (DB);
+        *status = 400;
+        return err_generic (env, "Cannot set watcher for table root");
+    }
     
     var *tv;
 

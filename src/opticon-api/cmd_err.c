@@ -8,6 +8,18 @@
 #include "cmd.h"
 #include "options.h"
 
+int err_generic (var *out, const char *fmt, ...) {
+    char buffer[4096];
+    buffer[0] = 0;
+    va_list ap;
+    va_start (ap, fmt);
+    vsnprintf (buffer, 4096, fmt, ap);
+    va_end (ap);
+
+    var_set_str_forkey (out, "error", buffer);
+    return 1;
+}
+
 /** Generate a generic 401 error */
 int err_unauthorized (req_context *ctx, req_arg *a, var *out, int *status) {
     var_set_str_forkey (out, "error", "Unauthorized access");

@@ -86,6 +86,14 @@ int cmd_host_set_watcher (req_context *ctx, req_arg *a,
     /* Copy the type from parent information */
     const char *tp = var_get_str_forkey (def_meter, "type");
     if (! tp) tp = "integer";
+    else if (strcmp (tp, "table") == 0) {
+        db_free (DB);
+        var_free (def);
+        var_free (hmeta);
+        *status = 400;
+        return err_generic (env, "Cannot set watcher for table root");
+    }
+    
     var_set_str_forkey (hmeta_meter, "type", tp);
     
     var *in_watcher = var_get_dict_forkey (ctx->bodyjson, "watcher");

@@ -103,15 +103,16 @@ void watchlist_populate (watchlist *w, var *v_meters) {
             var *v_alert = var_get_dict_forkey (mdef, "alert");
             var *v_crit = var_get_dict_forkey (mdef, "critical");
             const char *type = var_get_str_forkey (mdef, "type");
-            if (type && (v_warn || v_alert)) {
+            if (type && (v_warn || v_alert || v_crit)) {
                 metertype_t tp;
                 if (memcmp (type, "int", 3) == 0) tp = MTYPE_INT;
                 else if (strcmp (type, "frac") == 0) tp = MTYPE_FRAC;
                 else if (memcmp (type, "str", 3) == 0) tp = MTYPE_STR;
                 else {
-                    log_error ("fixme");
-                    /* FIXME, LOG AND ABORT */
-                    break;
+                    log_error ("Watcher configured for unrecognized "
+                               "typeid %s", type);
+                    mdef = mdef->next;
+                    continue;
                 }
                 
                 meterid_t id = makeid (mdef->id, tp, 0);
