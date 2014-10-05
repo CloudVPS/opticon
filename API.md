@@ -310,6 +310,104 @@ POST /{TENANT}/meter/{METER}
 DELETE /{TENANT}/meter/{METER}
 ------------------------------
 
-**INPUT:** Irrelevant
+**INPUT:** None
+
+**OUTPUT:** Irrelevant
+
+GET /{TENANT}/watcher
+---------------------
+
+**INPUT:** None
+
+**OUTPUT:**
+
+```javascript
+{
+    "watcher": {
+        "df/pused": {
+            "type": "frac",
+            "warning": {
+                "cmp": "gt",
+                "val": 90.000000,
+                "weight": 1.000000
+            },
+            "alert": {
+                "cmp": "gt",
+                "val": 95.000000,
+                "weight": 1.000000
+            },
+            "critical": {
+                "cmp": "gt",
+                "val": 99.000000,
+                "weight": 1.000000
+            }
+        },
+        "pcpu": {
+            "type": "frac",
+            "warning": {
+                "cmp": "gt",
+                "val": 45.000000,
+                "weight": 1.000000,
+                "origin": "tenant"
+            },
+            "alert": {
+                "cmp": "gt",
+                "val": 50.000000,
+                "weight": 1.000000
+            },
+            "critical": {
+                "cmp": "gt",
+                "val": 99.000000,
+                "weight": 1.000000
+            }
+        },
+...
+    }
+}
+```
+
+**NOTES:**
+
+1. This is a combination view. Watchers that are defined at the tenant
+   level will have their `origin` field set to `tenant`.
+
+POST /{TENANT}/watcher/{METER}
+------------------------------
+
+**INPUT:**
+```javascript
+{
+    "watcher": {
+        "warning":{
+            "cmp": {MATCHFUNCTION},
+            "val": {MATCHVALUE},
+            "weight": 1.0
+        },
+        "alert":{
+            "cmp": {MATCHFUNCTION},
+            "val": {MATCHVALUE},
+            "weight": 1.0
+        },
+        "critical":{
+            "cmp": {MATCHFUNCTION},
+            "val": {MATCHVALUE},
+            "weight": 1.0
+        }
+    }
+}
+```
+
+**NOTES:**
+
+1. The alert levels `warning`, `alert`, and `critical` are all optional.
+   If only a `warning` is defined, the watcher settings for the other
+   two levels are unaffected by the update.
+2. Valid matchfunctions for `int` and `frac` types are `lt`, and `gt.
+   For string types, `eq` is available.
+3. If no `weight` is provided, a default weight of `1.0` is chosen.
+
+DELETE /{TENANT}/watcher/{METER}
+
+**INPUT:** None
 
 **OUTPUT:** Irrelevant
