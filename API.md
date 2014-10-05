@@ -39,6 +39,17 @@ Error Replies
 }
 ```
 
+**STATUS** **CODES:**
+| Code | Description                                     |
+| ---- | ----------------------------------------------- |
+| 400  | The API server didn't like the data you sent    |
+| 401  | Your didn't send a token, or it was invalid     |
+| 403  | The server wanted an admin. You're not an admin |
+| 404  | Requested object could not be found             |
+| 405  | You sent an HTTP method that made no sense      |
+| 409  | Resource you're trying to create already exists |
+| 500  | Opticon dun goofed                              |
+
 GET /
 -----
 
