@@ -14,15 +14,15 @@ Opticon API Reference
 | /{TENANT}/meta                   | GET          | Sends back tenant's metadata                                               |
 | /{TENANT}/meta                   | PUT/POST^1   | ​Update tenant's metadata                                                  |
 | /{TENANT}/meter                  | GET          | Sends a list of all default and custom meters active for the tenant        |
-| /{TENANT}/meter/{MID}            | PUT/POST     | Create or update a custom meter definition                                 |
+| /{TENANT}/meter/{MID}            | PUT/POST^1   | Create or update a custom meter definition                                 |
 | /{TENANT}/meter/{MID}            | DELETE       | Remove a meter definition (and associated watchers)                        |
 | /{TENANT}/watcher                | GET          | Sends a list of all default and custom watchers                            |
-| /{TENANT}/watcher/{MID}          | PUT/POST     | Create or update a watcher                                                 |
+| /{TENANT}/watcher/{MID}          | PUT/POST^1   | Create or update a watcher                                                 |
 | /{TENANT}/watcher/{MID}          | DELETE       | Remove a watcher (host-level watchers may still apply)                     |
 | /{TENANT}/host                   | GET          | Sends a list of all the tenant's hosts                                     |
 | /{TENANT}/host/{H}               | GET          | Sends the current record for the host                                      |
 | /{TENANT}/host/{H}/watcher       | GET          | Sends a list of all default and custom watchers (host & tenant)            |
-| /{TENANT}/host/{H}/watcher/{MID} | PUT/POST     | Create or update a host-level watcher                                      |
+| /{TENANT}/host/{H}/watcher/{MID} | PUT/POST^1   | Create or update a host-level watcher                                      |
 | /{TENANT}/host/{H}/watcher/{MID} | DELETE       | Remove a host-level watcher                                                |
 
 ^1: Both POST and PUT have the same effect. Sorry, REST purists.
@@ -30,9 +30,9 @@ Opticon API Reference
 Error Replies
 -------------
 
-**INPUT: **Something stupid
+**INPUT:** Something stupid
 
-**OUTPUT: **HTTP error, plus JSON data with a specific error message:
+**OUTPUT:** HTTP error, plus JSON data with a specific error message:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 {
@@ -43,7 +43,7 @@ Error Replies
 GET /
 -----
 
-**INPUT: **None
+**INPUT:** None
 
 **OUTPUT:**
 
@@ -62,7 +62,7 @@ GET /
 GET /token
 ----------
 
-**INPUT: **None
+**INPUT:** None
 
 **OUTPUT:**
 
