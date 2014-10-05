@@ -26,6 +26,10 @@ var *var_alloc (void) {
 void var_link (var *self, var *parent) {
     if (! (self && parent)) return;
     
+    if (self->hashcode == 0 && self->id[0]) {
+        self->hashcode = hash_token (self->id);
+    }
+    
     self->parent = parent;
     self->root = (parent->root) ? parent->root : parent;
     self->next = NULL;
