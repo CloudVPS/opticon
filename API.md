@@ -204,7 +204,7 @@ GET /{TENANT}/meta
 }
 ```
 
-POST /{$TENANT}/meta
+POST /{TENANT}/meta
 --------------------
 
 **INPUT:**
@@ -218,7 +218,7 @@ POST /{$TENANT}/meta
 
 **OUTPUT:** Irrelevant
 
-GET /${TENANT}/meter
+GET /{TENANT}/meter
 
 **INPUT:** None
 
