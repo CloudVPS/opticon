@@ -12,7 +12,7 @@ Opticon API Reference
 | /{TENANT}                        | PUT          | Update a tenant                                                            |
 | /{TENANT}                        | DELETE       | Delete a tenant                                                            |
 | /{TENANT}/meta                   | GET          | Sends back tenant's metadata                                               |
-| /{TENANT}/meta                   | PUT/POST[^1] | ​Update tenant's metadata                                                  |
+| /{TENANT}/meta                   | PUT/POST^1   | ​Update tenant's metadata                                                  |
 | /{TENANT}/meter                  | GET          | Sends a list of all default and custom meters active for the tenant        |
 | /{TENANT}/meter/{MID}            | PUT/POST     | Create or update a custom meter definition                                 |
 | /{TENANT}/meter/{MID}            | DELETE       | Remove a meter definition (and associated watchers)                        |
@@ -25,7 +25,7 @@ Opticon API Reference
 | /{TENANT}/host/{H}/watcher/{MID} | PUT/POST     | Create or update a host-level watcher                                      |
 | /{TENANT}/host/{H}/watcher/{MID} | DELETE       | Remove a host-level watcher                                                |
 
-[^1]: Both POST and PUT have the same effect. Sorry, REST purists.
+^1: Both POST and PUT have the same effect. Sorry, REST purists.
 
 Error Replies
 -------------
