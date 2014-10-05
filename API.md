@@ -3,7 +3,6 @@ Opticon API Reference
 
 | **Path**                         | **Method**   | **Description**                                                            |
 | -------------------------------- | ------------ | -------------------------------------------------------------------------- |
-| /{TENANT}/meter                  | GET          | Sends a list of all default and custom meters active for the tenant        |
 | /                                | GET          | Sends back a list of tenants available to the user                         |
 | /token                           | GET          | Can be used by clients to verify they still have valid access              |
 | /session                         | GET          | (ADMIN) Sends an overview of active collector sessions                     |
@@ -124,3 +123,41 @@ GET /{TENANT}
     }
 }
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+POST /{TENANT}
+--------------
+**INPUT:** 
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+{
+    "tenant": {
+        "key": "fAM9aZdUoNzdytgqLoS2y44dfZeqWeBY9wkGWAq72C4=",
+        "name": "cowboy-henk"
+    }
+}
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+**ALTINPUT:**
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+{
+    "tenant": {}
+}
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+**OUTPUT:**
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+{
+    "tenant": {
+        "key": "fAM9aZdUoNzdytgqLoS2y44dfZeqWeBY9wkGWAq72C4=",
+        "name": "cowboy-henk"
+    }
+}
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+**NOTES:**
+1. Users authenticated through keystone are not allowed to set their own `name`
+   field. This field will always be inherited from the keystone metadata.
+2. If no `key` field is provided, the system will generate one. This is the
+   recommended way to get one on systems that have no secure random.
