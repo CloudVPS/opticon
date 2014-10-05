@@ -126,6 +126,8 @@ GET /{TENANT}
 
 POST /{TENANT}
 --------------
+PUT /{TENANT}
+--------------
 **INPUT:** 
 
 ```javascript
@@ -162,4 +164,16 @@ POST /{TENANT}
    field. This field will always be inherited from the keystone metadata.
 2. If no `key` field is provided, the system will generate one. This is the 
    recommended way to get one on systems that have no secure random.
+
+DELETE /{TENANT}
+----------------
+**INPUT:** None
+
+**OUTPUT:**
+
+```javascript
+{
+    "deleted": "{TENANT}"
+}
+```
 
