@@ -232,6 +232,14 @@ void tokencache_store_valid (const char *token, uuid *tenantlist,
     memcpy (into->tenantlist, tenantlist, tenantcount * sizeof (uuid));
     into->ctime = into->lastref = tnow;
     
+    /* Invalidate any open entries in the negative cache */
+    for (i=0; i<16; ++i) {
+        crsr = &TOKENCACHE.invalids[i];
+        if (crsr->hashcode == into->hashcode) {
+            tcache_node_clear (crsr, 1);
+        }
+    }
+
     pthread_rwlock_unlock (&TOKENCACHE.lock);
     __b__();
 }

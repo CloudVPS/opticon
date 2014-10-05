@@ -15,6 +15,8 @@
 #include "api.h"
 #include "cmd.h"
 
+static const char *PENDING_HDR = NULL;
+
 /** Display function for host-show section headers */
 void print_hdr (const char *hdr) {
     const char *mins = "-----------------------------------------------"
@@ -36,6 +38,10 @@ void print_hdr (const char *hdr) {
 
 /** Display function for host-show data */
 void print_value (const char *key, const char *fmt, ...) {
+    if (PENDING_HDR) {
+        print_hdr (PENDING_HDR);
+        PENDING_HDR = 0;
+    }
     char val[4096];
     val[0] = 0;
     va_list ap;
@@ -96,9 +102,7 @@ void print_values (var *apires, const char *pfx, var *mdef) {
     if (! mdef) mdef = api_get ("/%s/meter", OPTIONS.tenant);
     var *meters = var_get_dict_forkey (mdef, "meter");
     var *crsr = apires->value.arr.first;
-    if ( (!pfx) && (crsr) ) {
-        print_hdr ("MISC");
-    }
+    PENDING_HDR = "MISC";
     while (crsr) {
         char valbuf[1024];
         const char *name = NULL;
@@ -116,7 +120,7 @@ void print_values (var *apires, const char *pfx, var *mdef) {
         switch (crsr->type) {
             case VAR_ARRAY:
                 if (crsr->value.arr.first &&
-                    crsr->value.arr.first->type != VAR_DICT) {
+                   crsr->value.arr.first->type != VAR_DICT) {
                     print_array (name, crsr);
                 }
                 break;
