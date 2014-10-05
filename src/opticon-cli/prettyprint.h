@@ -19,5 +19,6 @@ void print_table (var *arr, const char **hdr, const char **fld,
                   const char **suffx, int *div);
 void print_generic_table (var *);
 void print_tables (var *);
+void print_done (void);
 
 #endif
