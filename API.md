@@ -188,3 +188,114 @@ DELETE /{TENANT}
 **INPUT:** None
 
 **OUTPUT:** Irrelevant
+
+GET /{TENANT}/meta
+------------------
+
+**INPUT:** None
+
+**OUTPUT:**
+
+```javascript
+{
+    "metadata": {
+        "alles": "tof"
+    }
+}
+```
+
+POST /{$TENANT}/meta
+--------------------
+
+**INPUT:**
+
+```javascript
+{
+    "metadata": {
+        "key": "value"
+    }
+}
+
+**OUTPUT:** Irrelevant
+
+GET /${TENANT}/meter
+
+**INPUT:** None
+
+**OUTPUT:**
+
+```javascript
+{
+    "meter": {
+        "agent/ip": {
+            "type": "string",
+            "description": "Remote IP Address"
+        },
+        "os/kernel": {
+            "type": "string",
+            "description": "Version"
+        },
+        "os/arch": {
+            "type": "string",
+            "description": "CPU Architecture"
+        },
+
+...
+
+        "who/user": {
+            "type": "string",
+            "description": "User",
+            "origin": "tenant"
+        },
+        "who/tty": {
+            "type": "string",
+            "description": "TTY",
+            "origin": "tenant"
+        },
+        "who/remote": {
+            "type": "string",
+            "description": "Remote IP",
+            "origin": "tenant"
+        },
+        "who": {
+            "type": "table",
+            "description": "Remote Users",
+            "origin": "tenant"
+        }
+    }
+}
+```
+
+**NOTES:**
+
+1. This is a combination view. Meters that are defined at the tenant
+   leve will have an `origin` field set to `"tenant"`. 
+   
+POST /{TENANT}/meter/{METER}
+----------------------------
+
+**INPUT:**
+
+```javascript
+{
+    "meter": {
+        "type": "{METERTYPE}",
+        "description": "My Meter",
+        "unit": "fl/mftn"
+    }
+}
+```
+
+**OUTPUT:** Irrelevant
+
+**NOTES:**
+
+1. The `unit` field is optional.
+2. Technically, so is `description`, but don't be a dick.
+
+DELETE /{TENANT}/meter/{METER}
+------------------------------
+
+**INPUT:** Irrelevant
+
+**OUTPUT:** Irrelevant
