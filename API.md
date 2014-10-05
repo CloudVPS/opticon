@@ -40,6 +40,7 @@ Error Replies
 ```
 
 **STATUS** **CODES:**
+
 | Code | Description                                     |
 | ---- | ----------------------------------------------- |
 | 400  | The API server didn't like the data you sent    |
