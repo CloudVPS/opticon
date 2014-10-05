@@ -1,5 +1,6 @@
 #include <libopticon/daemon.h>
 #include <libopticon/log.h>
+#include <libopticon/uuid.h>
 #include <stdio.h>
 #include <unistd.h>
 #include <signal.h>
@@ -29,14 +30,19 @@ int daemonfunc (int argc, const char *argv[]) {
 
 int main (int argc, const char *argv[]) {
     char buf[128];
+    char TMPF[128];
     pid_t p;
     FILE *f;
     
-    assert (daemonize ("./.tmp.pid", argc, argv, daemonfunc, 0));
+    uuid u = uuidgen();
+    uuid2str (u, buf);
+    sprintf (TMPF, "/tmp/%s.pid", buf);
+    
+    assert (daemonize (TMPF, argc, argv, daemonfunc, 0));
     log_info ("Giving the daemon some time");
     sleep (2);
     
-    assert (f = fopen ("./.tmp.pid", "r"));
+    assert (f = fopen (TMPF, "r"));
     fgets (buf, 128, f);
     fclose (f);
     
@@ -45,12 +51,12 @@ int main (int argc, const char *argv[]) {
     assert (kill (p, SIGTERM) == 0);
     sleep (1);
     log_info ("Checking on leftovers");
-    f = fopen ("./.tmp.pid","r");
+    f = fopen (TMPF,"r");
     int cnt = 0;
     while (cnt < 5 && f) {
         fclose (f);
         sleep (1);
-        f = fopen ("./.tmp.pid","r");
+        f = fopen (TMPF,"r");
         cnt++;
     }
     assert (f == NULL);
