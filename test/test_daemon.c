@@ -43,9 +43,17 @@ int main (int argc, const char *argv[]) {
     log_info ("Terminating daemon");
     p = atoi (buf);
     assert (kill (p, SIGTERM) == 0);
-    sleep (3);
+    sleep (1);
     log_info ("Checking on leftovers");
-    assert (fopen ("./.tmp.pid","r") == NULL);
+    f = fopen ("./.tmp.pid","r");
+    int cnt = 0;
+    while (cnt < 5 && f) {
+        fclose (f);
+        sleep (1);
+        f = fopen ("./.tmp.pid","r");
+        cnt++;
+    }
+    assert (f == NULL);
     assert (f = fopen ("./.tmp-file","r"));
     fgets (buf, 128, f);
     fclose (f);
