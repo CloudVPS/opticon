@@ -135,23 +135,25 @@ Configuring the opticon client
 
 The client gets its configuration from both `/etc/opticon/opticon-cli.conf` and
 `$HOME/.opticonrc` (the latter having precedence, but both files are parsed and
-merged). Here is what it looks like:
+merged). First let’s configure the global configuration file with the endpoint:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 endpoints {
-  keystone: "https://identity.stack.cloudvps.com/v2.0"
   opticon: "http://127.0.0.1:8888/"
-}
-defaults {
-  tenant: 001b7153-4f4b-4f1c-b281-cc06b134f98f
 }
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-At some time in the future, the opticon endpoint will be available directly
-through keystone, and the `opticon` endpoint definition will become optional,
-but for now it has to be in there. The tenant set up in defaults is the tenant
-that will be used for any commands that aren’t given with an explicit `--tenant`
-flag
+In `.opticonrc` you can configure the `admin_token` as it was configured in the
+api configuration:
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+defaults {
+  admin_token: a666ed1e-24dc-4533-acab-1efb2bb55081
+}
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+This is the `.opticonrc` you should set up for the root account, or another user
+with an administrative role.
 
 Managing the tenant database
 ----------------------------
@@ -161,8 +163,7 @@ talk to them, the admin API can be used to add tenants to the database. Use the
 following command to create a new tenant:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-$ opticon --opticon-token a666ed1e-24dc-4533-acab-1efb2bb55081 \
-  tenant-create --name "Acme"
+$ opticon tenant-create --name "Acme"
 Tenant created:
 ------------------------------------------------------------------
      Name: Acme
@@ -180,8 +181,7 @@ If you want to create a tenant with a predefined UUID, you can use the
 `--tenant` command line flag:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-$ opticon --opticon-token a666ed1e-24dc-4533-acab-1efb2bb55081 \
-  tenant-create --name "Acme" --tenant 0296d893-8187-4f44-a31b-bf3b4c19fc10 
+$ opticon tenant-create --name "Acme" --tenant 0296d893-8187-4f44-a31b-bf3b4c19fc10
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 This will be followed by the same information as the first example.
@@ -192,7 +192,7 @@ If accessed through the admin API, the `tenant-list` sub-command will show
 information about all tenants on the system:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-$ opticon --opticon-token a666ed1e-24dc-4533-acab-1efb2bb55081 tenant-list
+$ opticon tenant-list
 UUID                                 Hosts  Name
 --------------------------------------------------------------------------------
 001b7153-4f4b-4f1c-b281-cc06b134f98f     2  compute-pim
@@ -210,8 +210,7 @@ To get rid of a tenant (and reclaim all associated storage), use the
 `tenant-delete` sub-command:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-$ opticon --opticon-token a666ed1e-24dc-4533-acab-1efb2bb55081 \
-  tenant-delete --tenant 0296d893-8187-4f44-a31b-bf3b4c19fc10
+$ opticon tenant-delete --tenant 0296d893-8187-4f44-a31b-bf3b4c19fc10
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 that should teach them.
@@ -286,9 +285,30 @@ Accessing opticon as a user
 ---------------------------
 
 After you used the admin API to create a tenant, you should be able to access
-the rest of the functionality from any machine running an opticon client. If you
-invoke *opticon* without a `--opticon-token` flag, the first time it wants to
-make contact with the API server, it will ask you for keystone credentials:
+the rest of the functionality from any machine running an opticon client. To
+allow for keystone authentication, add the endpoint to `opticon-cli.conf` like
+this:
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+endpoints {
+  keystone: "https://identity.stack.cloudvps.com/v2.0"
+  opticon: "http://192.168.1.1:8888/"
+}
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The local `.opticonrc` shouldn't have an `admin_token`, but it’s possible to add
+some convenience to the workflow by picking a default tenant for commands; most
+users are likely to work with a single tenant and can do fine without typing
+`--tenant`, and a huge UUID after each command:
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+defaults {
+  tenant: 001b7153-4f4b-4f1c-b281-cc06b134f98f
+}
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+With everything in place, calling opticon for the first time will now prompt you
+for Keystone login credentials:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 $ opticon tenant-list
