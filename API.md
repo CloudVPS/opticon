@@ -26,6 +26,16 @@ Opticon API Reference
 
 ^1: Both POST and PUT have the same effect. Sorry, REST purists.
 
+Request Headers
+---------------
+
+The following headers have a special meaning:
+
+| Header                  | Function                           |
+| ----------------------- | ---------------------------------- |
+| X-Opticon-Token         | Token for access the admin API     |
+| X-Auth-Token            | Keystone token                     |
+
 Error Replies
 -------------
 
