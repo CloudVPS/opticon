@@ -172,9 +172,8 @@ Tenant created:
 ------------------------------------------------------------------
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The `--opticon-token` flag is used to bypass KeyStone authentication and use the
-admin API. The tool will spit out the UUID for the newly created tenant, as well
-as the tenant AES256 key to be used in the configuration of this tenant’s
+The tool will spit out the UUID for the newly created tenant, as well as the
+tenant AES256 key to be used in the configuration of this tenant’s
 *opticon-agent* instances.
 
 If you want to create a tenant with a predefined UUID, you can use the
@@ -184,7 +183,11 @@ If you want to create a tenant with a predefined UUID, you can use the
 $ opticon tenant-create --name "Acme" --tenant 0296d893-8187-4f44-a31b-bf3b4c19fc10
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-This will be followed by the same information as the first example.
+This will be followed by the same information as the first example. Note that
+creating tenants manually in a Keystone-enabled setup is going to be a bit
+pointless. Users authenticated with a valid keystone token are allowed to create
+the tenant record for tenants they have access to, so the entire set-up should
+be self service.
 
 ### Getting an overview of tenants
 
@@ -213,7 +216,9 @@ To get rid of a tenant (and reclaim all associated storage), use the
 $ opticon tenant-delete --tenant 0296d893-8187-4f44-a31b-bf3b4c19fc10
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-that should teach them.
+that should teach them. Users authenticated through Keystone are allowed to
+clean up their own tenants, but not those of others, for reasons that should be
+obvious.
 
 Configuring opticon-agent
 -------------------------
