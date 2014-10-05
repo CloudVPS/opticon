@@ -482,3 +482,46 @@ GET /{TENANT}/host/{HOST}
 
 1. The `status`, `problems`, `badness`, and `agent` records originated
    from `opticon-collector`, not the origin host.
+
+GET /{TENANT}/host/{HOST}/watcher
+---------------------------------
+
+**INPUT:** None
+
+**OUTPUT:** Same as /{TENANT}/watcher
+
+**NOTES:** 
+
+1. An extra `origin` option is now `host` for watchers overridden at the
+   host-level.
+   
+POST /{TENANT}/host/{HOST}/watcher/{METER}
+------------------------------------------
+
+**INPUT:** 
+
+```javascript```
+{
+    "watcher": {
+        "warning": {
+            "value": {MATCHVALUE},
+            "weight": 1.0
+        }
+    }
+}
+```
+
+**NOTES:**
+
+1. This call differs from the one at the tenant level, in that it can only
+   act as an adjustment of an existing watcher higher up the tree. This
+   is why there is no `cmp` field. If the watcher is not in the default
+   list of watchers, it needs to be defined with the proper `cmp` function
+   at the tenant level, before any host-level watchers make sense.
+
+DELETE /{TENANT}/host/{HOST}/watcher/{METER}
+--------------------------------------------
+
+**INPUT:** None
+
+**OUTPUT:** Irrelevant
