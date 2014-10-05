@@ -407,7 +407,78 @@ POST /{TENANT}/watcher/{METER}
 3. If no `weight` is provided, a default weight of `1.0` is chosen.
 
 DELETE /{TENANT}/watcher/{METER}
+--------------------------------
 
 **INPUT:** None
 
 **OUTPUT:** Irrelevant
+
+GET /{TENANT}/host
+------------------
+
+**INPUT:** None
+
+**OUTPUT:**
+
+```json
+{
+    "host": [
+        {
+            "id": "65d13b37-41d0-4579-9331-ed4ed4c01259",
+            "usage": 1156821,
+            "start": "2014-10-03T17:18:00",
+            "end": "2014-10-05T13:13:00"
+        },
+        {
+            "id": "0d19d114-55c8-4077-9cab-348579c70612",
+            "usage": 1704224,
+            "start": "2014-10-03T17:03:00",
+            "end": "2014-10-05T13:13:00"
+        },
+        {
+            "id": "2b331038-aac4-4d8b-a7cd-5271b603bd1e",
+            "usage": 1663072,
+            "start": "2014-10-03T17:15:00",
+            "end": "2014-10-05T13:13:00"
+        }
+    ]
+}
+```
+
+**NOTES:**
+
+1. Times are in UTC
+2. The `usage` field describes the database size, in bytes.
+
+GET /{TENANT}/host/{HOST}
+-------------------------
+
+**INPUT:** None
+
+**OUTPUT:**
+
+```javascript
+{
+    "status": "WARN",
+    "problems": [
+        "proc/stuck",
+        "df/pused"
+    ],
+    "badness": 45.438000,
+    "agent": {
+        "ip": "::ffff:92.108.228.195"
+    },
+    "hostname": "giskard.local",
+    "os": {
+        "kernel": "Darwin",
+        "version": "14.0.0",
+        "arch": "x86_64"
+    },
+...
+}
+```
+
+**NOTES:**
+
+1. The `status`, `problems`, `badness`, and `agent` records originated
+   from `opticon-collector`, not the origin host.
