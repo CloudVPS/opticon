@@ -316,6 +316,13 @@ void print_generic_table (var *table) {
         for (i=0; i<count; ++i) width[i]++;
     }
     
+    const char *title = table->id;
+    var *tdef = var_find_key (meters, table->id);
+    if (tdef) {
+        const char *c = var_get_str_forkey (tdef, "description");
+        if (c) title = c;
+    }
+    
     print_hdr (table->id);
     print_table (table, (const char **) header, (const char **) field,
                  align, type, width, (const char **) suffix, div);
