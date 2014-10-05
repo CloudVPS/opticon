@@ -57,6 +57,7 @@ STRINGOPT(config_file)
 int set_type (const char *o, const char *v) {
     if ( (strcmp (v, "integer") == 0) ||
          (strcmp (v, "frac") == 0) ||
+         (strcmp (v, "table") == 0) ||
          (strcmp (v, "string") == 0) ) {
         OPTIONS.type = v;
         return 1;
