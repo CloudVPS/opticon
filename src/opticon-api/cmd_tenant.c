@@ -457,6 +457,12 @@ int cmd_tenant_set_meter (req_context *ctx, req_arg *a,
     
     #define copystr(x) \
         if ((tstr = var_get_str_forkey (req_meter, x))) { \
+            if (strlen (tstr) > 128) { \
+                var_free (dbmeta); \
+                db_free (DB); \
+                *status = 400; \
+                return err_generic (env, "String too long"); \
+            } \
             var_set_str_forkey (dbmeta_meter, x, tstr); \
         } else var_delete_key (dbmeta_meter, x)
     
