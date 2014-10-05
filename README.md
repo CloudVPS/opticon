@@ -708,10 +708,6 @@ $ opticon host-show --host 0d19d114-55c8-4077-9cab-348579c70612
 UUID............: 0d19d114-55c8-4077-9cab-348579c70612
 Hostname........: giskard.local
 ...
----( STORAGE )------------------------------------------------------------------
-DEVICE                 SIZE FS         USED MOUNTPOINT 
-/dev/disk2        147.08 GB hfs     90.00 % / 
-/dev/disk1s2      465.44 GB hfs     91.00 % /Volumes/Giskard Data 
 ---( OTHER )--------------------------------------------------------------------
 Battery Level...: 96.00 %
 Power Source....: AC
@@ -727,4 +723,80 @@ $ opticon watcher-set --meter power/level --level alert --match lt --value 15
 $ opticon watcher-list | grep power/level
 tenant   power/level  warning   lt                     30.00                1.0
 tenant   power/level  alert     lt                     15.00                1.0
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Table data
+----------
+
+If you want to send table-like metering data, like the process list, a little
+more work needs to be done. Let’s walk in a fictional universe, where there is
+no probe for the currently logged in users (there is). First we’ll write a
+wrapper around the output of the “who” command, which looks like this on Darwin:
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+$ who
+pi       console  Oct  4 22:55 
+pi       ttys000  Oct  5 10:27 
+pi       ttys001  Oct  5 10:43 
+pi       ttys002  Oct  5 00:18 
+pi       ttys003  Oct  5 10:43  (172.16.1.10)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+And the poxed-ridden contraption of a bash script to convert it into JSON:
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+$ cat /usr/local/scripts/who.sh
+#!/bin/sh
+echo '{"who":['
+who | while read name tty month day time remote; do
+  if [ ! -z "$remote" ]; then
+    remote=$(echo "$remote" | cut -f2 -d'(' | cut -f1 -d')')
+    printf '  {"user":"%s","tty":"%s","remote":"%s"}\n' "$name" "$tty" "$remote"
+  fi
+done
+echo ']}'
+$ /usr/local/scripts/who.sh
+{"who":[
+  {"user":"pi","tty":"ttys003","remote":"172.16.1.10"}
+]}
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+We’ll bind it to a probe in `opticon-agent.conf` like before:
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    who {
+        type: exec
+        call: /Users/pi/Sources/Git/opticon/playground/who.sh
+        interval: 60
+    }
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Finally, meters need to be set up. We’ll set one for each field in the table,
+but also one for the table itself:
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+$ opticon meter-create --meter who --type table --description "Remote Users"
+$ opticon meter-create --meter who/user --type string --description "User"
+$ opticon meter-create --meter who/tty --type string --description "TTY"
+$ opticon meter-create --meter who/remote --type string --description "Remote IP"
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+With everything configured and the metering data coming in, the results should
+be visible from `opticon host-show`:
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+$ opticon host-show --host 0d19d114-55c8-4077-9cab-348579c70612
+---( HOST )---------------------------------------------------------------------
+UUID..............: 0d19d114-55c8-4077-9cab-348579c70612
+Hostname..........: giskard.local
+Address...........: ::ffff:92.108.228.195
+...
+---( STORAGE )------------------------------------------------------------------
+DEVICE                 SIZE FS         USED MOUNTPOINT 
+/dev/disk2        147.08 GB hfs     94.00 % / 
+/dev/disk0s2      465.44 GB hfs     91.00 % /Volumes/Giskard Data 
+---( REMOTE USERS )-------------------------------------------------------------
+USER      TTY           REMOTE IP         
+pi        ttys003       172.16.1.10       
+--------------------------------------------------------------------------------
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
