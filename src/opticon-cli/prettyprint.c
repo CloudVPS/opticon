@@ -323,7 +323,7 @@ void print_generic_table (var *table) {
         if (c) title = c;
     }
     
-    print_hdr (table->id);
+    print_hdr (title);
     print_table (table, (const char **) header, (const char **) field,
                  align, type, width, (const char **) suffix, div);
     
