@@ -15,6 +15,10 @@ ifeq (freebsd,$(OSNAME))
   LDFLAGS+=-lkvm
 endif
 
+ifeq (linux,$(OSNAME))
+  LDFLAGS+=-lm
+endif
+
 CFLAGS+=-DOSNAME=$(OSNAME) -DOSREL=$(OSREL) -DOSRELMAJOR=$(OSRELMAJOR)
 
 all:
