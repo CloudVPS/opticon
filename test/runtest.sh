@@ -25,7 +25,7 @@ for test in $FILES; do
     rm -f out/${ofile}.build
     exit 1
   fi
-  $CC -o bin/$ofile ${ofile}.o ../lib/*.a -lz >>out/${ofile}.build 2>&1
+  $CC -o bin/$ofile ${ofile}.o ../lib/*.a -lz -lm >>out/${ofile}.build 2>&1
   if [ ! $? = 0 ]; then
     echo " FAIL"
     cat out/${ofile}.build
