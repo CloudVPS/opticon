@@ -176,14 +176,6 @@ PUT /{TENANT}
 }
 ```
 
-**ALTINPUT:**
-
-```javascript
-{
-    "tenant": {}
-}
-```
-
 **OUTPUT:**
 
 ```javascript
