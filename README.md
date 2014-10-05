@@ -139,7 +139,7 @@ Now that the collector and API-server are active, and the client knows how to
 talk to them, the admin API can be used to add tenants to the database. Use the
 following command to create a new tenant:
 
-```
+```Apex
 $ opticon tenant-create --name "Acme"
 Tenant created:
 ------------------------------------------------------------------
@@ -156,7 +156,7 @@ tenant AES256 key to be used in the configuration of this tenant’s
 If you want to create a tenant with a predefined UUID, you can use the
 `--tenant` command line flag:
 
-```
+```Apex
 $ opticon tenant-create --name "Acme" --tenant 0296d893-8187-4f44-a31b-bf3b4c19fc10
 ```
 
@@ -171,7 +171,7 @@ be self service.
 If accessed through the admin API, the `tenant-list` sub-command will show
 information about all tenants on the system:
 
-```
+```Apex
 $ opticon tenant-list
 UUID                                 Hosts  Name
 --------------------------------------------------------------------------------
@@ -189,7 +189,7 @@ accessible to the user.
 To get rid of a tenant (and reclaim all associated storage), use the
 `tenant-delete` sub-command:
 
-```
+```Apex
 $ opticon tenant-delete --tenant 0296d893-8187-4f44-a31b-bf3b4c19fc10
 ```
 
@@ -292,7 +292,7 @@ defaults {
 With everything in place, calling opticon for the first time will now prompt you
 for Keystone login credentials:
 
-```
+```Apex
 $ opticon tenant-list
 % Login required
 
@@ -322,7 +322,7 @@ Every tenant object in the opticon database has freeform metadata. Some of it is
 used internally, like the tenant AES key. Use the `tenant-get-metadata`
 sub-command to view a tenant’s metadata in JSON format:
 
-```
+```Apex
 $ opticon tenant-get-metadata
 {
     "metadata": {
@@ -333,7 +333,7 @@ $ opticon tenant-get-metadata
 You can add keys to the metadata, or change the value of existing keys, by using
 the obviously named `tenant-set-metadata` sub-command:
 
-```
+```Apex
 $ opticon tenant-set-metadata sleep optional
 $ opticon tenant-get-metadata
 {
@@ -348,7 +348,7 @@ $ opticon tenant-get-metadata
 To get an overview of the hosts being monitored by the system, use the
 `host-list` sub-command:
 
-```
+```Apex
 $ opticon host-list
 UUID                                    Size First record      Last record
 --------------------------------------------------------------------------------
@@ -361,7 +361,7 @@ The times provided throughout opticon are always normalized to UTC.
 
 Use the `host-show` sub-command to get the latest record available for a host:
 
-```
+```Apex
 $ opticon host-show --host 2b331038-aac4-4d8b-a7cd-5271b603bd1e
 ---( HOST )---------------------------------------------------------------------
 UUID............: 2b331038-aac4-4d8b-a7cd-5271b603bd1e
@@ -409,7 +409,7 @@ The software ships with a default set of watchers that is hopefully useful for
 most cases. You can look at the current situation by issuing the `watcher-list`
 sub-command:
 
-```
+```Apex
 $ opticon watcher-list
 From     Meter        Trigger   Match                  Value             Weight
 --------------------------------------------------------------------------------
@@ -441,7 +441,7 @@ default  mem/free     critical  lt                      4096   
 You can change the settings for a watcher, by using the `watcher-set`
 sub-command:
 
-```
+```Apex
 $ opticon watcher-set --meter pcpu --level warning --value 40
 $ opticon watcher-list
 From     Meter        Trigger   Match                  Value             Weight
@@ -471,7 +471,7 @@ between the agent and the collector. Before we start designing our own custom
 meter, first some bits about the data model. By running the client with the
 `--json` flag, you can get an idea of the structure:
 
-```
+```Apex
 $ opticon host-show --host 2b331038-aac4-4d8b-a7cd-5271b603bd1e --json
 {
     "agent": {
@@ -533,7 +533,7 @@ look like this:
 This representation, as noted, allows for a limited set of JSON constructs
 involving dictionaries:
 
-```
+```Apex
 "key": "string" # obviously
 
 "key": 18372 # unsigned 63-bit integer
@@ -564,7 +564,7 @@ A further limitation is length of the keys. The maximum size of a key name is
 parent key name cannot be larger than 10 (one is lost for the ‘/‘). There’s also
 a very limited character set to choose from for keys:
 
-```
+```Apex
 a b c d e f g h i j k l m n o p q r s t u v w x y z . - _ / @
 ```
 
@@ -580,7 +580,7 @@ transmitting this as a meter.
 The battery level can be queried from the command line using the `pmset`
 utility. Its output looks like this:
 
-```
+```Apex
 $ pmset -g batt
 Now drawing from 'AC Power'
  -InternalBattery-0     97%; charged; 0:00 remaining
@@ -588,7 +588,7 @@ Now drawing from 'AC Power'
 
 We’ll write an ugly script to turn that information into JSON:
 
-```
+```Apex
 $ cat /usr/local/scripts/getpower.sh
 #!/bin/sh
 charge=$(pmset -g batt | grep InternalBattery | cut -f2 | cut -f1 -d'%')
@@ -635,7 +635,7 @@ Et voila, an extra meter was born.
 If you want your meter to show up less cryptically, you should add information
 the meter to the tenant’s database using the command line tool:
 
-```
+```Apex
 $ opticon meter-create --meter power/level --type frac --description "Battery Level" --unit "%"
 $ opticon meter-create --meter power/src --type string --description "Power Source"
 $ opticon meter-list
@@ -679,7 +679,7 @@ interpret the value. The agent may end up encoding a `frac` value as an
 With the extra information provided, your meter should now also show up in the
 `host-show` non-JSON output:
 
-```
+```Apex
 $ opticon host-show --host 0d19d114-55c8-4077-9cab-348579c70612
 ---( HOST )---------------------------------------------------------------------
 UUID............: 0d19d114-55c8-4077-9cab-348579c70612
@@ -694,7 +694,7 @@ Power Source....: AC
 Now that the meter exists in the database, it’s also possible to set up watchers
 for it. Let’s set up some sensible levels:
 
-```
+```Apex
 $ opticon watcher-set --meter power/level --level warning --match lt --value 30
 $ opticon watcher-set --meter power/level --level alert --match lt --value 15
 $ opticon watcher-list | grep power/level
@@ -710,7 +710,7 @@ more work needs to be done. Let’s walk in a fictional universe, where there is
 no probe for the currently logged in users (there is). First we’ll write a
 wrapper around the output of the “who” command, which looks like this on Darwin:
 
-```
+```Apex
 $ who
 pi       console  Oct  4 22:55 
 pi       ttys000  Oct  5 10:27 
@@ -721,7 +721,7 @@ pi       ttys003  Oct  5 10:43  (172.16.1.10)
 
 And the pox-ridden contraption of a bash script to convert it into JSON:
 
-```
+```Apex
 $ cat /usr/local/scripts/who.sh
 #!/bin/sh
 echo '{"who":['
@@ -751,7 +751,7 @@ We’ll bind it to a probe in `opticon-agent.conf` like before:
 Finally, meters need to be set up. We’ll set one for each field in the table,
 but also one for the table itself:
 
-```
+```Apex
 $ opticon meter-create --meter who --type table --description "Remote Users"
 $ opticon meter-create --meter who/user --type string --description "User"
 $ opticon meter-create --meter who/tty --type string --description "TTY"
@@ -761,7 +761,7 @@ $ opticon meter-create --meter who/remote --type string --description "Remote IP
 With everything configured and the metering data coming in, the results should
 be visible from `opticon host-show`:
 
-```
+```Apex
 $ opticon host-show --host 0d19d114-55c8-4077-9cab-348579c70612
 ---( HOST )---------------------------------------------------------------------
 UUID..............: 0d19d114-55c8-4077-9cab-348579c70612
