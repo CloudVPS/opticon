@@ -1,5 +1,6 @@
 #include <libopticon/codec_pkt.h>
 #include <libopticon/util.h>
+#include <libopticon/defaults.h>
 #include <stdlib.h>
 
 /** Write out a meter value */
@@ -77,23 +78,34 @@ int pktcodec_decode_host (ioport *io, host *h) {
             }
         }
         
-        M = host_get_meter (h, mid);
-        meter_setcount (M, count);
+        M = host_find_meter (h, mid);
+        if (! M) {
+            if (h->mcount <= default_host_max_meters) {
+                M = host_get_meter (h, mid);
+            }
+        }
+
+        uint64_t ival;
+        double dval;
+
+        if (M) meter_setcount (M, count);
         if (! count) count=1;
         if (count >= SZ_EMPTY_VAL) continue;
         for (uint8_t i=0; i<count; ++i) {
             switch (mid & MMASK_TYPE) {
                 case MTYPE_INT:
-                    meter_set_uint (M, i, ioport_read_encint (io));
+                    ival = ioport_read_encint (io);
+                    if (M) meter_set_uint (M, i, ival);
                     break;
                     
                 case MTYPE_FRAC:
-                    meter_set_frac (M, i, ioport_read_encfrac (io));
+                    dval = ioport_read_encfrac (io);
+                    if (M) meter_set_frac (M, i, dval);
                     break;
                 
                 case MTYPE_STR:
                     ioport_read_encstring (io, strbuf);
-                    meter_set_str (M, i, strbuf);
+                    if (M) meter_set_str (M, i, strbuf);
                     break;
                 
                 default:

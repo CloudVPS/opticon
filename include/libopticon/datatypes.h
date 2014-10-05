@@ -145,6 +145,14 @@ typedef struct host_s {
     time_t               lastmetasync; /**< Time of last metadata sync-in*/
     meter               *first; /**< first connected meter */
     meter               *last; /**< last connected meter */
+    
+                         /** Number of active meters. The pktcodec
+                           * uses this to keep a reasonable
+                           * quota on the number of active meters
+                           * a single host is allowed to keep.
+                           */
+    int                  mcount;
+    
     pthread_rwlock_t     lock; /**< Threading infrastructure */
 } host;
 
@@ -187,6 +195,7 @@ void         host_delete_meter (host *h, meter *m);
 void         host_begin_update (host *h, time_t when);
 void         host_end_update (host *h);
 meter       *host_find_meter_name (host *h, meterid_t id);
+meter       *host_find_meter (host *h, meterid_t id);
 meter       *host_get_meter (host *h, meterid_t id);
 int          host_has_meter (host *h, meterid_t id);
 meter       *host_set_meter_uint (host *h, meterid_t id, 

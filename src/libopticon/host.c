@@ -18,6 +18,7 @@ host *host_alloc (void) {
     res->lastserial = 0;
     res->badness = 0.0;
     res->lastmetasync = 0;
+    res->mcount = 0;
     adjustlist_init (&res->adjust);
     pthread_rwlock_init (&res->lock, NULL);
     return res;
@@ -128,6 +129,18 @@ meter *host_find_meter_name (host *h, meterid_t id) {
     return NULL;
 }
 
+/** look up a meter */
+meter *host_find_meter (host *h, meterid_t id) {
+    meterid_t rid = (id & (MMASK_TYPE | MMASK_NAME));
+    meter *m = h->first;
+    if (! m) return NULL;
+    while (m) {
+        if (m->id == rid) return m;
+        m = m->next;
+    }
+    return NULL;
+}
+
 /** Get (or create) a specific meter for a host.
   * \param host The host structure.
   * \param id The meterid (label and type).
@@ -141,6 +154,7 @@ meter *host_get_meter (host *h, meterid_t id) {
     if (! m) {
         nm = meter_alloc();
         h->first = h->last = nm;
+        h->mcount = 1;
         nm->id = rid;
         nm->host = h;
         return nm;
@@ -155,6 +169,7 @@ meter *host_get_meter (host *h, meterid_t id) {
             h->last = nm;
             nm->id = rid;
             nm->host = h;
+            h->mcount++;
             return nm;
         }
     }
@@ -233,6 +248,7 @@ void host_delete_meter (host *h, meter *m) {
     else {
         h->last = m->prev;
     }
+    h->mcount--;
     meter_set_empty (m);
     free (m);
 }
