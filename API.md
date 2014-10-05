@@ -126,8 +126,6 @@ GET /{TENANT}
 
 POST /{TENANT}
 --------------
-PUT /{TENANT}
---------------
 **INPUT:** 
 
 ```javascript
@@ -164,6 +162,43 @@ PUT /{TENANT}
    field. This field will always be inherited from the keystone metadata.
 2. If no `key` field is provided, the system will generate one. This is the 
    recommended way to get one on systems that have no secure random.
+
+PUT /{TENANT}
+-------------
+**INPUT:** 
+
+```javascript
+{
+    "tenant": {
+        "key": "fAM9aZdUoNzdytgqLoS2y44dfZeqWeBY9wkGWAq72C4=",
+        "name": "cowboy-henk"
+    }
+}
+```
+
+**ALTINPUT:**
+
+```javascript
+{
+    "tenant": {}
+}
+```
+
+**OUTPUT:**
+
+```javascript
+{
+    "tenant": {
+        "key": "fAM9aZdUoNzdytgqLoS2y44dfZeqWeBY9wkGWAq72C4=",
+        "name": "cowboy-henk"
+    }
+}
+```
+
+**NOTES:**
+
+1. Users authenticated through keystone are not allowed to set their own `name` 
+   field. This field will always be inherited from the keystone metadata.
 
 DELETE /{TENANT}
 ----------------
