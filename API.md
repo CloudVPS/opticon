@@ -1,57 +1,29 @@
 Opticon API Reference
 =====================
 
-| **Path**                         | **Method**   | **Description**                          |
-| -------------------------------- | ------------ | ---------------------------------------- |
-| /                                | GET          | Sends back a list of tenants available   |
-|                                  |              | to the user                              |
-| -------------------------------- | ------------ | ---------------------------------------- |
-| /token                           | GET          | Can be used by clients to verify they    |
-|                                  |              | still have valid access                  |
-| -------------------------------- | ------------ | ---------------------------------------- |
-| /session                         | GET          | (ADMIN) Sends an overview of active      |
-|                                  |              | collector sessions                       |
-| -------------------------------- | ------------ | ---------------------------------------- |
-| /{TENANT}                        | GET          | Get information about a tenant (name,    |
-|                                  |              | AES key)                                 |
-| -------------------------------- | ------------ | ---------------------------------------- |
-| /{TENANT}                        | POST         | Create a new tenant                      |
-| -------------------------------- | ------------ | ---------------------------------------- |
-| /{TENANT}                        | PUT          | Update a tenant                          |
-| -------------------------------- | ------------ | ---------------------------------------- |
-| /{TENANT}                        | DELETE       | Delete a tenant                          |
-| -------------------------------- | ------------ | ---------------------------------------- |
-| /{TENANT}/meta                   | GET          | Sends back tenant's metadata             |
-| -------------------------------- | ------------ | ---------------------------------------- |
-| /{TENANT}/meta                   | PUT/POST[^1] | ​Update tenant's metadata                |
-| -------------------------------- | ------------ | ---------------------------------------- |
-| /{TENANT}/meter                  | GET          | Sends a list of all default and custom   |
-|                                  |              | meters active for the tenant             |
-| -------------------------------- | ------------ | ---------------------------------------- |
-| /{TENANT}/meter/{MID}            | PUT/POST     | Create or update a custom meter          |
-|                                  |              | definition                               |
-| -------------------------------- | ------------ | ---------------------------------------- |
-| /{TENANT}/meter/{MID}            | DELETE       | Remove a meter definition (and           |
-|                                  |              | associated watchers)                     |
-| -------------------------------- | ------------ | ---------------------------------------- |
-| /{TENANT}/watcher                | GET          | Sends a list of all default and custom   |
-|                                  |              | watchers                                 |
-| -------------------------------- | ------------ | ---------------------------------------- |
-| /{TENANT}/watcher/{MID}          | PUT/POST     | Create or update a watcher               |
-| -------------------------------- | ------------ | ---------------------------------------- |
-| /{TENANT}/watcher/{MID}          | DELETE       | Remove a watcher (host-level watchers    |
-|                                  |              | may still apply)                         |
-| -------------------------------- | ------------ | ---------------------------------------- |
-| /{TENANT}/host                   | GET          | Sends a list of all the tenant's hosts   |
-| -------------------------------- | ------------ | ---------------------------------------- |
-| /{TENANT}/host/{H}               | GET          | Sends the current record for the host    |
-| -------------------------------- | ------------ | ---------------------------------------- |
-| /{TENANT}/host/{H}/watcher       | GET          | Sends a list of all default and custom   |
-|                                  |              | watchers (host & tenant)                 |
-| -------------------------------- | ------------ | ---------------------------------------- |
-| /{TENANT}/host/{H}/watcher/{MID} | PUT/POST     | Create or update a host-level watcher    |
-| -------------------------------- | ------------ | ---------------------------------------- |
-| /{TENANT}/host/{H}/watcher/{MID} | DELETE       | Remove a host-level watcher              |
+| **Path**                         | **Method**   | **Description**                                                            |
+| -------------------------------- | ------------ | -------------------------------------------------------------------------- |
+| /{TENANT}/meter                  | GET          | Sends a list of all default and custom meters active for the tenant        |
+| /                                | GET          | Sends back a list of tenants available to the user                         |
+| /token                           | GET          | Can be used by clients to verify they still have valid access              |
+| /session                         | GET          | (ADMIN) Sends an overview of active collector sessions                     |
+| /{TENANT}                        | GET          | Get information about a tenant (name, AES key)                             |
+| /{TENANT}                        | POST         | Create a new tenant                                                        |
+| /{TENANT}                        | PUT          | Update a tenant                                                            |
+| /{TENANT}                        | DELETE       | Delete a tenant                                                            |
+| /{TENANT}/meta                   | GET          | Sends back tenant's metadata                                               |
+| /{TENANT}/meta                   | PUT/POST[^1] | ​Update tenant's metadata                                                  |
+| /{TENANT}/meter                  | GET          | Sends a list of all default and custom meters active for the tenant        |
+| /{TENANT}/meter/{MID}            | PUT/POST     | Create or update a custom meter definition                                 |
+| /{TENANT}/meter/{MID}            | DELETE       | Remove a meter definition (and associated watchers)                        |
+| /{TENANT}/watcher                | GET          | Sends a list of all default and custom watchers                            |
+| /{TENANT}/watcher/{MID}          | PUT/POST     | Create or update a watcher                                                 |
+| /{TENANT}/watcher/{MID}          | DELETE       | Remove a watcher (host-level watchers may still apply)                     |
+| /{TENANT}/host                   | GET          | Sends a list of all the tenant's hosts                                     |
+| /{TENANT}/host/{H}               | GET          | Sends the current record for the host                                      |
+| /{TENANT}/host/{H}/watcher       | GET          | Sends a list of all default and custom watchers (host & tenant)            |
+| /{TENANT}/host/{H}/watcher/{MID} | PUT/POST     | Create or update a host-level watcher                                      |
+| /{TENANT}/host/{H}/watcher/{MID} | DELETE       | Remove a host-level watcher                                                |
 
 [^1]: Both POST and PUT have the same effect. Sorry, REST purists.
 
