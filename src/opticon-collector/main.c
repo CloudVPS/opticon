@@ -109,8 +109,11 @@ void watchlist_populate (watchlist *w, var *v_meters) {
                 else if (strcmp (type, "frac") == 0) tp = MTYPE_FRAC;
                 else if (memcmp (type, "str", 3) == 0) tp = MTYPE_STR;
                 else {
-                    log_error ("Watcher configured for unrecognized "
-                               "typeid %s", type);
+                    /* Skip table, complain about others */
+                    if (strcmp (type, "table") != 0) {
+                        log_error ("Meter configured with unrecognized "
+                                   "typeid %s", type);
+                    }
                     mdef = mdef->next;
                     continue;
                 }
