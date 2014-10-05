@@ -176,16 +176,7 @@ PUT /{TENANT}
 }
 ```
 
-**OUTPUT:**
-
-```javascript
-{
-    "tenant": {
-        "key": "fAM9aZdUoNzdytgqLoS2y44dfZeqWeBY9wkGWAq72C4=",
-        "name": "cowboy-henk"
-    }
-}
-```
+**OUTPUT:** Irrelevant
 
 **NOTES:**
 
@@ -196,11 +187,4 @@ DELETE /{TENANT}
 ----------------
 **INPUT:** None
 
-**OUTPUT:**
-
-```javascript
-{
-    "deleted": "{TENANT}"
-}
-```
-
+**OUTPUT:** Irrelevant
