@@ -58,6 +58,9 @@ void probe_run (thread *t) {
             self->lastreply = time (NULL);
             if (ovar) var_free ((var *)ovar);
         }
+        else {
+            log_error ("No suitable response from probe");
+        }
         conditional_wait_fresh (&self->pulse);
         log_debug ("Probe %s pulse received", self->call);
     }

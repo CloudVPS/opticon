@@ -13,7 +13,7 @@ typedef enum {
 void print_hdr (const char *);
 void print_value (const char *, const char *, ...);
 void print_array (const char *key, var *arr);
-void print_values (var *apires, const char *pfx, var *mdef);
+void print_values (var *apires, const char *pfx);
 void print_table (var *arr, const char **hdr, const char **fld,
                   columnalign *align, vartype *typ, int *wid,
                   const char **suffx, int *div);

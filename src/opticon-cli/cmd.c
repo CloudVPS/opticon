@@ -579,7 +579,7 @@ int cmd_get_record (int argc, const char *argv[]) {
     Vdone("io");
     Vdone("badness");
 
-    print_values (apires, NULL, NULL);
+    print_values (apires, NULL);
     
     /* -------------------------------------------------------------*/
     print_hdr ("PROCESS LIST");
@@ -625,6 +625,7 @@ int cmd_get_record (int argc, const char *argv[]) {
             "-----------------------------------\n");
 
     var_free (apires);
+    print_done();
     return 0;    
 }
 

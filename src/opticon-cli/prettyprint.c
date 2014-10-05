@@ -16,6 +16,7 @@
 #include "cmd.h"
 
 static const char *PENDING_HDR = NULL;
+static var *MDEF = NULL;
 
 /** Display function for host-show section headers */
 void print_hdr (const char *hdr) {
@@ -98,9 +99,9 @@ void print_array (const char *key, var *arr) {
   * \param pfx Path prefix (used for recursion)
   * \param mdef Meter definitions (used for recursion)
   */
-void print_values (var *apires, const char *pfx, var *mdef) {
-    if (! mdef) mdef = api_get ("/%s/meter", OPTIONS.tenant);
-    var *meters = var_get_dict_forkey (mdef, "meter");
+void print_values (var *apires, const char *pfx) {
+    if (! MDEF) MDEF = api_get ("/%s/meter", OPTIONS.tenant);
+    var *meters = var_get_dict_forkey (MDEF, "meter");
     var *crsr = apires->value.arr.first;
     PENDING_HDR = "MISC";
     while (crsr) {
@@ -140,7 +141,7 @@ void print_values (var *apires, const char *pfx, var *mdef) {
                 break;
             
             case VAR_DICT:
-                print_values (crsr, crsr->id, mdef);
+                print_values (crsr, crsr->id);
                 break;
                 
             default:
@@ -148,7 +149,6 @@ void print_values (var *apires, const char *pfx, var *mdef) {
         }
         crsr = crsr->next;
     }
-    if (! pfx) var_free (mdef);
 }
 
 /** Print out tabular data (like top, df) with headers, bells and
@@ -214,6 +214,7 @@ void print_table (var *arr, const char **hdr, const char **fld,
                     buf[0] = 0;
                     break;
             }
+            if (suffx[col][0] && suffx[col][0] != ' ') strcat (buf, " ");
             strcat (buf, suffx[col]);
             strcpy (fmt, "%");
             if (align[col] == CA_L) strcat (fmt, "-");
@@ -229,6 +230,12 @@ void print_table (var *arr, const char **hdr, const char **fld,
 
 /** Prepare data for print_table on a generic table */
 void print_generic_table (var *table) {
+    char fullkey[64];
+    sprintf (fullkey, "%s/", table->id);
+    char *nodekey = fullkey+strlen(fullkey);
+
+    if (! MDEF) MDEF = api_get ("/%s/meter", OPTIONS.tenant);
+    var *meters = var_get_dict_forkey (MDEF, "meter");
     int rowcount = var_get_count (table);
     if (rowcount < 1) return;
     var *crsr = table->value.arr.first;
@@ -252,7 +259,16 @@ void print_generic_table (var *table) {
         type[i] = node->type;
         field[i] = (char *) node->id;
         width[i] = strlen (node->id);
-        header[i] = strdup (node->id);
+        strcpy (nodekey, node->id);
+        var *mdef = var_find_key (meters, fullkey);
+        if (! mdef) {
+            header[i] = strdup (node->id);
+        }
+        else {
+            const char *d = var_get_str_forkey (mdef, "description");
+            if (d && strlen(d) < 10) header[i] = strdup (d);
+            else header[i] = strdup (node->id);
+        }
         for (c = header[i]; *c; ++c) *c = toupper (*c);
         if (node->type == VAR_DOUBLE || node->type == VAR_INT) {
             align[i] = i ? CA_R : CA_L;
@@ -270,6 +286,10 @@ void print_generic_table (var *table) {
             }
         }
         suffix[i] = "";
+        if (mdef) {
+            const char *unit = var_get_str_forkey (mdef, "unit");
+            if (unit) suffix[i] = (char*) unit;
+        }
     }
     
     crsr = crsr->next;
@@ -322,6 +342,14 @@ void print_tables (var *apires) {
             }
         }
         crsr = crsr->next;
+    }
+}
+
+/** Free open memory */
+void print_done (void) {
+    if (MDEF) {
+        var_free (MDEF);
+        MDEF = NULL;
     }
 }
 
