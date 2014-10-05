@@ -742,7 +742,7 @@ pi       ttys002  Oct  5 00:18 
 pi       ttys003  Oct  5 10:43  (172.16.1.10)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-And the poxed-ridden contraption of a bash script to convert it into JSON:
+And the pox-ridden contraption of a bash script to convert it into JSON:
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 $ cat /usr/local/scripts/who.sh
