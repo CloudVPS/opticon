@@ -13,41 +13,18 @@ flowing even under adversial conditions, where traditional pollers tend to fail.
 Components
 ----------
 
-Opticon consists of three main program components. Monitored servers run
-*opticon-agent*. On the other side, *opticon-collector* and *opticon-api* handle
-the collection of data and interaction with users respectively.
+An installation of opticon will leave you with the following binaries and
+path elements:
 
-The source code is organized into smaller modules, some of which are shared
-between multiple programs:
-
-**libopticon**
-
-Data structures for keeping track of hosts and meters, as well as encoding and
-decoding them for transport or storage. Infrastructure for applications and
-daemons.
-
-**libopticondb**
-
-Access to the timestamp-indexed opticon disk database that tracks metering
-samples.
-
-**opticon-api**
-
-A HTTP service that offers a local and remote API for manipulating and querying
-the opticon database.
-
-**opticon-cli**
-
-A command line client for opticon-api.
-
-**opticon-agent**
-
-Monitoring tool that runs on the client machines and sends the probe data.
-
-**opticon-collector**
-
-Receiving daemon that collects metering data and writes it to a database, while
-also keeping track of alert-conditions.
+| Component                      | Function                                           |
+| ------------------------------ | -------------------------------------------------- |
+| /usr/sbin/opticon-agent        | The data probe that should run on monitored hosts. |
+| /usr/sbin/opticon-collector    | The server component that gathers metering data.   |
+| /usr/sbin/opticon-api          | The API server.                                    |
+| /usr/bin/opticon               | The command line client to the API server.         |
+| /etc/opticon                   | Directory for configuration.                       |
+| /usr/libexec/opticon           | Directory for plugins.                             |
+| /var/db/opticon                | Directory for the database.                        |
 
 Configuring opticon-collector
 -----------------------------
