@@ -10,6 +10,117 @@
 
 static int KMEMTOTAL = 1024;
 
+static struct linuxprobe_info_s {
+    time_t      lastrun;
+    uint64_t    total_cpu;
+    uint64_t    net_in;
+    uint64_t    net_out;
+    uint64_t    io_blk_r;
+    uint64_t    io_blk_w;
+    uint64_t    io_wait;
+    uint16_t    ports[65536][3];
+} GLOB;
+
+var *runprobe_uptime (probe *self) {
+    char buf[256];
+    var *res = var_alloc();
+    FILE *F = fopen ("/proc/uptime","r");
+    if (F) {
+        fgets (buf, 255, F);
+        fclose (F);
+        var_set_int_forkey ("uptime", strtoull (buf, NULL, 10));
+    }
+    return res;
+}
+
+var *runprobe_io (probe *self)
+{
+	wordlist *split;
+	FILE *F;
+	time_t ti;
+	char buf[256];
+	uint64_t totalblk_r = 0;
+	uint64_t totalblk_w = 0;
+	uint64_t delta_r;
+	uint64_t delta_w;
+	uint64_t delta;
+	uint64_t cpudelta;
+	uint64_t totalcpu;
+	uint64_t totalwait = 0;
+	var *res = var_alloc();
+	
+	F = fopen ("/proc/diskstats", "r");
+	if (F)
+	{
+		while (! feof (F))
+		{
+			buf[0] = 0;
+			fgets (buf, 255, F);
+			if (! strlen (buf)) continue;
+			
+			split = wordlist_make (buf);
+			if (split->argc < 14)
+			{
+				wordlist_free (split);
+				continue;
+			}
+			
+			totalblk_r += atoll (split->argv[5]);
+			totalblk_w += atoll (split->argv[9]);
+			
+			wordlist_free (split);
+		}
+		
+		fclose (F);
+	}
+
+	F = fopen ("/proc/stat","r");
+	if (F)
+	{
+		fgets (buf, 255, F);
+		split = wordlist_make (buf);
+		totalwait = atoll (split->argv[5]);
+		totalcpu = atoll (split->argv[1]) + atoll (split->argv[2]) +
+				   atoll (split->argv[3]) + atoll (split->argv[4]);
+		wordlist_free (split);
+		fclose (F);
+	}
+	
+	delta_r = totalblk_r - GLOB.io_blk_r;
+	delta_w = totalblk_w - GLOB.io_blk_w;
+	
+	ti = time (NULL);
+	if (ti == GLOB.lastrun) GLOB.lastrun--;
+	if (GLOB.io_blk_r || GLOB.io_blk_w)
+	{
+	    var *res_io = var_get_dict_forkey (res, "io");
+	    if (GLOB.io_blk_r) {
+    	    var_set_int_forkey (res_io, "rdops", delta_r / (ti - GLOB.lastrun));
+    	}
+    	if (GLOB.io_blk_w) {
+    	    var_set_int_forkey (res_io, "wrops", delta_w / (ti - GLOB.lastrun));
+    	}
+	}
+
+	delta = totalwait - GLOB.io_wait;
+	cpudelta = totalcpu - GLOB.total_cpu;
+
+	if (GLOB.io_wait)
+	{
+	    var *res_io = var_get_dict_forkey (res, "io");
+	    var_set_double_forkey (res_io, "pwait", (100.0 * delta) / (1.0 * cpudelta));
+	}
+
+	GLOB.io_blk = totalblk;
+	GLOB.io_wait = totalwait;
+	GLOB.total_cpu = totalcpu;
+	GLOB.lastrun = ti;
+	
+	return res;
+}
+
+
+
 typedef struct topentry_s {
 	char				username[16];
 	pid_t				pid;
@@ -317,6 +428,8 @@ var *runprobe_top (probe *self) {
 builtinfunc BUILTINS[] = {
     GLOBAL_BUILTINS,
     {"probe_top", runprobe_top},
+    {"probe_uptime", runprobe_uptime},
+    {"probe_io", runprobe_io}
     {NULL, NULL}
 };
 
