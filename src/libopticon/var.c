@@ -100,6 +100,7 @@ void var_copy (var *self, var *orig) {
         self->value.arr.first = self->value.arr.last = NULL;
         self->value.arr.cachepos = -1;
         self->value.arr.cachenode = NULL;
+        self->value.arr.count = 0;
     }
 
     self->type = VAR_NULL;
@@ -126,6 +127,7 @@ void var_copy (var *self, var *orig) {
             self->value.arr.first = self->value.arr.last = NULL;
             self->value.arr.cachepos = -1;
             self->value.arr.cachenode = NULL;
+            self->value.arr.count = 0;
             crsr = orig->value.arr.first;
             while (crsr) {
                 var *nvar = var_alloc();
@@ -142,6 +144,7 @@ void var_copy (var *self, var *orig) {
             self->value.arr.first = self->value.arr.last = NULL;
             self->value.arr.cachepos = -1;
             self->value.arr.cachenode = NULL;
+            self->value.arr.count = 0;
             crsr = orig->value.arr.first;
             while (crsr) {
                 var *nvar = var_alloc();
