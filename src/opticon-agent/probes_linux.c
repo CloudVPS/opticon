@@ -79,6 +79,7 @@ var *runprobe_net (probe *self) {
         var_set_int_forkey (res_net, "out_pps", diffout_packets / tdiff);
     }
     NETPROBE.lastrun = ti;
+    return res;
 }
 
 /* ======================================================================= */
@@ -113,6 +114,7 @@ uint64_t diskdevice_size_in_mb (const char *devname) {
 
 	while (! feof (F))
 	{
+	    *buf = 0;
 		fgets (buf, 255, F);
 		buf[255] = 0;
 		if (*buf) buf[strlen(buf)-1] = 0;
@@ -202,6 +204,7 @@ var *runprobe_loadavg (probe *self) {
     
     F = fopen ("/proc/loadavg", "r");
     if (F) {
+        *buf = 0;
         fgets (buf, 255, F);
         fclose (F);
         
@@ -264,6 +267,7 @@ var *runprobe_uptime (probe *self) {
     var *res = var_alloc();
     FILE *F = fopen ("/proc/uptime","r");
     if (F) {
+        *buf = 0;
         fgets (buf, 255, F);
         fclose (F);
         var_set_int_forkey (res, "uptime", strtoull (buf, NULL, 10));
