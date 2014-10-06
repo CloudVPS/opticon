@@ -3,6 +3,8 @@
 #include "tproc.h"
 #include "wordlist.h"
 
+static int KMEMTOTAL = 1024;
+
 typedef struct topentry_s
 {
 	char				username[16];
@@ -243,6 +245,22 @@ static struct topthreadinfo_s {
 } TOPTHREAD = {NULL,NULL, NULL};
 
 void top_run (thread *self) {
+    FILE *F;
+    char buf[256];
+    
+    F = fopen ("/proc/meminfo","r");
+    if (F) {
+        while (! feof (F)) {
+            *buf = 0;
+            fgets (buf, 255, F);
+            
+            if (strncmp (buf, "MemTotal:", 9) == 0) {
+                KMEMTOTAL = atoi (buf+9);
+            }
+        }
+        fclose (F);
+    }
+
     procrun *p = (procrun *) malloc (sizeof (procrun));
     int i;
     
