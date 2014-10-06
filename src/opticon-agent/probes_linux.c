@@ -1,3 +1,5 @@
+#include <dirent.h>
+#include <sys/stat.h>
 #include "tproc.h"
 #include "wordlist.h"
 
@@ -37,7 +39,7 @@ void sample_tprocs (procrun *run) {
 	long long		 tpmem;
 	int				 pmem;
 	
-	procrun_initsample (&GLOB.procs);
+	procrun_initsample (run);
 	D = opendir ("/proc");
 	if (!D) return;
 	pausetimer = 0;
@@ -72,13 +74,13 @@ void sample_tprocs (procrun *run) {
 				}
 					
 				/* 11=u 12=s */
-				words = wordlist_create (c);
+				words = wordlist_make (c);
 				if (words->argc > 12) {
 					utime = atol (words->argv[11]);
 					stime = atol (words->argv[12]);
 				}
 				fclose (F);
-				wordlist_free (args);
+				wordlist_free (words);
 
 				sprintf (buf, "/proc/%d/statm", pid);
 				if ((F = fopen (buf, "r"))) {
