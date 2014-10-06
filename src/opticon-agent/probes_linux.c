@@ -253,6 +253,11 @@ void run_top (thread *self) {
     FILE *F;
     char buf[256];
     
+    procrun *p = (procrun *) malloc (sizeof (procrun));
+    int i;
+    
+    procrun_init (p);
+
     F = fopen ("/proc/meminfo","r");
     if (F) {
         while (! feof (F)) {
@@ -266,10 +271,21 @@ void run_top (thread *self) {
         fclose (F);
     }
 
-    procrun *p = (procrun *) malloc (sizeof (procrun));
-    int i;
-    
-    procrun_init (p);
+	F = fopen ("/proc/cpuinfo","r");
+	if (F) {
+		while (! feof (F)) {
+			buf[0] = 0;
+			fgets (buf, 255, F);
+			if (strncasecmp (buf, "processor", 9) == 0) {
+				p->ncpu++;
+			}
+		}
+		fclose (F);
+	}
+	else {
+		p->ncpu = 1;
+	}
+
     while (1) {
         for (i=0; i<3; ++i) {
             sample_tprocs (p);
