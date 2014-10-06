@@ -5,7 +5,7 @@
 
 #define isspace(q) ((q==' ')||(q=='\t'))
 
-inline char *findspace (char *src) {
+static char *findspace (char *src) {
 	register char *t1;
 	register char *t2;
 	
