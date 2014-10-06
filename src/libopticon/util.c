@@ -59,6 +59,15 @@ meterid_t id2mask (meterid_t id) {
     return res;
 }
 
+/** Determine whether one meterid is prefix for another one. The mask of the prefix
+  * part of prefixfor should be provided pre-calculated.
+  * Example: isidprefix ('top','top/pcpu', '***') would be true. With meterids in stead
+  * of strings.
+  * \param potential The potential prefix node
+  * \param prefixfor The potential 'child' node
+  * \param mask Mask for the prefix part of the potential child.
+  * \return 1 if matches, 0 if not.
+  */
 int idisprefix (meterid_t potential, meterid_t prefixfor, meterid_t mask) {
     if ((prefixfor&mask) != (potential&mask)) return 0;
     int bshift = 57;
@@ -73,6 +82,10 @@ int idisprefix (meterid_t potential, meterid_t prefixfor, meterid_t mask) {
     return 0;
 }
 
+/** Get the prefix part of a meterid that has two levels, e.g. "top/pcpu".
+  * \param id The potentially compound meterid.
+  * \return The prefix, or 0 if the meter was not compound.
+  */
 meterid_t idgetprefix (meterid_t id) {
     if (! (id & MMASK_NAME)) return 0ULL;
     meterid_t res = 0ULL;

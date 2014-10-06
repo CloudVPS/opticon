@@ -18,8 +18,4 @@
 
 /* ============================= FUNCTIONS ============================= */
 
-void        id2label (meterid_t id, char *into);
-metertype_t id2type (meterid_t id);
-uint64_t    idmask (int sz);
-
 #endif

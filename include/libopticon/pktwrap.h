@@ -7,6 +7,8 @@
 #include <libopticon/ioport_buffer.h>
 #include <libopticon/aes.h>
 
+/* =============================== TYPES =============================== */
+
 typedef aeskey *(*resolve_tenantkey_f)(uuid, uint32_t);
 typedef aeskey *(*resolve_sessionkey_f)(uint32_t, uint32_t, uint32_t, void **);
 
@@ -18,16 +20,21 @@ typedef aeskey *(*resolve_sessionkey_f)(uint32_t, uint32_t, uint32_t, void **);
 
 extern int unwrap_errno;
 
+/** Authentication information going in/out of an authentication packet. */
 typedef struct authinfo_s {
-    uint32_t    sessionid;
-    uint32_t    serial;
-    uuid        tenantid;
-    uuid        hostid;
-    aeskey      sessionkey;
-    aeskey      tenantkey;
+    uint32_t    sessionid; /** Selected session-id */
+    uint32_t    serial; /** Sent serial number */
+    uuid        tenantid; /** Tenant UUID */
+    uuid        hostid; /** Host UUID */
+    aeskey      sessionkey; /** AES256 session key */
+    aeskey      tenantkey; /** AES256 tenant key */
 } authinfo;
 
+/* ============================== GLOBALS ============================== */
+
 extern uint32_t SERIAL;
+
+/* ============================= FUNCTIONS ============================= */
 
 uint32_t     gen_networkid (struct sockaddr_storage *);
 uint32_t     gen_sessionid (void);

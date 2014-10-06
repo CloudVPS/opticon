@@ -10,6 +10,7 @@
 
 /* ============================= FUNCTIONS ============================= */
 
+uint64_t     idmask (int sz);
 void         id2str (meterid_t id, char *into);
 void         nodeid2str (meterid_t id, char *into);
 uint64_t     idhaspath (meterid_t);
