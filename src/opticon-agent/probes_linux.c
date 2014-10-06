@@ -305,8 +305,13 @@ var *runprobe_top (probe *self) {
     if (! TOPTHREAD.thread) {
         TOPTHREAD.thread = thread_create (run_top, NULL);
     }
-    
-    return TOPTHREAD.res;
+
+    if (TOPTHREAD.res) {
+        var *res = var_alloc();
+        var_copy (res, TOPTHREAD.res);
+        return res;
+    }    
+    return NULL;
 }
 
 builtinfunc BUILTINS[] = {
