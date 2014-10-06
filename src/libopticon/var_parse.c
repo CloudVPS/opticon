@@ -1,4 +1,4 @@
-#include <libopticon/parse.h>
+#include <libopticon/var_parse.h>
 #include <libopticon/defaults.h>
 #include <ctype.h>
 #include <string.h>
@@ -36,7 +36,8 @@ typedef enum parse_state_e {
   * \param buf The cursor (inout)
   * \param st The state to start out with.
   */
-int parse_json_level (var *v, const char **buf, parse_state st, int depth) {
+static int var_parse_json_level (var *v, const char **buf,
+                             parse_state st, int depth) {
     if (depth > default_max_json_depth) {
         sprintf (LAST_PARSE_ERROR, "Nested to deep");
         return 0;
@@ -106,7 +107,7 @@ int parse_json_level (var *v, const char **buf, parse_state st, int depth) {
                                  "for key '%s'", keybuf);
                         return 0;
                     }
-                    if (!parse_json_level (vv, buf,
+                    if (!var_parse_json_level (vv, buf,
                                            PSTATE_DICT_WAITKEY, depth+1)) {
                         return 0;
                     }
@@ -123,7 +124,7 @@ int parse_json_level (var *v, const char **buf, parse_state st, int depth) {
                         return 0;
                     }
                     var_clear_array (vv);
-                    if (!parse_json_level (vv, buf, PSTATE_ARRAY_WAITVALUE, 
+                    if (!var_parse_json_level (vv, buf, PSTATE_ARRAY_WAITVALUE, 
                                            depth+1)) {
                         return 0;
                     }
@@ -173,7 +174,7 @@ int parse_json_level (var *v, const char **buf, parse_state st, int depth) {
                                  "key '%s'", keybuf);
                         return 0;
                     }
-                    if (!parse_json_level (vv, buf, PSTATE_DICT_WAITKEY,
+                    if (!var_parse_json_level (vv, buf, PSTATE_DICT_WAITKEY,
                                            depth+1)) {
                         return 0;
                     }
@@ -190,7 +191,7 @@ int parse_json_level (var *v, const char **buf, parse_state st, int depth) {
                         return 0;
                     }
                     var_clear_array (vv);
-                    if (!parse_json_level (vv, buf, PSTATE_ARRAY_WAITVALUE,
+                    if (!var_parse_json_level (vv, buf, PSTATE_ARRAY_WAITVALUE,
                                            depth+1)) {
                         return 0;
                     }
@@ -287,7 +288,7 @@ int parse_json_level (var *v, const char **buf, parse_state st, int depth) {
                         sprintf (LAST_PARSE_ERROR, "Couldn't add dict");
                         return 0;
                     }
-                    if (!parse_json_level (vv, buf, PSTATE_DICT_WAITKEY,
+                    if (!var_parse_json_level (vv, buf, PSTATE_DICT_WAITKEY,
                                            depth+1)) {
                         return 0;
                     }
@@ -303,7 +304,7 @@ int parse_json_level (var *v, const char **buf, parse_state st, int depth) {
                         return 0;
                     }
                     var_clear_array (vv);
-                    if (!parse_json_level (vv, buf, PSTATE_ARRAY_WAITVALUE,
+                    if (!var_parse_json_level (vv, buf, PSTATE_ARRAY_WAITVALUE,
                                            depth+1)) {
                         return 0;
                     }
@@ -388,7 +389,7 @@ int parse_json_level (var *v, const char **buf, parse_state st, int depth) {
   * \param path Path to the configuration file.
   * \return 1 on success, 0 on failure.
   */
-int load_json (var *into, const char *path) {
+int var_load_json (var *into, const char *path) {
     struct stat st;
     int res = 0;
     if (stat (path, &st) == 0) {
@@ -397,7 +398,7 @@ int load_json (var *into, const char *path) {
         if (F) {
             fread (txt, st.st_size, 1, F);
             txt[st.st_size] = 0;
-            res = parse_json (into, txt);
+            res = var_parse_json (into, txt);
             fclose (F);
         }
         free (txt);
@@ -410,9 +411,9 @@ int load_json (var *into, const char *path) {
   * \param buf The configuration text.
   * \return 1 on success, 0 on failure.
   */
-int parse_json (var *into, const char *buf) {
+int var_parse_json (var *into, const char *buf) {
     const char *crsr = buf;
-    int res = parse_json_level (into, &crsr, PSTATE_BEGINNING, 0);
+    int res = var_parse_json_level (into, &crsr, PSTATE_BEGINNING, 0);
     if (! res) {
         char errbuf[64];
         LAST_PARSE_LINE=1;

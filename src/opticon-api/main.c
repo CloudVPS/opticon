@@ -6,7 +6,7 @@
 #include <libopticon/datatypes.h>
 #include <libopticon/ioport.h>
 #include <libopticon/ioport_buffer.h>
-#include <libopticon/parse.h>
+#include <libopticon/var_parse.h>
 #include <libopticon/dump.h>
 #include <libopticon/defaultmeters.h>
 #include <libopticon/react.h>
@@ -414,14 +414,14 @@ int main (int _argc, const char *_argv[]) {
     opticonf_add_reaction ("database/path", conf_dbpath);
     
     OPTIONS.conf = var_alloc();
-    if (! load_json (OPTIONS.conf, OPTIONS.confpath)) {
+    if (! var_load_json (OPTIONS.conf, OPTIONS.confpath)) {
         log_error ("Error loading %s: %s\n",
                    OPTIONS.confpath, parse_error());
         return 1;
     }
 
     OPTIONS.mconf = get_default_meterdef();
-    if (! load_json (OPTIONS.mconf, OPTIONS.mconfpath)) {
+    if (! var_load_json (OPTIONS.mconf, OPTIONS.mconfpath)) {
         log_error ("Error loading %s: %s\n",
                    OPTIONS.mconfpath, parse_error());
         return 1;

@@ -1,4 +1,4 @@
-#include <libopticon/parse.h>
+#include <libopticon/var_parse.h>
 #include <libopticon/dump.h>
 #include <libopticon/log.h>
 #include <stdio.h>
@@ -10,7 +10,7 @@ void test_input (const char *txt) {
     var *env_collector = NULL;
     var *env_colors = NULL;
     const char *tstr;
-    assert (parse_json (env, txt));
+    assert (var_parse_json (env, txt));
     assert (env_collector = var_get_dict_forkey (env, "collector"));
     assert (var_get_int_forkey (env_collector, "listenport") == 3333);
     assert (tstr = var_get_str_forkey (env_collector, "address"));
@@ -28,14 +28,14 @@ void test_input (const char *txt) {
 
 void test_faulty_input (const char *txt) {
     var *env = var_alloc();
-    assert (! parse_json (env, txt));
+    assert (! var_parse_json (env, txt));
     log_info ("Caught error: %s", parse_error());
     var_free (env);
 }
 
 void dump_input (const char *txt) {
     var *env = var_alloc();
-    assert (parse_json (env, txt));
+    assert (var_parse_json (env, txt));
     dump_var (env, stdout);
     var_free (env);
 }

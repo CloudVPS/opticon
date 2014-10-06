@@ -5,7 +5,7 @@
 #include <libopticon/pktwrap.h>
 #include <libopticon/util.h>
 #include <libopticon/var.h>
-#include <libopticon/parse.h>
+#include <libopticon/var_parse.h>
 #include <libopticon/react.h>
 #include <libopticon/daemon.h>
 #include <libopticon/log.h>
@@ -382,7 +382,7 @@ void conf_reloader_run (thread *t) {
     conf_reloader *self = (conf_reloader *) t;
     while (1) {
         conditional_wait_fresh (self->cond);
-        if (! load_json (APP.conf, APP.confpath)) {
+        if (! var_load_json (APP.conf, APP.confpath)) {
             log_error ("Error loading %s: %s\n",
                        APP.confpath, parse_error());
         }
@@ -584,14 +584,14 @@ int main (int _argc, const char *_argv[]) {
     var_link (defmeters, APP.conf);
     
     /* Load other meters from meter.conf */
-    if (! load_json (defmeters, APP.mconfpath)) {
+    if (! var_load_json (defmeters, APP.mconfpath)) {
         log_error ("Error loading %s: %s\n",
                    APP.confpath, parse_error());
         return 1;
     }
     
     /* Now load the main config in the same var space */
-    if (! load_json (APP.conf, APP.confpath)) {
+    if (! var_load_json (APP.conf, APP.confpath)) {
         log_error ("Error loading %s: %s\n",
                    APP.confpath, parse_error());
         return 1;

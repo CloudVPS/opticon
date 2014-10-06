@@ -1,4 +1,4 @@
-#include <libopticon/parse.h>
+#include <libopticon/var_parse.h>
 #include <libopticon/log.h>
 #include "opticon-agent.h"
 #include "probes.h"
@@ -32,7 +32,7 @@ var *runprobe_exec (probe *self) {
     }
     pclose (proc);
     var *res = var_alloc();
-    if (! parse_json (res, buffer)) {
+    if (! var_parse_json (res, buffer)) {
         log_error ("Error parsing output from %s: %s", self->call,
                     parse_error());
         var_free (res);

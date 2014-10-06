@@ -1,6 +1,6 @@
 #include <libopticon/ioport.h>
 #include <libopticon/ioport_buffer.h>
-#include <libopticon/parse.h>
+#include <libopticon/var_parse.h>
 #include <libopticon/dump.h>
 #include <libopticon/log.h>
 #include <curl/curl.h>
@@ -82,10 +82,10 @@ var *http_call (const char *mth, const char *url, var *hdr, var *data,
     if (curlres == CURLE_OK) {
         curl_easy_getinfo (curl, CURLINFO_RESPONSE_CODE, &http_status);
         if (http_status == 200) {
-            parse_json (res, ioport_get_buffer (indata));
+            var_parse_json (res, ioport_get_buffer (indata));
         } else {
             if (errinfo) {
-                parse_json (errinfo, ioport_get_buffer (indata));
+                var_parse_json (errinfo, ioport_get_buffer (indata));
                 var_set_int_forkey (errinfo, "status", http_status);
             }
             var_free (res);

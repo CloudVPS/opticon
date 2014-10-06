@@ -3,7 +3,7 @@
 #include <ctype.h>
 #include <assert.h>
 #include <libopticon/util.h>
-#include <libopticon/parse.h>
+#include <libopticon/var_parse.h>
 #include <libopticon/ioport_buffer.h>
 #include <libopticon/dump.h>
 #include "req_context.h"
@@ -365,7 +365,7 @@ void req_context_set_header (req_context *self, const char *hdrname,
 int req_context_parse_body (req_context *self) {
     if (! self->body) return 1;
     if (strcasecmp (self->ctype, "application/json") != 0) return 0;
-    return parse_json (self->bodyjson, self->body);
+    return var_parse_json (self->bodyjson, self->body);
 }
 
 /** Internal function for sizing the body data buffer */

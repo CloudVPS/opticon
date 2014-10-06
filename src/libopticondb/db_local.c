@@ -2,7 +2,7 @@
 #include <libopticon/ioport_file.h>
 #include <libopticon/codec.h>
 #include <libopticon/util.h>
-#include <libopticon/parse.h>
+#include <libopticon/var_parse.h>
 #include <libopticon/dump.h>
 #include <libopticon/log.h>
 #include <stdio.h>
@@ -665,7 +665,7 @@ var *localdb_get_metadata (db *d) {
     flock (fileno (F), LOCK_UN);
     fclose (F);
     var *res = var_alloc();
-    if (! parse_json (res, data)) {
+    if (! var_parse_json (res, data)) {
         log_error ("Parse error: %s\n", parse_error());
         var_free (res);
         res = NULL;
@@ -733,7 +733,7 @@ var *localdb_get_hostmeta (db *d, uuid hostid) {
     flock (fileno (F), LOCK_UN);
     fclose (F);
     var *res = var_alloc();
-    if (! parse_json (res, data)) {
+    if (! var_parse_json (res, data)) {
         log_error ("Parse error: %s\n", parse_error());
         var_free (res);
         res = NULL;
@@ -845,7 +845,7 @@ var *localdb_get_global (db *d, const char *id) {
     flock (fileno (F), LOCK_UN);
     fclose (F);
     var *res = var_alloc();
-    if (! parse_json (res, data)) {
+    if (! var_parse_json (res, data)) {
         log_error ("Parse error: %s\n", parse_error());
         var_free (res);
         res = NULL;

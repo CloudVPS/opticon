@@ -5,8 +5,8 @@
 
 /* ============================= FUNCTIONS ============================= */
 
-int          load_json (var *, const char *);
-int          parse_json (var *, const char *);
+int          var_load_json (var *, const char *);
+int          var_parse_json (var *, const char *);
 const char  *parse_error (void);
 
 #endif

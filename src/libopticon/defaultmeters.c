@@ -1,5 +1,5 @@
 #include <libopticon/var.h>
-#include <libopticon/parse.h>
+#include <libopticon/var_parse.h>
 #include <libopticon/log.h>
 #include <assert.h>
 
@@ -155,7 +155,7 @@ static var *PARSED_DEFMETERS = NULL;
 var *get_default_meterdef (void) {
     if (! PARSED_DEFMETERS) {
         PARSED_DEFMETERS = var_alloc();
-        if (! parse_json (PARSED_DEFMETERS, DEFMETERS)) {
+        if (! var_parse_json (PARSED_DEFMETERS, DEFMETERS)) {
             log_error ("Parse error: %s", parse_error);
         }
     }

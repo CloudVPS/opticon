@@ -7,7 +7,7 @@
 
 #include <libopticondb/db_local.h>
 #include <libopticon/cliopt.h>
-#include <libopticon/parse.h>
+#include <libopticon/var_parse.h>
 #include <libopticon/dump.h>
 #include <libopticon/react.h>
 #include <libopticon/log.h>
@@ -172,7 +172,7 @@ int load_cached_token (void) {
     var *cache = var_alloc();
     char path[1024];
     sprintf (path, "%s/.opticon-token-cache", home);
-    if (load_json (cache, path)) {
+    if (var_load_json (cache, path)) {
         const char *token;
         token = var_get_str_forkey (cache, "keystone_token");
         
@@ -406,7 +406,7 @@ int main (int _argc, const char *_argv[]) {
     OPTIONS.conf = var_alloc();
     
     if (stat (OPTIONS.config_file, &st) == 0) {
-        if (! load_json (OPTIONS.conf, OPTIONS.config_file)) {
+        if (! var_load_json (OPTIONS.conf, OPTIONS.config_file)) {
             log_error ("Error loading %s: %s\n",
                        OPTIONS.config_file, parse_error());
             return 1;
@@ -417,7 +417,7 @@ int main (int _argc, const char *_argv[]) {
     sprintf (rcpath, "%s/.opticonrc", getenv("HOME"));
     
     if (stat (rcpath, &st) == 0) {
-        if (! load_json (OPTIONS.conf, rcpath)) {
+        if (! var_load_json (OPTIONS.conf, rcpath)) {
             log_error ("Error loading %s: %s\n", rcpath, parse_error());
             return 1;
         }

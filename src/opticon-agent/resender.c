@@ -4,7 +4,7 @@
 #include <libopticon/pktwrap.h>
 #include <libopticon/util.h>
 #include <libopticon/var.h>
-#include <libopticon/parse.h>
+#include <libopticon/var_parse.h>
 #include <libopticon/react.h>
 #include <libopticon/daemon.h>
 #include <libopticon/log.h>
