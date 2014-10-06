@@ -54,7 +54,7 @@ var *runprobe_meminfo (probe *self) {
             *buf = 0;
             fgets (buf, 255, F);
             if (strncmp (buf, "MemTotal:", 9) == 0) {
-                var_set_int_forkey (resmem, "total", strtoull (buf+9,NULL,10));
+                var_set_int_forkey (res_mem, "total", strtoull (buf+9,NULL,10));
             }
             else if (strncmp (buf, "MemFree:", 8) == 0) {
                 kmemfree = strtoull (buf+8, NULL, 10);
@@ -66,11 +66,11 @@ var *runprobe_meminfo (probe *self) {
                 kmemfree += strtoull (buf+7, NULL, 10);
             }
             else if (strncmp (buf, "SwapFree:", 9) == 0) {
-                var_set_int_forkey (resmem, "swap", strtoull (buf+9,NULL,10));
+                var_set_int_forkey (res_mem, "swap", strtoull (buf+9,NULL,10));
             }
         }
         fclose (F);
-        var_set_int_forkey (resmem, "free", kmemfree);
+        var_set_int_forkey (res_mem, "free", kmemfree);
     }
     return res;
 }
