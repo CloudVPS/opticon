@@ -30,6 +30,7 @@ var *runprobe_who (probe *self) {
     char buf[1024];
     var *res = var_alloc();
     var *res_who = var_get_array_forkey (res, "who");
+    char *cremote;
     char *c;
     wordlist *args;
     FILE *f = popen ("/usr/bin/who","r");
@@ -39,18 +40,18 @@ var *runprobe_who (probe *self) {
         fgets (buf, 1023, f);
         buf[1023] = 0;
         if (*buf == 0) continue;
+        if (! strchr (buf, '(')) continue;
+        
         args = wordlist_make (buf);
         if (args->argc > 4) {
             var *rec = var_add_dict (res_who);
             var_set_str_forkey (rec, "user", args->argv[0]);
             var_set_str_forkey (rec, "tty", args->argv[1]);
-            if (args->argv[4][0] == '(') {
-                strcpy (buf, args->argv[4]+1);
-                c = strchr (buf, ')');
-                if (c) *c = 0;
-                var_set_str_forkey (rec, "remote", buf);
-            }
-            else var_set_str_forkey (rec, "remote", args->argv[4]);
+            cremote = strchr (buf, '(');
+            cremote++;
+            c = strchr (cremote, ')');
+            if (c) *c = 0;
+            var_set_str_forkey (rec, "remote", cremote);
         }
     }
     pclose (f);
