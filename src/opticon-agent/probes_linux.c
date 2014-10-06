@@ -10,17 +10,72 @@
 
 static int KMEMTOTAL = 1024;
 
-static struct linuxprobe_info_s {
-    time_t      lastrun;
-    uint64_t    total_cpu;
-    uint64_t    net_in;
-    uint64_t    net_out;
-    uint64_t    io_blk_r;
-    uint64_t    io_blk_w;
-    uint64_t    io_wait;
-    uint16_t    ports[65536][3];
-} GLOB;
+var *runprobe_loadavg (probe *self) {
+    FILE *F;
+    char buf[256];
+    wordlist *arg;
+    char *slash;
+    double td;
+    var *res = var_alloc();
+    
+    F = fopen ("/proc/loadavg", "r");
+    if (F) {
+        fgets (buf, 255, F);
+        fclose (F);
+        
+        arg = wordlist_make (buf);
+        td = atof (arg->argv[0]);
+        var *res_load = var_get_array_forkey (res, "loadavg");
+        var_add_double (res_load, atof (arg->argv[0]));
+        var_add_double (res_load, atof (arg->argv[1]));
+        var_add_double (res_load, atof (arg->argv[2]));
+        
+        var *res_proc = var_get_dict_forkey (res, "proc");
+        var_set_int_forkey (res_proc, "run", atoi (arg->argv[3]));
+        slash = strchr (arg->argv[3], '/');
+        if (slash) {
+            var_set_int_forkey (res_proc, "total", atoi (slash+1));
+        }
+        wordlist_free (arg);
+    }
+    return res;
+}
 
+var *runprobe_meminfo (probe *self) {
+    FILE *F;
+    char buf[256];
+    var *res = var_alloc();
+    var *res_mem = var_get_dict_forkey (res, "mem");
+    uint64_t kmemfree;
+    
+    F = fopen ("/proc/meminfo", "r");
+    if (F) {
+        while (! feof (F)) {
+            *buf = 0;
+            fgets (buf, 255, F);
+            if (strncmp (buf, "MemTotal:", 9) == 0) {
+                var_set_int_forkey (resmem, "total", strtoull (buf+9,NULL,10));
+            }
+            else if (strncmp (buf, "MemFree:", 8) == 0) {
+                kmemfree = strtoull (buf+8, NULL, 10);
+            }
+            else if (strncmp (buf, "Buffers:", 8) == 0) {
+                kmemfree += strtoull (buf+8, NULL, 10);
+            }
+            else if (strncmp (buf, "Cached:", 7) == 0) {
+                kmemfree += strtoull (buf+7, NULL, 10);
+            }
+            else if (strncmp (buf, "SwapFree:", 9) == 0) {
+                var_set_int_forkey (resmem, "swap", strtoull (buf+9,NULL,10));
+            }
+        }
+        fclose (F);
+        var_set_int_forkey (resmem, "free", kmemfree);
+    }
+    return res;
+}
+
+/* ======================================================================= */
 var *runprobe_uptime (probe *self) {
     char buf[256];
     var *res = var_alloc();
@@ -32,6 +87,17 @@ var *runprobe_uptime (probe *self) {
     }
     return res;
 }
+
+/* ======================================================================= */
+static struct linuxprobe_info_s {
+    time_t      lastrun;
+    uint64_t    total_cpu;
+    uint64_t    net_in;
+    uint64_t    net_out;
+    uint64_t    io_blk_r;
+    uint64_t    io_blk_w;
+    uint64_t    io_wait;
+} IOPROBE;
 
 var *runprobe_io (probe *self)
 {
@@ -86,42 +152,41 @@ var *runprobe_io (probe *self)
 		fclose (F);
 	}
 	
-	delta_r = totalblk_r - GLOB.io_blk_r;
-	delta_w = totalblk_w - GLOB.io_blk_w;
+	delta_r = totalblk_r - IOPROBE.io_blk_r;
+	delta_w = totalblk_w - IOPROBE.io_blk_w;
 	
 	ti = time (NULL);
-	if (ti == GLOB.lastrun) GLOB.lastrun--;
-	if (GLOB.io_blk_r || GLOB.io_blk_w)
+	if (ti == IOPROBE.lastrun) IOPROBE.lastrun--;
+	if (IOPROBE.io_blk_r || IOPROBE.io_blk_w)
 	{
 	    var *res_io = var_get_dict_forkey (res, "io");
-	    if (GLOB.io_blk_r) {
-    	    var_set_int_forkey (res_io, "rdops", delta_r / (ti - GLOB.lastrun));
+	    if (IOPROBE.io_blk_r) {
+    	    var_set_int_forkey (res_io, "rdops", delta_r / (ti - IOPROBE.lastrun));
     	}
-    	if (GLOB.io_blk_w) {
-    	    var_set_int_forkey (res_io, "wrops", delta_w / (ti - GLOB.lastrun));
+    	if (IOPROBE.io_blk_w) {
+    	    var_set_int_forkey (res_io, "wrops", delta_w / (ti - IOPROBE.lastrun));
     	}
 	}
 
-	delta = totalwait - GLOB.io_wait;
-	cpudelta = totalcpu - GLOB.total_cpu;
+	delta = totalwait - IOPROBE.io_wait;
+	cpudelta = totalcpu - IOPROBE.total_cpu;
 
-	if (GLOB.io_wait)
+	if (IOPROBE.io_wait)
 	{
 	    var *res_io = var_get_dict_forkey (res, "io");
 	    var_set_double_forkey (res_io, "pwait", (100.0 * delta) / (1.0 * cpudelta));
 	}
 
-	GLOB.io_blk_r = totalblk_r;
-	GLOB.io_blk_w = totalblk_w;
-	GLOB.io_wait = totalwait;
-	GLOB.total_cpu = totalcpu;
-	GLOB.lastrun = ti;
+	IOPROBE.io_blk_r = totalblk_r;
+	IOPROBE.io_blk_w = totalblk_w;
+	IOPROBE.io_wait = totalwait;
+	IOPROBE.total_cpu = totalcpu;
+	IOPROBE.lastrun = ti;
 	
 	return res;
 }
 
-
-
+/* ======================================================================= */
 typedef struct topentry_s {
 	char				username[16];
 	pid_t				pid;
@@ -426,11 +491,14 @@ var *runprobe_top (probe *self) {
     return NULL;
 }
 
+/* ======================================================================= */
 builtinfunc BUILTINS[] = {
     GLOBAL_BUILTINS,
     {"probe_top", runprobe_top},
     {"probe_uptime", runprobe_uptime},
     {"probe_io", runprobe_io},
+    {"probe_loadavg", runprobe_loadavg},
+    {"probe_meminfo", runprobe_meminfo},
     {NULL, NULL}
 };
 
