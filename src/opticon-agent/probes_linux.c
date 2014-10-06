@@ -174,11 +174,11 @@ var *gather_tprocs (procrun *procs) {
     sample_tprocs (procs);
     procrun_calc (procs);
     
-    var_set_frac ("pcpu",(procs->pcpu*1.0)/255.0);
+    var_set_double_forkey ("pcpu",(procs->pcpu*1.0)/255.0);
     for (i=0; i<procs->count; ++i) {
         inserted = 0;
         if (! procs->array[i].pid) continue;
-        for (j=0; j<top.ntop;++j) {
+        for (j=0; j<inf.ntop;++j) {
             if (((3*inf.tprocs[j].pcpu) + (inf.tprocs[j].pmem/2)) <
                 ((3*procs->array[i].pcpu) + (procs->array[i].pmem/2))) {
                 if ((procs->array[i].pcpu == 0) &&
@@ -249,7 +249,7 @@ static struct topthreadinfo_s {
     thread *thread;
 } TOPTHREAD = {NULL,NULL, NULL};
 
-void top_run (thread *self) {
+void run_top (thread *self) {
     FILE *F;
     char buf[256];
     
