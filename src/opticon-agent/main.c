@@ -338,7 +338,7 @@ cliopt CLIOPT[] = {
         "--config-path",
         "-c",
         OPT_VALUE,
-        "/etc/opticon/opticon-collector.conf",
+        "/etc/opticon/opticon-agent.conf",
         set_confpath
     },
     {NULL,NULL,0,NULL,NULL}
