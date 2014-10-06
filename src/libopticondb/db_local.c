@@ -3,7 +3,7 @@
 #include <libopticon/codec.h>
 #include <libopticon/util.h>
 #include <libopticon/var_parse.h>
-#include <libopticon/dump.h>
+#include <libopticon/var_dump.h>
 #include <libopticon/log.h>
 #include <stdio.h>
 #include <sys/stat.h>
@@ -515,7 +515,7 @@ int localdb_create_tenant (db *d, uuid tenant, var *meta) {
     strcat (mtmppath, ".tenant.metadata.new");
     FILE *F = fopen (mtmppath, "w");
     if (F) {
-        int res = dump_var (meta, F);
+        int res = var_dump (meta, F);
         fclose (F);
         if (res) {
             if (rename (mtmppath, metapath) != 0) res = 0;
@@ -688,7 +688,7 @@ int localdb_set_metadata (db *d, var *v) {
     strcat (tmppath, ".tenant.metadata.new");
     F = fopen (tmppath, "w");
     if (F) {
-        res = dump_var (v, F);
+        res = var_dump (v, F);
         fclose (F);
         if (res) {
             F = fopen (metapath, "r");
@@ -769,7 +769,7 @@ int localdb_set_hostmeta (db *d, uuid hostid, var *v) {
     sprintf (tmppath, "%s%s.metadata.new", self->path, uuidstr);
     F = fopen (tmppath, "w");
     if (F) {
-        res = dump_var (v, F);
+        res = var_dump (v, F);
         fclose (F);
         if (res) {
             F = fopen (metapath, "r");
@@ -800,7 +800,7 @@ int localdb_set_global (db *d, const char *id, var *v) {
     sprintf (tmppath, "%s/%s.json.new", self->pathprefix, id);
     F = fopen (tmppath, "w");
     if (F) {
-        res = dump_var (v, F);
+        res = var_dump (v, F);
         fclose (F);
         if (res) {
             F = fopen (metapath, "r");

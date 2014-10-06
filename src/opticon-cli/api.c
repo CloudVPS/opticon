@@ -13,7 +13,7 @@
 #include <libopticon/ioport_file.h>
 #include <libopticon/util.h>
 #include <libopticon/var.h>
-#include <libopticon/dump.h>
+#include <libopticon/var_dump.h>
 #include <libopticon/defaultmeters.h>
 #include <libopticondb/db_local.h>
 #include <libhttp/http.h>

@@ -5,8 +5,8 @@
 #include <libopticon/ioport.h>
 #include <stdio.h>
 
-int dump_var (var *, FILE *);
-int write_var (var *, ioport *);
-int write_var_indented (var *, ioport *, int);
+int var_dump (var *, FILE *);
+int var_write (var *, ioport *);
+int var_write_indented (var *, ioport *, int);
 
 #endif

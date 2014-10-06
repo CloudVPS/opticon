@@ -8,7 +8,7 @@
 #include <libopticondb/db_local.h>
 #include <libopticon/cliopt.h>
 #include <libopticon/var_parse.h>
-#include <libopticon/dump.h>
+#include <libopticon/var_dump.h>
 #include <libopticon/react.h>
 #include <libopticon/log.h>
 #include <libhttp/http.h>
@@ -153,7 +153,7 @@ void write_cached_token (const char *token) {
 
     var *cache = var_alloc();
     var_set_str_forkey (cache, "keystone_token", token);
-    dump_var (cache, f);
+    var_dump (cache, f);
     fclose (f);
     var_free (cache);
 }
