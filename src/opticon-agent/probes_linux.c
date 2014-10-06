@@ -534,7 +534,7 @@ var *gather_tprocs (procrun *procs) {
     sample_tprocs (procs);
     procrun_calc (procs);
     
-    var_set_double_forkey (res, "pcpu",(procs->pcpu*1.0)/255.0);
+    var_set_double_forkey (res, "pcpu",(procs->pcpu*100.0)/256.0);
     for (i=0; i<procs->count; ++i) {
         inserted = 0;
         if (! procs->array[i].pid) continue;
