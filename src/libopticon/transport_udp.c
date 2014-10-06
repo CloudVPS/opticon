@@ -19,6 +19,20 @@ int udp_outtransport_setremote (outtransport *t, const char *addr,
     if (getaddrinfo (addr, portstr, &hints, &(self->peeraddr)) < 0) {
         return 0;
     }
+ 
+ #ifdef OS_LINUX   
+    /* glibc sucks */
+    if (self->peeraddr->ai_family == AF_INET6) {
+        struct sockaddr_in6 *sin6 =
+            (struct sockaddr_in6 *) self->peeraddr->ai_addr;
+        sin6->sin6_port = htons (port);
+    }
+    else {
+        struct sockaddr_in *sin =
+            (struct sockaddr_in *) self->peeraddr->ai_addr;
+        sin->sin_port = htons (port);
+    }
+#endif
     
     self->sock = socket (self->peeraddr->ai_family, 
                          self->peeraddr->ai_socktype,
