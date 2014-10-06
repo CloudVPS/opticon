@@ -1,8 +1,10 @@
 #include <dirent.h>
 #include <sys/stat.h>
+#include <sys/types.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <pwd.h>
 #include "tproc.h"
 #include "wordlist.h"
 
@@ -165,11 +167,11 @@ var *gather_tprocs (procrun *procs) {
     int inserted;
     struct passwd *pwd;
     topinfo inf;
-    top.ntop = 0;
+    inf.ntop = 0;
     
     var *res = var_alloc();
     
-    sample_procs (procs);
+    sample_tprocs (procs);
     procrun_calc (procs);
     
     var_set_frac ("pcpu",(procs->pcpu*1.0)/255.0);
