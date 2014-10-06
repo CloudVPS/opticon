@@ -2,6 +2,7 @@
 #include <unistd.h>
 #include <libopticon/var.h>
 #include "probes.h"
+#include "wordlist.h"
 
 /** Get the hostname. POSIX compliant */
 var *runprobe_hostname (probe *self) {
@@ -24,9 +25,42 @@ var *runprobe_uname (probe *self) {
     return res;
 }
 
+/** Get logged on users from unix who */
+var *runprobe_who (probe *self) {
+    char buf[1024];
+    var *res = var_alloc();
+    var *res_who = var_get_array_forkey (res, "who");
+    char *c;
+    wordlist *args;
+    FILE *f = popen ("/usr/bin/who","r");
+    if (! f) return res;
+    while (! feof (f)) {
+        *buf = 0;
+        fgets (buf, 1023, f);
+        buf[1023] = 0;
+        if (*buf == 0) continue;
+        args = wordlist_make (buf);
+        if (args->argc > 4) {
+            var *rec = var_add_dict (res_who);
+            var_set_str_forkey (rec, "user", args->argv[0]);
+            var_set_str_forkey (rec, "tty", args->argv[1]);
+            if (args->argv[4][0] == '(') {
+                strcpy (buf, args->argv[4]+1);
+                c = strchr (buf, ')');
+                if (c) *c = 0;
+                var_set_str_forkey (rec, "remote", buf);
+            }
+            else var_set_str_forkey (rec, "remote", args->argv[4]);
+        }
+    }
+    pclose (f);
+    return res;
+}
+
 #define GLOBAL_BUILTINS \
     {"probe_hostname", runprobe_hostname}, \
-    {"probe_uname", runprobe_uname}
+    {"probe_uname", runprobe_uname}, \
+    {"probe_who", runprobe_who}
 
 
 #if defined(OS_DARWIN)
