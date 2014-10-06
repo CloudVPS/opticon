@@ -28,7 +28,7 @@ var *runprobe_uptime (probe *self) {
     if (F) {
         fgets (buf, 255, F);
         fclose (F);
-        var_set_int_forkey ("uptime", strtoull (buf, NULL, 10));
+        var_set_int_forkey (res, "uptime", strtoull (buf, NULL, 10));
     }
     return res;
 }
@@ -111,7 +111,8 @@ var *runprobe_io (probe *self)
 	    var_set_double_forkey (res_io, "pwait", (100.0 * delta) / (1.0 * cpudelta));
 	}
 
-	GLOB.io_blk = totalblk;
+	GLOB.io_blk_r = totalblk_r;
+	GLOB.io_blk_w = totalblk_w;
 	GLOB.io_wait = totalwait;
 	GLOB.total_cpu = totalcpu;
 	GLOB.lastrun = ti;
@@ -429,7 +430,7 @@ builtinfunc BUILTINS[] = {
     GLOBAL_BUILTINS,
     {"probe_top", runprobe_top},
     {"probe_uptime", runprobe_uptime},
-    {"probe_io", runprobe_io}
+    {"probe_io", runprobe_io},
     {NULL, NULL}
 };
 
