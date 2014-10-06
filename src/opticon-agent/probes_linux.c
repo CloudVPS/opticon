@@ -12,6 +12,75 @@
 static int KMEMTOTAL = 1024;
 
 /* ======================================================================= */
+static struct linuxprobe_net_info_s {
+    time_t      lastrun;
+    uint64_t    net_in_kbits;
+    uint64_t    net_out_kbits;
+    uint64_t    net_in_packets;
+    uint64_t    net_out_packets;
+} NETPROBE;
+
+var *runprobe_net (probe *self) {
+    FILE *F;
+    char buf[256];
+    uint64_t totalin_kbits;
+    uint64_t totalin_packets;
+    uint64_t totalout_kbits;
+    uint64_t totalout_packets;
+    uint64_t diffin_kbits;
+    uint64_t diffin_packets;
+    uint64_t diffout_kbits;
+    uint64_t diffout_packets;
+    wordlist *args;
+    char *colon;
+    time_t ti;
+    var *res = var_alloc();
+    
+    F = fopen ("/proc/net/dev", "r");
+    if (! F) return res;
+    var *res_net = var_get_dict_forkey (res, "net");
+    
+    fgets (buf, 255, F); /* skip first line */
+    while (! feof (F)) {
+        *buf = 0;
+        fgets (buf, 255, F);
+        args = wordlist_make (buf);
+        if (args->count < 11) {
+            wordlist_free (args);
+            continue;
+        }
+        
+        totalin_bytes += (strtoull (args->argv[1],NULL,10) >> 7);
+        totalin_packets += (stroull (args->argv[2],NULL,10));
+        totalout_bytes += (strtoull (args->argv[9],NULL,10) >> 7);
+        totalout_packets += (strtoull (args->argv[10],NULL,10));
+        wordlist_free (args);
+    }
+    fclose (F);
+    ti = time (NULL);
+    if (ti == NETPROBE.lastrun) NETPROBE.lastrun--;
+    
+    if (! NETPROBE.lastrun) {
+        NETPROBE.net_in_kbits = totalin_kbits;
+        NETPROBE.net_out_kbits = totalout_kbits;
+        NETPROBE.net_in_packets = totalin_packets;
+        NETPROBE.net_out_packets = totalout_packets;
+    }
+    else {
+        diffin_kbits = totalin_kbits - NETPROBE.net_in_kbits;
+        diffin_packets = totalin_packets - NETPROBE.net_in_packets;
+        diffout_kbits = totalout_kbits - NETPROBE.net_out_kbits;
+        diffout_packets = totalout_packets - NETPROBE.net_out_packets;
+        uint64_t tdiff = (ti - NETPROBE.lastrun);
+        var_set_int_forkey (res_net, "in_kbs", diffin_kbits / tdiff);
+        var_set_int_forkey (res_net, "in_pps", diffin_packets / tdiff);
+        var_set_int_forkey (res_net, "out_kbs", diffout_kbits / tdiff);
+        var_set_int_forkey (res_net, "out_pps", diffout_packets / tdiff);
+    }
+    NETPROBE.lastrun = ti;
+}
+
+/* ======================================================================= */
 double fs_used (const char *fs) {
     struct statfs sfs;
     double blkuse;
@@ -202,7 +271,7 @@ var *runprobe_uptime (probe *self) {
 }
 
 /* ======================================================================= */
-static struct linuxprobe_info_s {
+static struct linuxprobe_io_info_s {
     time_t      lastrun;
     uint64_t    total_cpu;
     uint64_t    net_in;
@@ -607,6 +676,7 @@ builtinfunc BUILTINS[] = {
     {"probe_loadavg", runprobe_loadavg},
     {"probe_meminfo", runprobe_meminfo},
     {"probe_df", runprobe_df},
+    {"probe_net", runprobe_net},
     {NULL, NULL}
 };
 
