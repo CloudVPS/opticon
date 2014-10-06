@@ -33,9 +33,7 @@ var *sessionlist_save (void) {
             var_set_uuid_forkey (v_sess, "hostid", crsr->hostid);
             var_set_int_forkey (v_sess, "addr", (uint64_t) crsr->addr);
             var_set_int_forkey (v_sess, "sessid", (uint64_t) crsr->sessid);
-            char *timestr = time2utcstr (crsr->lastcycle);
-            var_set_str_forkey (v_sess, "lastcycle", timestr);
-            free (timestr);
+            var_set_time_forkey (v_sess, "lastcycle", crsr->lastcycle);
             var_set_int_forkey (v_sess, "lastserial", crsr->lastserial);
             char *strkey = aeskey_to_base64 (crsr->key);
             var_set_str_forkey (v_sess, "key", strkey);
@@ -58,7 +56,7 @@ void sessionlist_restore (var *list) {
         s->hostid = var_get_uuid_forkey (crsr, "hostid");
         s->addr = (uint32_t) (var_get_int_forkey (crsr, "addr") & 0xffffffff);
         s->sessid = (uint32_t) (var_get_int_forkey (crsr, "sessid") & 0xffffffff);
-        s->lastcycle = utcstr2time (var_get_str_forkey (crsr, "lastcycle"));
+        s->lastcycle = var_get_time_forkey (crsr, "lastcycle");
         s->lastserial = (uint32_t) var_get_int_forkey (crsr, "lastserial");
         s->key = aeskey_from_base64 (var_get_str_forkey (crsr, "key"));
         str2ip (var_get_str_forkey (crsr, "remote"), &s->remote);

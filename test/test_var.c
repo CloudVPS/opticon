@@ -29,6 +29,12 @@ int main (int argc, const char *argv[]) {
     assert (tstr = var_get_str_atindex (env_colors, 2));
     assert (strcmp (tstr, "blue") == 0);
     
+    time_t tnow = time (NULL);
+    var_set_time_forkey (env, "nowtime", tnow);
+    assert (var_get_time_forkey (env, "nowtime") == tnow);
+    var_set_unixtime_forkey (env, "unixtime", tnow);
+    assert (var_get_time_forkey (env, "unixtime") == tnow);
+    
     var_new_generation (env);
     var_set_int_forkey (env_collector, "listenport", 3333);
     var_set_str_forkey (env_collector, "address", "192.168.1.1");
