@@ -1,12 +1,14 @@
 #include <dirent.h>
 #include <sys/stat.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include "tproc.h"
 #include "wordlist.h"
 
 static int KMEMTOTAL = 1024;
 
-typedef struct topentry_s
-{
+typedef struct topentry_s {
 	char				username[16];
 	pid_t				pid;
 	unsigned short		pcpu;
@@ -16,6 +18,7 @@ typedef struct topentry_s
 } topentry;
 
 #define NR_TPROCS 24
+#define MAX_NTOP 16
 
 typedef struct topinfo_s {
 	short				 ntop;
@@ -143,7 +146,7 @@ void sample_tprocs (procrun *run) {
 	closedir (D);
 }
 
-void make_top_hole (top_info *inf, int pos) {
+void make_top_hole (topinfo *inf, int pos) {
 	int tailsz;
 	
 	if (pos>(MAX_NTOP-2)) return;
