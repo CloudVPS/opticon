@@ -3,6 +3,7 @@
 
 #include <stdlib.h>
 #include <sys/types.h>
+#include <inttypes.h>
 
 /* =============================== TYPES =============================== */
 
