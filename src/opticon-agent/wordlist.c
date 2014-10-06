@@ -1,5 +1,4 @@
-#include "n2args.h"
-#include "n2malloc.h"
+#include "wordlist.h"
 #include <string.h>
 #include <unistd.h>
 #include <stdlib.h>
@@ -74,7 +73,7 @@ wordlist *wordlist_make (const char *string) {
 	while ((*crsr == ' ')||(*crsr == '\t')) ++crsr;
 	
 	result = (wordlist *) malloc (sizeof (wordlist));
-	count = argcount (crsr);
+	count = wordcount (crsr);
 	result->argc = count;
 	result->argv = (char **) malloc (count * sizeof (char *));
 	
