@@ -45,7 +45,9 @@ var *runprobe_net (probe *self) {
         *buf = 0;
         fgets (buf, 255, F);
         if (! *buf) continue;
-        args = wordlist_make (buf);
+        colon = strchr (buf, ':');
+        if (! colon) continue;
+        args = wordlist_make (colon);
         if (args->argc < 11) {
             wordlist_free (args);
             continue;
