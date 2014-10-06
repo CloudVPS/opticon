@@ -62,7 +62,7 @@ int procrun_alloc (procrun *p) {
 	}
 	
 	p->arraysz = p->arraysz * 2;
-	p->array = (tproc *) pool_realloc (p->array, p->arraysz * sizeof (tproc));
+	p->array = (tproc *) realloc (p->array, p->arraysz * sizeof (tproc));
 	
 	crsr = p->count;
 	p->array[crsr].beat = p->ti_now;
