@@ -1,4 +1,4 @@
-#include <libopticon/import.h>
+#include <libopticon/host_import.h>
 #include <libopticon/log.h>
 
 /** Changes an array of dictionaries from var data into a meter-style
@@ -7,7 +7,7 @@
   * \param prefix The name of the enveloping array.
   * \param v The first array node.
   */
-int dictarray_to_host (host *h, const char *prefix, var *v) {
+static int dictarray_to_host (host *h, const char *prefix, var *v) {
     char tmpid[16];
     meterid_t mid;
     meter *m;
@@ -81,7 +81,7 @@ int dictarray_to_host (host *h, const char *prefix, var *v) {
   * \param val The data to parse
   * \return 1 on success, 0 on failure.
   */
-int var_to_host (host *h, var *val) {
+int host_import (host *h, var *val) {
     var *v = val->value.arr.first;
     int count;
     char firstlevel[16];

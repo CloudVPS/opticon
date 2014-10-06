@@ -5,6 +5,6 @@
 #include <libopticon/var.h>
 #include <libopticon/util.h>
 
-int var_to_host (host *, var *);
+int host_import (host *, var *);
 
 #endif

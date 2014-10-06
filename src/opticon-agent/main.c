@@ -10,7 +10,7 @@
 #include <libopticon/log.h>
 #include <libopticon/cliopt.h>
 #include <libopticon/transport_udp.h>
-#include <libopticon/import.h>
+#include <libopticon/host_import.h>
 #include <libopticon/ioport_file.h>
 #include <libopticon/codec_json.h>
 #include <arpa/inet.h>
@@ -127,7 +127,7 @@ int daemon_main (int argc, const char *argv[]) {
                         ((!slowround) && p->interval<61)) {
                         log_debug ("Collecting '%s'", p->call);
                         
-                        var_to_host (h, (var *) v);
+                        host_import (h, (var *) v);
                         p->lastdispatch = tnow;
                         collected++;
                     }
