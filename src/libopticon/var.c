@@ -1,5 +1,6 @@
 #include <libopticon/var.h>
 #include <libopticon/hash.h>
+#include <libopticon/util.h>
 #include <string.h>
 #include <assert.h>
 
@@ -76,6 +77,11 @@ void var_link (var *self, var *parent) {
     parent->value.arr.count++;
 }
 
+/** Deep copy another var into one. The new structure will share no memory
+  * with the original.
+  * \param self The destination var
+  * \param orig The original var
+  */
 void var_copy (var *self, var *orig) {
     if (self->type == VAR_STR) {
         free (self->value.sval);
@@ -313,8 +319,23 @@ const char *var_get_str_forkey (var *self, const char *key) {
     return res->value.sval;
 }
 
+/** Get a uuid value out of a dict var. UUIDs are encoded as strings, not a
+  * proper var type.
+  * \param self The dictionary
+  * \param key The key for the alleged UUID.
+  * \return The uuid, or uuidnil() if it couldn't be found or parsed.
+  */
 uuid var_get_uuid_forkey (var *self, const char *key) {
     return mkuuid (var_get_str_forkey (self, key));
+}
+
+/** Get a time value out of a dict var.
+  * \param self The dictionary
+  * \param key Key for the time string or int.
+  */
+time_t var_get_time_forkey (var *self, const char *key) {
+    var *res = var_find_key (self, key);
+    return res ? var_get_time (res) : 0;
 }
 
 /** Return the number of children of a keyed child-array or child-dict of
@@ -353,6 +374,19 @@ const char *var_get_str (var *self) {
 /** Parse the string value of a var object as a uuid */
 uuid var_get_uuid (var *self) {
     return mkuuid (var_get_str (self));
+}
+
+/** Extract the time out of a variable. There are two options here.
+  * If the type is VAR_INT, the value is treated as a unix timestamp
+  * and just typecast. If the type is VAR_STR, the value is parsed
+  * as a UTC iso timestring.
+  * \param self The var with the alleged time value
+  * \return Timestamp, 0 if none could be extracted.
+  */
+time_t var_get_time (var *self) {
+    if (self->type == VAR_INT) return (time_t) var_get_int (self);
+    if (self->type == VAR_STR) return utcstr2time (var_get_str (self));
+    return 0;
 }
 
 /** Lookup a var inside a parent by its array index. Uses smart caching
@@ -488,6 +522,16 @@ uuid var_get_uuid_atindex (var *self, int idx) {
     var *res = var_find_index (self, idx);
     if (! res) return uuidnil();
     return var_get_uuid (res);
+}
+
+/** Get the time value of a var out of an array.
+  * \param self The array
+  * \param idx The array index
+  * \return The time value, or 0 on failure.
+  */
+time_t var_get_time_atindex (var *self, int idx) {
+    var *res = var_find_index (self, idx);
+    return res ? var_get_time (res) : 0;
 }
 
 /** Increase the generation counter of a variable space. When a new versin
@@ -642,10 +686,59 @@ void var_set_uuid_forkey (var *self, const char *key, uuid val) {
     var_set_uuid (v, val);
 }
 
+/** Set a UTC/iso time string value inside a dict.
+  * \param self The dictionary
+  * \param key The key for the time string
+  * \param t The value to set it to.
+  */
+void var_set_time_forkey (var *self, const char *key, time_t t) {
+    var *v = var_get_or_make (self, key, VAR_STR);
+    if (! v) return;
+    var_set_time (v, t);
+}
+
+/** Set a unix time int value inside a dict.
+  * \param self The dictionary
+  * \param key The key for the time value
+  * \param t The value to set it to
+  */
+void var_set_unixtime_forkey (var *self, const char *key, time_t t) {
+    var *v = var_get_or_make (self, key, VAR_INT);
+    if (! v) return;
+    var_set_int (v, (uint64_t) t);
+}
+
+/** Set up the var as a string with a uuid value. */
 void var_set_uuid (var *v, uuid u) {
     char buf[40];
     uuid2str (u, buf);
     var_set_str (v, buf);
+}
+
+/** Set up the var as a string with a UTC/iso time string */
+void var_set_time (var *v, time_t t) {
+    char *str = time2utcstr (t);
+    var_own_str (v, str);
+}
+
+/** Set up the var as an integer with a unix timestamp */
+void var_set_unixtime (var *v, time_t t) {
+    var_set_int (v, (uint64_t) t);
+}
+
+/** Set the direct stringvalue of a var, taking ownership of the string. */
+void var_own_str (var *v, char *val) {
+    if (v->type == VAR_NULL) {
+        v->type = VAR_STR;
+        v->value.sval = val;
+        var_update_gendata (v, 1);
+    }
+    else if (v->type == VAR_STR) {
+        free (v->value.sval);
+        v->value.sval = val;
+        var_update_gendata (v, 1);
+    }
+    else free (val);
 }
 
 /** Set the direct string value of a var */
@@ -751,6 +844,22 @@ void var_add_uuid (var *self, uuid u) {
     char buf[40];
     uuid2str (u, buf);
     var_add_str (self, buf);
+}
+
+/** Add a time string to array */
+void var_add_time (var *self, time_t t) {
+    if (self->type != VAR_ARRAY) return;
+    var *nvar = var_alloc();
+    var_set_time (nvar, t);
+    var_link (nvar, self);
+}
+
+/** Add a unix timestamp to array */
+void var_add_unixtime (var *self, time_t t) {
+    if (self->type != VAR_ARRAY) return;
+    var *nvar = var_alloc();
+    var_set_unixtime (nvar, t);
+    var_link (nvar, self);
 }
 
 /** Add a string value to an array var.
