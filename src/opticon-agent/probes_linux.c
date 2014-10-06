@@ -23,10 +23,10 @@ static struct linuxprobe_net_info_s {
 var *runprobe_net (probe *self) {
     FILE *F;
     char buf[256];
-    uint64_t totalin_kbits;
-    uint64_t totalin_packets;
-    uint64_t totalout_kbits;
-    uint64_t totalout_packets;
+    uint64_t totalin_kbits = 0;
+    uint64_t totalin_packets = 0;
+    uint64_t totalout_kbits = 0;
+    uint64_t totalout_packets = 0;
     uint64_t diffin_kbits;
     uint64_t diffin_packets;
     uint64_t diffout_kbits;
