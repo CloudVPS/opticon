@@ -1,5 +1,5 @@
 #include <libopticon/var_parse.h>
-#include <libopticon/dump.h>
+#include <libopticon/var_dump.h>
 #include <libopticon/log.h>
 #include <stdio.h>
 #include <string.h>
@@ -36,7 +36,7 @@ void test_faulty_input (const char *txt) {
 void dump_input (const char *txt) {
     var *env = var_alloc();
     assert (var_parse_json (env, txt));
-    dump_var (env, stdout);
+    var_dump (env, stdout);
     var_free (env);
 }
 

@@ -5,7 +5,7 @@
 #include <libopticon/util.h>
 #include <libopticon/var_parse.h>
 #include <libopticon/ioport_buffer.h>
-#include <libopticon/dump.h>
+#include <libopticon/var_dump.h>
 #include "req_context.h"
 
 /** Allocate a request argument list */
@@ -233,7 +233,7 @@ void req_write_response (struct MHD_Connection *conn,
      * response */
     if (! txt) {
         ioport_write (out, "{\n", 2);
-        write_var_indented (res, out, 4);
+        var_write_indented (res, out, 4);
         ioport_write (out, "}\n", 2);
     }
     void *buf = (void *) ioport_get_buffer (out);

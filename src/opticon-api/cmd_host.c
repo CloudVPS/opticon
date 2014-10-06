@@ -4,7 +4,7 @@
 #include <libopticon/util.h>
 #include <libopticon/datatypes.h>
 #include <libopticon/codec_json.h>
-#include <libopticon/dump.h>
+#include <libopticon/var_dump.h>
 #include <libopticon/hash.h>
 #include <microhttpd.h>
 #include "req_context.h"
@@ -38,7 +38,7 @@ int cmd_host_get (req_context *ctx, req_arg *a, ioport *outio, int *status) {
     
     var *err = var_alloc();
     var_set_str_forkey (err, "error", "No current record found for host");
-    write_var (err, outio);
+    var_write (err, outio);
     var_free (err);
     *status = 404;
     return 1;
@@ -131,7 +131,7 @@ int cmd_host_set_watcher (req_context *ctx, req_arg *a,
         }
     }
     
-    dump_var (hmeta, stdout);
+    var_dump (hmeta, stdout);
     
     db_set_hostmeta (DB, ctx->hostid, hmeta);
     var *envwatcher = var_get_dict_forkey (env, "watcher");

@@ -13,7 +13,7 @@
 #include <libopticon/ioport_file.h>
 #include <libopticon/util.h>
 #include <libopticon/var.h>
-#include <libopticon/dump.h>
+#include <libopticon/var_dump.h>
 #include <libopticon/defaultmeters.h>
 #include <libhttp/http.h>
 
@@ -25,7 +25,7 @@
 int cmd_tenant_list (int argc, const char *argv[]) {
     var *res = api_get ("/");
     if (OPTIONS.json) {
-        dump_var (res, stdout);
+        var_dump (res, stdout);
     }
     else {
         printf ("UUID                                 Hosts  Name\n");
@@ -58,7 +58,7 @@ int cmd_tenant_get_metadata (int argc, const char *argv[]) {
     }
 
     var *meta = api_get ("/%s/meta", OPTIONS.tenant);
-    dump_var (meta, stdout);
+    var_dump (meta, stdout);
     var_free (meta);
     return 0;
 }
@@ -145,7 +145,7 @@ int cmd_meter_list (int argc, const char *argv[]) {
     
     var *apires = api_get ("/%s/meter", OPTIONS.tenant);
     if (OPTIONS.json) {
-        dump_var (apires, stdout);
+        var_dump (apires, stdout);
     }
     else {
         var *res_meter = var_get_dict_forkey (apires, "meter");
@@ -312,7 +312,7 @@ int cmd_watcher_list (int argc, const char *argv[]) {
         apires = api_get ("/%s/watcher", OPTIONS.tenant);
     }
     if (OPTIONS.json) {
-        dump_var (apires, stdout);
+        var_dump (apires, stdout);
         var_free (apires);
         return 0;
     }
@@ -424,7 +424,7 @@ int cmd_host_list (int argc, const char *argv[]) {
     var *apires = api_get ("/%s/host", OPTIONS.tenant);
     
     if (OPTIONS.json) {
-        dump_var (apires, stdout);
+        var_dump (apires, stdout);
         var_free (apires);
         return 0;
     }
@@ -483,7 +483,7 @@ int cmd_get_record (int argc, const char *argv[]) {
     var *apires = api_get ("/%s/host/%s", OPTIONS.tenant, OPTIONS.host);
     
     if (OPTIONS.json) {
-        dump_var (apires, stdout);
+        var_dump (apires, stdout);
         var_free (apires);
         return 0;
     }
@@ -633,7 +633,7 @@ int cmd_session_list (int argc, const char *argv[]) {
     var *v = api_get ("/session");
 
     if (OPTIONS.json) {
-        dump_var (v, stdout);
+        var_dump (v, stdout);
         var_free (v);
         return 0;
     }

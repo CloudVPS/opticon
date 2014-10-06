@@ -1,7 +1,7 @@
 #include <libopticon/ioport.h>
 #include <libopticon/ioport_buffer.h>
 #include <libopticon/var_parse.h>
-#include <libopticon/dump.h>
+#include <libopticon/var_dump.h>
 #include <libopticon/log.h>
 #include <curl/curl.h>
 
@@ -50,7 +50,7 @@ var *http_call (const char *mth, const char *url, var *hdr, var *data,
     }
     
     if (var_get_count (data) > 0) {
-        write_var (data, outdata);
+        var_write (data, outdata);
         curl_easy_setopt (curl, CURLOPT_READFUNCTION, curlread);
         curl_easy_setopt (curl, CURLOPT_READDATA, outdata);
         char slen[32];

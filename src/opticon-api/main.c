@@ -7,7 +7,7 @@
 #include <libopticon/ioport.h>
 #include <libopticon/ioport_buffer.h>
 #include <libopticon/var_parse.h>
-#include <libopticon/dump.h>
+#include <libopticon/var_dump.h>
 #include <libopticon/defaultmeters.h>
 #include <libopticon/react.h>
 #include <libopticon/daemon.h>

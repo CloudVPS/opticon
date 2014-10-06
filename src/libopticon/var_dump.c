@@ -1,4 +1,4 @@
-#include <libopticon/dump.h>
+#include <libopticon/var_dump.h>
 #include <libopticon/ioport.h>
 #include <libopticon/ioport_file.h>
 #include <ctype.h>
@@ -26,13 +26,13 @@ char *dump_escape (const char *str) {
     return res;
 }
 
-/** Recursive implementation function for dump_var().
+/** Recursive implementation function for var_dump().
   * \param v The (dict) var at the current level to print out.
   * \param into The file to write to.
   * \param _indent The desired indentation level.
   * \return 1 on success, 0 on failure.
   */
-int write_var_indented (var *v, ioport *into, int _indent) {
+int var_write_indented (var *v, ioport *into, int _indent) {
     char *tstr;
     int first=1;
     int indent = _indent;
@@ -73,14 +73,14 @@ int write_var_indented (var *v, ioport *into, int _indent) {
                 
                 case VAR_DICT:
                     ioport_printf (into, "{\n");
-                    if (! write_var_indented (crsr, into, indent+4)) return 0;
+                    if (! var_write_indented (crsr, into, indent+4)) return 0;
                     if (indent) ioport_printf (into, "%s", SPC+(128-indent));
                     ioport_printf (into, "}");
                     break;
                     
                 case VAR_ARRAY:
                     ioport_printf (into, "[\n");
-                    if (! write_var_indented (crsr, into, indent+4)) return 0;
+                    if (! var_write_indented (crsr, into, indent+4)) return 0;
                     if (indent) ioport_printf (into, "%s", SPC+(128-indent));
                     ioport_printf (into, "]");
                     break;
@@ -101,20 +101,20 @@ int write_var_indented (var *v, ioport *into, int _indent) {
   * \param into The file to write to.
   * \return 1 on success, 0 on failure.
   */
-int dump_var (var *v, FILE *into) {
+int var_dump (var *v, FILE *into) {
     int res = 0;
     ioport *io = ioport_create_filewriter (into);
     ioport_write (io, "{\n", 2);
-    res = write_var_indented (v, io, 4);
+    res = var_write_indented (v, io, 4);
     ioport_write (io, "}\n", 2);
     ioport_close (io);
     return res;
 }
 
-int write_var (var *v, ioport *into) {
+int var_write (var *v, ioport *into) {
     int res = 0;
     ioport_write (into, "{\n", 2);
-    res = write_var_indented (v, into, 4);
+    res = var_write_indented (v, into, 4);
     ioport_write (into, "}\n", 2);
     return res;
 }
