@@ -63,13 +63,7 @@ var *runprobe_net (probe *self) {
     ti = time (NULL);
     if (ti == NETPROBE.lastrun) NETPROBE.lastrun--;
     
-    if (! NETPROBE.lastrun) {
-        NETPROBE.net_in_kbits = totalin_kbits;
-        NETPROBE.net_out_kbits = totalout_kbits;
-        NETPROBE.net_in_packets = totalin_packets;
-        NETPROBE.net_out_packets = totalout_packets;
-    }
-    else {
+    if (NETPROBE.lastrun) {
         diffin_kbits = totalin_kbits - NETPROBE.net_in_kbits;
         diffin_packets = totalin_packets - NETPROBE.net_in_packets;
         diffout_kbits = totalout_kbits - NETPROBE.net_out_kbits;
@@ -80,6 +74,10 @@ var *runprobe_net (probe *self) {
         var_set_int_forkey (res_net, "out_kbs", diffout_kbits / tdiff);
         var_set_int_forkey (res_net, "out_pps", diffout_packets / tdiff);
     }
+    NETPROBE.net_in_kbits = totalin_kbits;
+    NETPROBE.net_out_kbits = totalout_kbits;
+    NETPROBE.net_in_packets = totalin_packets;
+    NETPROBE.net_out_packets = totalout_packets;
     NETPROBE.lastrun = ti;
     return res;
 }
