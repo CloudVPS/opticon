@@ -18,7 +18,7 @@ static struct linuxprobe_net_info_s {
     uint64_t    net_out_kbits;
     uint64_t    net_in_packets;
     uint64_t    net_out_packets;
-} NETPROBE;
+} NETPROBE = {0,0,0,0,0};
 
 var *runprobe_net (probe *self) {
     FILE *F;
@@ -69,6 +69,8 @@ var *runprobe_net (probe *self) {
         diffout_kbits = totalout_kbits - NETPROBE.net_out_kbits;
         diffout_packets = totalout_packets - NETPROBE.net_out_packets;
         uint64_t tdiff = (ti - NETPROBE.lastrun);
+        log_info ("diffs: %llu, %llu, %llu, %llu", diffin_kbits, diffin_packets,
+                  diffout_kbits, diffout_packets);
         var_set_int_forkey (res_net, "in_kbs", diffin_kbits / tdiff);
         var_set_int_forkey (res_net, "in_pps", diffin_packets / tdiff);
         var_set_int_forkey (res_net, "out_kbs", diffout_kbits / tdiff);
