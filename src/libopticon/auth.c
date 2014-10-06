@@ -4,7 +4,6 @@
 #include <stdio.h>
 
 #include <libopticon/util.h>
-#include <libopticon/datatypes.h>
 #include <libopticon/auth.h>
 #include <libopticon/base64.h>
 #include <libopticon/log.h>

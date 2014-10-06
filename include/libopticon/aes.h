@@ -3,8 +3,6 @@
 
 #include <stdlib.h>
 #include <sys/types.h>
-#include <libopticon/datatypes.h>
-#include <libopticon/ioport.h>
 
 /* =============================== TYPES =============================== */
 
@@ -14,7 +12,14 @@ typedef struct {
     uint8_t deckey[32];
 } aes256_context; 
 
+/** Native Storage for an AES256 key */
+typedef struct aeskey_s {
+    uint8_t data[32];
+} aeskey;
+
 /* ============================= FUNCTIONS ============================= */
+
+#include <libopticon/ioport.h>
 
 void     aes256_init(aes256_context *, uint8_t * /* key */);
 void     aes256_done(aes256_context *);

@@ -24,7 +24,7 @@ CFLAGS+=-DOSNAME=$(OSNAME) -DOSREL=$(OSREL) -DOSRELMAJOR=$(OSRELMAJOR)
 OBJS_TEST = test/test_roundtrip_encoding.o
 OBJS_LIBOPTICON = adjust.o aes.o host.o tenant.o \
 				  util.o auth.o base64.o host_import.o \
-				  ioport.o ioport_file.o \
+				  ioport.o ioport_file.o meter.o \
 				  ioport_buffer.o codec.o \
 				  codec_json.o codec_pkt.o \
 				  compress.o pktwrap.o \

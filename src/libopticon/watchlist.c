@@ -1,6 +1,7 @@
-#include <libopticon/datatypes.h>
+#include <libopticon/watchlist.h>
 #include <unistd.h>
 #include <stdlib.h>
+#include <string.h>
 
 /** Initialize list header and thread lock for a watchlist.
   * \param self The watchlist ot initialize.

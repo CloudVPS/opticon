@@ -1,4 +1,5 @@
-#include <libopticon/datatypes.h>
+#include <libopticon/host.h>
+#include <libopticon/tenant.h>
 #include <libopticon/util.h>
 #include <string.h>
 

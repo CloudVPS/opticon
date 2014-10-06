@@ -5,6 +5,7 @@
 #include <stddef.h>
 #include <sys/socket.h>
 #include <libopticon/ioport_buffer.h>
+#include <libopticon/aes.h>
 
 typedef aeskey *(*resolve_tenantkey_f)(uuid, uint32_t);
 typedef aeskey *(*resolve_sessionkey_f)(uint32_t, uint32_t, uint32_t, void **);

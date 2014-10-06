@@ -1,4 +1,3 @@
-#include <libopticon/datatypes.h>
 #include <libopticon/util.h>
 #include <stdio.h>
 #include <unistd.h>

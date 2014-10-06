@@ -1,4 +1,4 @@
-#include <libopticon/datatypes.h>
+#include <libopticon/watchlist.h>
 #include <libopticon/util.h>
 #include <libopticon/log.h>
 #include <unistd.h>
