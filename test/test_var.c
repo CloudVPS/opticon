@@ -1,4 +1,5 @@
 #include <libopticon/var.h>
+#include <libopticon/util.h>
 #include <stdio.h>
 #include <assert.h>
 #include <string.h>
@@ -34,6 +35,11 @@ int main (int argc, const char *argv[]) {
     assert (var_get_time_forkey (env, "nowtime") == tnow);
     var_set_unixtime_forkey (env, "unixtime", tnow);
     assert (var_get_time_forkey (env, "unixtime") == tnow);
+    
+    uuid uuid_in = uuidgen();
+    var_set_uuid_forkey (env, "myuuid", uuid_in);
+    uuid uuid_out = var_get_uuid_forkey (env, "myuuid");
+    assert (uuidcmp (uuid_in, uuid_out));
     
     var_new_generation (env);
     var_set_int_forkey (env_collector, "listenport", 3333);
