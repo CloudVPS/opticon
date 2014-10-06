@@ -51,7 +51,7 @@ var *runprobe_net (probe *self) {
         }
         
         totalin_kbits += (strtoull (args->argv[1],NULL,10) >> 7);
-        totalin_packets += (stroull (args->argv[2],NULL,10));
+        totalin_packets += (strtoull (args->argv[2],NULL,10));
         totalout_kbits += (strtoull (args->argv[9],NULL,10) >> 7);
         totalout_packets += (strtoull (args->argv[10],NULL,10));
         wordlist_free (args);
