@@ -10,6 +10,117 @@
 
 static int KMEMTOTAL = 1024;
 
+/* ======================================================================= */
+double fs_used (const char *fs) {
+    struct statfs sfs;
+    double blkuse;
+    double blksz;
+    double res = 0.0;
+    
+    if (statfs (fs, &sfs) == 0) {
+        blkuse = (sfs.f_blocks - sfs.f_bfree);
+        blksz = (sfs.f_blocks+1);
+        res = 100.0 * blkuse / blksz;
+    }
+    return res;
+}
+
+uint64_t diskdevice_size_in_mb (const char *devname) {
+	struct stat 		 st;
+	wordlist 			*args;
+	int         		 iminor, imajor;
+	FILE 				*F;
+	char        		 buf[256];
+	unsigned long long 	 sizebytes;
+
+	if (stat (devname, &st)) return 0;
+	iminor = minor (st.st_rdev);
+	imajor = major (st.st_rdev);
+
+	F = fopen ("/proc/partitions","r");
+	if (!F) return 0;
+
+	while (! feof (F))
+	{
+		fgets (buf, 255, F);
+		buf[255] = 0;
+		if (*buf) buf[strlen(buf)-1] = 0;
+		if (! (*buf)) continue;
+
+		args = wordlist_make (buf);
+		if (args->argc < 3)
+		{
+			wordlist_free (args);
+			continue;
+		}
+
+		if (imajor == atoi (args->argv[0]))
+		{
+			if (iminor == atoi (args->argv[1]))
+			{
+				sizebytes = atoll (args->argv[2]);
+				wordlist_free (args);
+				fclose (F);
+				return sizebytes/1024;
+			}
+		}
+		wordlist_free (args);
+	}
+	fclose (F);
+	return 0;
+}
+
+var *runprobe_df (probe *self) {
+	FILE *F;
+	char buf[256];
+	wordlist *args;
+    var *res = var_alloc();
+    var *res_df = var_get_array_forkey (res, "df");
+
+    F = fopen ("/proc/mounts","r");
+    if (! F) return res;
+    while (! feof (F)) {
+        *buf = 0;
+        fgets (buf, 255, F);
+        if (*buf) {
+            args = wordlist_make (buf);
+            if (args->argc > 3) {
+                if ((! strncmp (args->argv[3], "rw", 2)) &&
+                    (strcmp (args->argv[2], "rootfs")) &&
+                    (strcmp (args->argv[2], "proc")) &&
+                    (strcmp (args->argv[2], "usbdevfs")) &&
+                    (strcmp (args->argv[2], "devfs")) &&
+                    (strcmp (args->argv[2], "tmpfs")) &&
+                    (strcmp (args->argv[2], "usbfs")) &&
+                    (strcmp (args->argv[2], "autofs")) &&
+                    (strncmp (args->argv[2], "nfs", 3)) &&
+                    (strncmp (args->argv[2], "sys", 3)) &&
+                    (strcmp (args->argv[2], "devpts")) &&
+                    (strncmp (args->argv[2], "binfmt_", 7)) &&
+                    (strncmp (args->argv[2], "rpc_", 4)) &&
+                    (strcmp (args->argv[0], "none")) &&
+                    (strncmp (args->argv[1], "/sys", 4)) &&
+                    (strncmp (args->argv[1], "/proc", 5))) {
+                    const char *dev = args->argv[0];
+                    uint64_t sz = diskdevice_size_in_mb (dev);
+                    if (sz) {
+                        var *mnt = var_add_dict (res_df);
+                        var_set_str_forkey (mnt, "device", dev);
+                        var_set_int_forkey (mnt, "size", sz);
+                        var_set_double_forkey (mnt, "pused", fs_used (dev));
+                        var_set_str_forkey (mnt, "mount", args->argv[1]);
+                        var_set_str_forkey (mnt, "fs", args->argv[2]);
+                    }
+                }
+            }
+            wordlist_free (args);
+        }
+    }
+    fclose (F);
+    return res;
+}
+
+/* ======================================================================= */
 var *runprobe_loadavg (probe *self) {
     FILE *F;
     char buf[256];
@@ -41,6 +152,7 @@ var *runprobe_loadavg (probe *self) {
     return res;
 }
 
+/* ======================================================================= */
 var *runprobe_meminfo (probe *self) {
     FILE *F;
     char buf[256];
@@ -116,17 +228,14 @@ var *runprobe_io (probe *self)
 	var *res = var_alloc();
 	
 	F = fopen ("/proc/diskstats", "r");
-	if (F)
-	{
-		while (! feof (F))
-		{
+	if (F) {
+		while (! feof (F)) {
 			buf[0] = 0;
 			fgets (buf, 255, F);
 			if (! strlen (buf)) continue;
 			
 			split = wordlist_make (buf);
-			if (split->argc < 14)
-			{
+			if (split->argc < 14) {
 				wordlist_free (split);
 				continue;
 			}
@@ -141,8 +250,7 @@ var *runprobe_io (probe *self)
 	}
 
 	F = fopen ("/proc/stat","r");
-	if (F)
-	{
+	if (F) {
 		fgets (buf, 255, F);
 		split = wordlist_make (buf);
 		totalwait = atoll (split->argv[5]);
@@ -157,8 +265,7 @@ var *runprobe_io (probe *self)
 	
 	ti = time (NULL);
 	if (ti == IOPROBE.lastrun) IOPROBE.lastrun--;
-	if (IOPROBE.io_blk_r || IOPROBE.io_blk_w)
-	{
+	if (IOPROBE.io_blk_r || IOPROBE.io_blk_w) {
 	    var *res_io = var_get_dict_forkey (res, "io");
 	    if (IOPROBE.io_blk_r) {
     	    var_set_int_forkey (res_io, "rdops", delta_r / (ti - IOPROBE.lastrun));
@@ -171,8 +278,7 @@ var *runprobe_io (probe *self)
 	delta = totalwait - IOPROBE.io_wait;
 	cpudelta = totalcpu - IOPROBE.total_cpu;
 
-	if (IOPROBE.io_wait)
-	{
+	if (IOPROBE.io_wait) {
 	    var *res_io = var_get_dict_forkey (res, "io");
 	    var_set_double_forkey (res_io, "pwait", (100.0 * delta) / (1.0 * cpudelta));
 	}
@@ -499,6 +605,7 @@ builtinfunc BUILTINS[] = {
     {"probe_io", runprobe_io},
     {"probe_loadavg", runprobe_loadavg},
     {"probe_meminfo", runprobe_meminfo},
+    {"probe_df", runprobe_df},
     {NULL, NULL}
 };
 
