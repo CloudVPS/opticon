@@ -191,7 +191,7 @@ var *gather_tprocs (procrun *procs) {
                     inf.tprocs[j].username[15] = 0;
                 }
                 else {
-                    sprintf (info.tprocs[j].username, "#%d",
+                    sprintf (inf.tprocs[j].username, "#%d",
                              procs->array[i].uid);
                 }
                 inf.tprocs[j].pid = procs->array[i].pid;
