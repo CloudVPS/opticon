@@ -13,41 +13,18 @@ flowing even under adversial conditions, where traditional pollers tend to fail.
 Components
 ----------
 
-Opticon consists of three main program components. Monitored servers run
-*opticon-agent*. On the other side, *opticon-collector* and *opticon-api* handle
-the collection of data and interaction with users respectively.
+An installation of opticon will leave you with the following binaries and
+path elements:
 
-The source code is organized into smaller modules, some of which are shared
-between multiple programs:
-
-**libopticon**
-
-Data structures for keeping track of hosts and meters, as well as encoding and
-decoding them for transport or storage. Infrastructure for applications and
-daemons.
-
-**libopticondb**
-
-Access to the timestamp-indexed opticon disk database that tracks metering
-samples.
-
-**opticon-api**
-
-A HTTP service that offers a local and remote API for manipulating and querying
-the opticon database.
-
-**opticon-cli**
-
-A command line client for opticon-api.
-
-**opticon-agent**
-
-Monitoring tool that runs on the client machines and sends the probe data.
-
-**opticon-collector**
-
-Receiving daemon that collects metering data and writes it to a database, while
-also keeping track of alert-conditions.
+| Component                      | Function                                           |
+| ------------------------------ | -------------------------------------------------- |
+| /usr/sbin/opticon-agent        | The data probe that should run on monitored hosts. |
+| /usr/sbin/opticon-collector    | The server component that gathers metering data.   |
+| /usr/sbin/opticon-api          | The API server.                                    |
+| /usr/bin/opticon               | The command line client to the API server.         |
+| /etc/opticon                   | Directory for configuration.                       |
+| /usr/libexec/opticon           | Directory for plugins.                             |
+| /var/db/opticon                | Directory for the database.                        |
 
 Configuring opticon-collector
 -----------------------------
@@ -63,7 +40,7 @@ the opticon cli, so we’ll get to that after setting up the API server.
 The collector has a very simple base configuration in
 `/etc/opticon/opticon-collector.conf`, only dealing with system resources:
 
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+```javascript
 network {
     port: 1047
     address: *
@@ -71,12 +48,12 @@ network {
 database {
     path: "/var/db/opticon"
 }
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+```
 
 Additionally, system-wide custom meters and watchers can be configured in
 `/etc/opticon/opticon-meter.conf`, like this:
 
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+```javascript
 # Custom meter and watcher definitions
 "pcpu" {
     type: frac
@@ -89,7 +66,7 @@ Additionally, system-wide custom meters and watchers can be configured in
     type: string
     description: "Hostname"
 }
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+```
 
 The configuration files are in a ’sloppy’ JSON format. You can use strict JSON
 formatting, but you can also leave out any colons, commas, or quotes around
@@ -101,7 +78,7 @@ Configuring opticon-api
 The API server keeps its configuration in `/etc/opticon/opticon-api.conf`. This
 is how it typically looks:
 
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+```javascript
 network {
     port: 8888
 }
@@ -113,7 +90,7 @@ auth {
 database {
     path: "/var/db/opticon"
 }
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+```
 
 Generate a random UUID for the `admin_token` setting. Requests with this token
 coming from the IP address specified by `admin_host` will be granted
@@ -135,23 +112,25 @@ Configuring the opticon client
 
 The client gets its configuration from both `/etc/opticon/opticon-cli.conf` and
 `$HOME/.opticonrc` (the latter having precedence, but both files are parsed and
-merged). Here is what it looks like:
+merged). First let’s configure the global configuration file with the endpoint:
 
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+``` javascript
 endpoints {
-  keystone: "https://identity.stack.cloudvps.com/v2.0"
   opticon: "http://127.0.0.1:8888/"
 }
-defaults {
-  tenant: 001b7153-4f4b-4f1c-b281-cc06b134f98f
-}
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+```
 
-At some time in the future, the opticon endpoint will be available directly
-through keystone, and the `opticon` endpoint definition will become optional,
-but for now it has to be in there. The tenant set up in defaults is the tenant
-that will be used for any commands that aren’t given with an explicit `--tenant`
-flag
+In `.opticonrc` you can configure the `admin_token` as it was configured in the
+api configuration:
+
+``` javascript
+defaults {
+  admin_token: a666ed1e-24dc-4533-acab-1efb2bb55081
+}
+```
+
+This is the `.opticonrc` you should set up for the root account, or another user
+with an administrative role.
 
 Managing the tenant database
 ----------------------------
@@ -160,46 +139,47 @@ Now that the collector and API-server are active, and the client knows how to
 talk to them, the admin API can be used to add tenants to the database. Use the
 following command to create a new tenant:
 
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-$ opticon --opticon-token a666ed1e-24dc-4533-acab-1efb2bb55081 \
-  tenant-create --name "Acme"
+```Apex
+$ opticon tenant-create --name "Acme"
 Tenant created:
 ------------------------------------------------------------------
      Name: Acme
      UUID: dbe7c559-297e-e65b-9eca-fc96037c67e2
   AES Key: nwKT5sfGa+OlYHwa7rZZ7WQaMsAIEWKQii0iuSUPfG0=
 ------------------------------------------------------------------
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+```
 
-The `--opticon-token` flag is used to bypass KeyStone authentication and use the
-admin API. The tool will spit out the UUID for the newly created tenant, as well
-as the tenant AES256 key to be used in the configuration of this tenant’s
+The tool will spit out the UUID for the newly created tenant, as well as the
+tenant AES256 key to be used in the configuration of this tenant’s
 *opticon-agent* instances.
 
 If you want to create a tenant with a predefined UUID, you can use the
 `--tenant` command line flag:
 
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-$ opticon --opticon-token a666ed1e-24dc-4533-acab-1efb2bb55081 \
-  tenant-create --name "Acme" --tenant 0296d893-8187-4f44-a31b-bf3b4c19fc10 
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+```Apex
+$ opticon tenant-create --name "Acme" --tenant 0296d893-8187-4f44-a31b-bf3b4c19fc10
+```
 
-This will be followed by the same information as the first example.
+This will be followed by the same information as the first example. Note that
+creating tenants manually in a Keystone-enabled setup is going to be a bit
+pointless. Users authenticated with a valid keystone token are allowed to create
+the tenant record for tenants they have access to, so the entire set-up should
+be self service.
 
 ### Getting an overview of tenants
 
 If accessed through the admin API, the `tenant-list` sub-command will show
 information about all tenants on the system:
 
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-$ opticon --opticon-token a666ed1e-24dc-4533-acab-1efb2bb55081 tenant-list
+```Apex
+$ opticon tenant-list
 UUID                                 Hosts  Name
 --------------------------------------------------------------------------------
 001b7153-4f4b-4f1c-b281-cc06b134f98f     2  compute-pim
 0296d893-8187-4f44-a31b-bf3b4c19fc10     0  Acme
 6c0606c4-97e6-37dc-14fc-b7c1c61effef     0  compute-demo
 --------------------------------------------------------------------------------
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+```
 
 The same command issued to the regular API will restrict this list to tenants
 accessible to the user.
@@ -209,12 +189,13 @@ accessible to the user.
 To get rid of a tenant (and reclaim all associated storage), use the
 `tenant-delete` sub-command:
 
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-$ opticon --opticon-token a666ed1e-24dc-4533-acab-1efb2bb55081 \
-  tenant-delete --tenant 0296d893-8187-4f44-a31b-bf3b4c19fc10
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+```Apex
+$ opticon tenant-delete --tenant 0296d893-8187-4f44-a31b-bf3b4c19fc10
+```
 
-that should teach them.
+that should teach them. Users authenticated through Keystone are allowed to
+clean up their own tenants, but not those of others, for reasons that should be
+obvious.
 
 Configuring opticon-agent
 -------------------------
@@ -224,7 +205,7 @@ opticon-agent on servers that you would like to monitor. The agent reads its
 configuration from `/etc/opticon/opticon-agent.conf`. First let’s take a look at
 a rather straightforward configuration:
 
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+```javascript
 collector {
     config: manual
     address: 192.168.1.1
@@ -260,7 +241,7 @@ probes {
         interval: 60
     }
 }
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+```
 
 The `collector` section tells the agent how to reach the opticon-collector, and
 how to identify itself. If the server runs in an OpenStack cloud, you can change
@@ -286,11 +267,32 @@ Accessing opticon as a user
 ---------------------------
 
 After you used the admin API to create a tenant, you should be able to access
-the rest of the functionality from any machine running an opticon client. If you
-invoke *opticon* without a `--opticon-token` flag, the first time it wants to
-make contact with the API server, it will ask you for keystone credentials:
+the rest of the functionality from any machine running an opticon client. To
+allow for keystone authentication, add the endpoint to `opticon-cli.conf` like
+this:
 
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+```javascript
+endpoints {
+  keystone: "https://identity.stack.cloudvps.com/v2.0"
+  opticon: "http://192.168.1.1:8888/"
+}
+```
+
+The local `.opticonrc` shouldn't have an `admin_token`, but it’s possible to add
+some convenience to the workflow by picking a default tenant for commands; most
+users are likely to work with a single tenant and can do fine without typing
+`--tenant`, and a huge UUID after each command:
+
+```javascript
+defaults {
+  tenant: 001b7153-4f4b-4f1c-b281-cc06b134f98f
+}
+```
+
+With everything in place, calling opticon for the first time will now prompt you
+for Keystone login credentials:
+
+```Apex
 $ opticon tenant-list
 % Login required
 
@@ -302,7 +304,7 @@ UUID                                 Hosts  Name
 --------------------------------------------------------------------------------
 001b7153-4f4b-4f1c-b281-cc06b134f98f     2  compute-pim
 --------------------------------------------------------------------------------
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+```
 
 The next time you issue a request, the client will use a cached version of the
 Keystone token it acquired with your username and password. If you’re having
@@ -320,18 +322,18 @@ Every tenant object in the opticon database has freeform metadata. Some of it is
 used internally, like the tenant AES key. Use the `tenant-get-metadata`
 sub-command to view a tenant’s metadata in JSON format:
 
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+```Apex
 $ opticon tenant-get-metadata
 {
     "metadata": {
     }
 }
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+```
 
 You can add keys to the metadata, or change the value of existing keys, by using
 the obviously named `tenant-set-metadata` sub-command:
 
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+```Apex
 $ opticon tenant-set-metadata sleep optional
 $ opticon tenant-get-metadata
 {
@@ -339,27 +341,27 @@ $ opticon tenant-get-metadata
         "sleep": "optional"
     }
 }
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+```
 
 ### Navigating hosts
 
 To get an overview of the hosts being monitored by the system, use the
 `host-list` sub-command:
 
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+```Apex
 $ opticon host-list
 UUID                                    Size First record      Last record
 --------------------------------------------------------------------------------
 0d19d114-55c8-4077-9cab-348579c70612    5 MB 2014-09-24 13:57  2014-10-02 20:20
 2b331038-aac4-4d8b-a7cd-5271b603bd1e    5 MB 2014-09-24 16:14  2014-10-02 20:20
 --------------------------------------------------------------------------------
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+```
 
 The times provided throughout opticon are always normalized to UTC.
 
 Use the `host-show` sub-command to get the latest record available for a host:
 
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+```Apex
 $ opticon host-show --host 2b331038-aac4-4d8b-a7cd-5271b603bd1e
 ---( HOST )---------------------------------------------------------------------
 UUID............: 2b331038-aac4-4d8b-a7cd-5271b603bd1e
@@ -393,7 +395,7 @@ DEVICE                 SIZE FS         USED MOUNTPOINT 
 /dev/disk6       5588.40 GB hfs     49.00 % /Volumes/Oodle Nova 
 /dev/disk7       5588.40 GB hfs     31.00 % /Volumes/Storage 
 --------------------------------------------------------------------------------
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+```
 
 Customizing alerts
 ------------------
@@ -407,7 +409,7 @@ The software ships with a default set of watchers that is hopefully useful for
 most cases. You can look at the current situation by issuing the `watcher-list`
 sub-command:
 
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+```Apex
 $ opticon watcher-list
 From     Meter        Trigger   Match                  Value             Weight
 --------------------------------------------------------------------------------
@@ -434,12 +436,12 @@ default  mem/free     warning   lt                     65536    
 default  mem/free     alert     lt                     32768                1.0
 default  mem/free     critical  lt                      4096                1.0
 --------------------------------------------------------------------------------
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+```
 
 You can change the settings for a watcher, by using the `watcher-set`
 sub-command:
 
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+```Apex
 $ opticon watcher-set --meter pcpu --level warning --value 40
 $ opticon watcher-list
 From     Meter        Trigger   Match                  Value             Weight
@@ -451,7 +453,7 @@ tenant   pcpu         warning   gt                     40.00  �
 default  pcpu         alert     gt                     50.00                1.0
 default  pcpu         critical  gt                     99.00                1.0
 ...
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+```
 
 The `weight` value for a watcher determines how fast it should cause the alert
 level to rise. If you set it lower, the time it takes for an over-threshold
@@ -469,7 +471,7 @@ between the agent and the collector. Before we start designing our own custom
 meter, first some bits about the data model. By running the client with the
 `--json` flag, you can get an idea of the structure:
 
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+```Apex
 $ opticon host-show --host 2b331038-aac4-4d8b-a7cd-5271b603bd1e --json
 {
     "agent": {
@@ -503,7 +505,7 @@ $ opticon host-show --host 2b331038-aac4-4d8b-a7cd-5271b603bd1e --json
         }
     },
 ...
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+```
 
 This looks deceptively structured. But opticon data is not free form. The limits
 imposed by UDP packet sizes necessitate some engineering compromises. To keep
@@ -512,7 +514,7 @@ list of values and arrays, with dictionary/hashes at the JSON level being purely
 an illusion limited to two levels. The data above, represented internally, would
 look like this:
 
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+```javascript
 {
     "agent/ip": "fe80::8a53:95ff:fe32:557",
     "hostname": "Jander.local",
@@ -526,12 +528,12 @@ look like this:
     "df/mount": ["/", "/Volumes/Audio"],
     "df/fs": ["hfs", "hfs"]
 }
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+```
 
 This representation, as noted, allows for a limited set of JSON constructs
 involving dictionaries:
 
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+```Apex
 "key": "string" # obviously
 
 "key": 18372 # unsigned 63-bit integer
@@ -555,16 +557,16 @@ involving dictionaries:
     {"key1": "valueA", "key2": 42},
     {"key1": "valueB", "key2": 64}
 ]
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+```
 
 A further limitation is length of the keys. The maximum size of a key name is
 11. If you’re at a second level, the sum of the length of the key name and its
 parent key name cannot be larger than 10 (one is lost for the ‘/‘). There’s also
 a very limited character set to choose from for keys:
 
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+```Apex
 a b c d e f g h i j k l m n o p q r s t u v w x y z . - _ / @
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+```
 
 In addition, arrays are limited in size to a maximum of 29 items.
 
@@ -578,15 +580,15 @@ transmitting this as a meter.
 The battery level can be queried from the command line using the `pmset`
 utility. Its output looks like this:
 
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+```Apex
 $ pmset -g batt
 Now drawing from 'AC Power'
  -InternalBattery-0     97%; charged; 0:00 remaining
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+```
 
 We’ll write an ugly script to turn that information into JSON:
 
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+```Apex
 $ cat /usr/local/scripts/getpower.sh
 #!/bin/sh
 charge=$(pmset -g batt | grep InternalBattery | cut -f2 | cut -f1 -d'%')
@@ -595,11 +597,11 @@ printf '{"power":{"level":%.2f,"src":"%s"}}\n' "$charge" "$source"
 
 $ /usr/local/scripts/getpower.sh
 {"power":{"level":96.00,"src":"AC"}}
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+```
 
 Now we can add this script to the `probes` section of `opticon-agent.conf`:
 
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+```javascript
 probes {
     power {
         type: exec
@@ -607,13 +609,13 @@ probes {
         interval: 60
     }
     ...
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+```
 
 After restarting the agent, and waiting for the next minute mark to pass, and
 collector to write out its data, the value should be visible in the `host-show`
 JSON output:
 
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+```javascript
     "mem": {
         "total": 8386560,
         "free": 6928384
@@ -624,7 +626,7 @@ JSON output:
         "src": "AC"
     },
     "status": "WARN",
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+```
 
 Et voila, an extra meter was born.
 
@@ -633,7 +635,7 @@ Et voila, an extra meter was born.
 If you want your meter to show up less cryptically, you should add information
 the meter to the tenant’s database using the command line tool:
 
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+```Apex
 $ opticon meter-create --meter power/level --type frac --description "Battery Level" --unit "%"
 $ opticon meter-create --meter power/src --type string --description "Power Source"
 $ opticon meter-list
@@ -667,7 +669,7 @@ default  hostname     string            Hostname
 tenant   power/level  frac      %       Battery Level
 tenant   power/src    string            Power Source
 --------------------------------------------------------------------------------
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+```
 
 Note that the type indicated with `--type` is a hint about how watchers should
 interpret the value. The agent may end up encoding a `frac` value as an
@@ -677,29 +679,101 @@ interpret the value. The agent may end up encoding a `frac` value as an
 With the extra information provided, your meter should now also show up in the
 `host-show` non-JSON output:
 
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+```Apex
 $ opticon host-show --host 0d19d114-55c8-4077-9cab-348579c70612
 ---( HOST )---------------------------------------------------------------------
 UUID............: 0d19d114-55c8-4077-9cab-348579c70612
 Hostname........: giskard.local
 ...
----( STORAGE )------------------------------------------------------------------
-DEVICE                 SIZE FS         USED MOUNTPOINT 
-/dev/disk2        147.08 GB hfs     90.00 % / 
-/dev/disk1s2      465.44 GB hfs     91.00 % /Volumes/Giskard Data 
 ---( OTHER )--------------------------------------------------------------------
 Battery Level...: 96.00 %
 Power Source....: AC
 --------------------------------------------------------------------------------
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+```
 
 Now that the meter exists in the database, it’s also possible to set up watchers
 for it. Let’s set up some sensible levels:
 
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+```Apex
 $ opticon watcher-set --meter power/level --level warning --match lt --value 30
 $ opticon watcher-set --meter power/level --level alert --match lt --value 15
 $ opticon watcher-list | grep power/level
 tenant   power/level  warning   lt                     30.00                1.0
 tenant   power/level  alert     lt                     15.00                1.0
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+```
+
+Table data
+----------
+
+If you want to send table-like metering data, like the process list, a little
+more work needs to be done. Let’s walk in a fictional universe, where there is
+no probe for the currently logged in users (there is). First we’ll write a
+wrapper around the output of the “who” command, which looks like this on Darwin:
+
+```Apex
+$ who
+pi       console  Oct  4 22:55 
+pi       ttys000  Oct  5 10:27 
+pi       ttys001  Oct  5 10:43 
+pi       ttys002  Oct  5 00:18 
+pi       ttys003  Oct  5 10:43  (172.16.1.10)
+```
+
+And the pox-ridden contraption of a bash script to convert it into JSON:
+
+```Apex
+$ cat /usr/local/scripts/who.sh
+#!/bin/sh
+echo '{"who":['
+who | while read name tty month day time remote; do
+  if [ ! -z "$remote" ]; then
+    remote=$(echo "$remote" | cut -f2 -d'(' | cut -f1 -d')')
+    printf '  {"user":"%s","tty":"%s","remote":"%s"}\n' "$name" "$tty" "$remote"
+  fi
+done
+echo ']}'
+$ /usr/local/scripts/who.sh
+{"who":[
+  {"user":"pi","tty":"ttys003","remote":"172.16.1.10"}
+]}
+```
+
+We’ll bind it to a probe in `opticon-agent.conf` like before:
+
+```javascript
+    who {
+        type: exec
+        call: /Users/pi/Sources/Git/opticon/playground/who.sh
+        interval: 60
+    }
+```
+
+Finally, meters need to be set up. We’ll set one for each field in the table,
+but also one for the table itself:
+
+```Apex
+$ opticon meter-create --meter who --type table --description "Remote Users"
+$ opticon meter-create --meter who/user --type string --description "User"
+$ opticon meter-create --meter who/tty --type string --description "TTY"
+$ opticon meter-create --meter who/remote --type string --description "Remote IP"
+```
+
+With everything configured and the metering data coming in, the results should
+be visible from `opticon host-show`:
+
+```Apex
+$ opticon host-show --host 0d19d114-55c8-4077-9cab-348579c70612
+---( HOST )---------------------------------------------------------------------
+UUID..............: 0d19d114-55c8-4077-9cab-348579c70612
+Hostname..........: giskard.local
+Address...........: ::ffff:92.108.228.195
+...
+---( STORAGE )------------------------------------------------------------------
+DEVICE                 SIZE FS         USED MOUNTPOINT 
+/dev/disk2        147.08 GB hfs     94.00 % / 
+/dev/disk0s2      465.44 GB hfs     91.00 % /Volumes/Giskard Data 
+---( REMOTE USERS )-------------------------------------------------------------
+USER      TTY           REMOTE IP         
+pi        ttys003       172.16.1.10       
+--------------------------------------------------------------------------------
+```
