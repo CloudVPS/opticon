@@ -743,7 +743,7 @@ We’ll bind it to a probe in `opticon-agent.conf` like before:
 ```javascript
     who {
         type: exec
-        call: /Users/pi/Sources/Git/opticon/playground/who.sh
+        call: /usr/local/scripts/who.sh
         interval: 60
     }
 ```
