@@ -183,13 +183,14 @@ var *runprobe_df (probe *self) {
                     (strncmp (args->argv[1], "/sys", 4)) &&
                     (strncmp (args->argv[1], "/proc", 5))) {
                     const char *dev = args->argv[0];
+                    const char *mnt = args->argv[1];
                     uint64_t sz = diskdevice_size_in_mb (dev);
                     if (sz) {
                         var *mnt = var_add_dict (res_df);
                         var_set_str_forkey (mnt, "device", dev);
                         var_set_int_forkey (mnt, "size", sz);
-                        var_set_double_forkey (mnt, "pused", fs_used (dev));
-                        var_set_str_forkey (mnt, "mount", args->argv[1]);
+                        var_set_double_forkey (mnt, "pused", fs_used (mnt));
+                        var_set_str_forkey (mnt, "mount", mnt);
                         var_set_str_forkey (mnt, "fs", args->argv[2]);
                     }
                 }
