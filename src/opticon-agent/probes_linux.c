@@ -278,15 +278,22 @@ var *runprobe_distro (probe *self) {
     }
     else {
         F = fopen ("/etc/redhat-release","r");
-        if (! F) return res;
+        if (! F) {
+            log_debug ("No distro files found");
+            return res;
+        }
         *buf = 0;
         fgets (buf, 255, F);
         if (*buf) distro = buf;
     }
     
     if (distro) {
+        log_debug ("distro: %s", distro);
         var *res_os = var_get_dict_forkey (res, "os");
         var_set_str_forkey (res_os, "distro", distro);
+    }
+    else {
+        log_debug ("Error getting distro");
     }
     
     return res;
