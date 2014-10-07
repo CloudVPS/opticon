@@ -121,7 +121,7 @@ int daemon_main (int argc, const char *argv[]) {
             while (p) {
                 volatile var *v = p->vcurrent;
                 /* See if data for this probe has been collected since the last kick */
-                if (v && (p->lastdispatch < p->lastreply)) {
+                if (v && (p->lastdispatch <= p->lastreply)) {
                     /* Filter probes for the current lane */
                     if ((slowround && p->interval>60) ||
                         ((!slowround) && p->interval<61)) {

@@ -270,7 +270,7 @@ var *runprobe_distro (probe *self) {
             *buf = 0;
             fgets (buf, 255, F);
             if (strncmp (buf, "DISTRIB_DESCRIPTION=", 20) == 0) {
-                distro = buf+20;
+                distro = buf+21;
                 break;
             }
         }
@@ -290,6 +290,8 @@ var *runprobe_distro (probe *self) {
     if (distro && strlen (distro)) {
         int len = strlen (distro);
         if (distro[len-1] == '\n') distro[len-1] = 0;
+        len--;
+        if (len && distro[len-1] == '\"') distro[len-1] = 0;
         log_debug ("distro: %s", distro);
         var *res_os = var_get_dict_forkey (res, "os");
         var_set_str_forkey (res_os, "distro", distro);
