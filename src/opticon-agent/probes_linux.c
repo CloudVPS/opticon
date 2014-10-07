@@ -288,7 +288,7 @@ var *runprobe_distro (probe *self) {
     }
     
     if (distro && strlen (distro)) {
-        len = strlen (distro);
+        int len = strlen (distro);
         if (distro[len-1] == '\n') distro[len-1] = 0;
         log_debug ("distro: %s", distro);
         var *res_os = var_get_dict_forkey (res, "os");
