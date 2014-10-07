@@ -362,8 +362,14 @@ var *runprobe_io (probe *self)
 			while (isalpha (*c)) c++;
 			if (isdigit (*c)) *c = 0;
 			
-			if (var_find_key (toplevels, buf)) continue;
-			if (strncmp (split->argv[0], "ram", 3) == 0) continue;
+			if (var_find_key (toplevels, buf)) {
+			    wordlist_free (split);
+			    continue;
+			}
+			if (strncmp (split->argv[0], "ram", 3) == 0) {
+			    wordlist_free (split);
+			    continue;
+			}
 			var_set_int_forkey (toplevels, split->argv[0], 1);
 			
 			totalblk_r += atoll (split->argv[3]);
