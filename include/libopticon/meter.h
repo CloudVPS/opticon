@@ -19,6 +19,7 @@ typedef uint32_t        status_t;
 #define MMASK_COUNT     0x000000000000001f
 #define MMASK_NAME      0x3fffffffffffffe0
 
+#define SZ_MAX_ARRAY    0x000000000000001d
 #define SZ_EMPTY_VAL    0x000000000000001e
 #define SZ_EMPTY_ARRAY  0x000000000000001f
 
