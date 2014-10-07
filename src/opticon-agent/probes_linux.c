@@ -71,8 +71,8 @@ var *runprobe_net (probe *self) {
         diffout_kbits = totalout_kbits - NETPROBE.net_out_kbits;
         diffout_packets = totalout_packets - NETPROBE.net_out_packets;
         uint64_t tdiff = (ti - NETPROBE.lastrun);
-        log_info ("diffs: %llu, %llu, %llu, %llu", diffin_kbits, diffin_packets,
-                  diffout_kbits, diffout_packets);
+        log_debug ("diffs: %llu, %llu, %llu, %llu", diffin_kbits, diffin_packets,
+                   diffout_kbits, diffout_packets);
         var_set_int_forkey (res_net, "in_kbs", diffin_kbits / tdiff);
         var_set_int_forkey (res_net, "in_pps", diffin_packets / tdiff);
         var_set_int_forkey (res_net, "out_kbs", diffout_kbits / tdiff);
@@ -334,13 +334,14 @@ var *runprobe_io (probe *self)
 			if (isdigit (*c)) *c = 0;
 			
 			if (var_find_key (toplevels, buf)) continue;
+			if (strncmp (split->argv[0], "ram", 3) == 0) continue;
 			var_set_int_forkey (toplevels, split->argv[0], 1);
 			
 			totalblk_r += atoll (split->argv[3]);
 			totalblk_w += atoll (split->argv[7]);
 			
-			log_info ("disk %s r/%llu w/%llu", split->argv[0], totalblk_r,
-			          totalblk_w);
+			log_debug ("disk %s r/%llu w/%llu", split->argv[0], totalblk_r,
+			            totalblk_w);
 			
 			wordlist_free (split);
 		}
