@@ -294,6 +294,7 @@ var *runprobe_io (probe *self)
 	FILE *F;
 	time_t ti;
 	char buf[256];
+	char *c;
 	uint64_t totalblk_r = 0;
 	uint64_t totalblk_w = 0;
 	uint64_t delta_r;
@@ -303,6 +304,7 @@ var *runprobe_io (probe *self)
 	uint64_t totalcpu;
 	uint64_t totalwait = 0;
 	var *res = var_alloc();
+	var *toplevels = var_alloc(); /* to skip hda1 if we already did hda */
 	
 	F = fopen ("/proc/diskstats", "r");
 	if (F) {
@@ -311,11 +313,20 @@ var *runprobe_io (probe *self)
 			fgets (buf, 255, F);
 			if (strlen (buf) <15) continue;
 			
-			split = wordlist_make (buf+14);
+			split = wordlist_make (buf+13);
 			if (split->argc < 8) {
 				wordlist_free (split);
 				continue;
 			}
+			
+			/* make copy of the device name with digits stripped off */
+			strncpy (buf, split->argv[0]);
+			c = buf;
+			while (isalpha (*c)) c++;
+			if (isdigit (*c)) *c = 0;
+			
+			if (var_find_key (toplevels, buf)) continue;
+			var_set_int_forkey (toplevels, split->argv[0], 1);
 			
 			totalblk_r += atoll (split->argv[3]);
 			totalblk_w += atoll (split->argv[7]);
@@ -328,6 +339,8 @@ var *runprobe_io (probe *self)
 		
 		fclose (F);
 	}
+	
+	var_free (toplevels);
 
 	F = fopen ("/proc/stat","r");
 	if (F) {
