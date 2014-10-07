@@ -6,7 +6,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <pwd.h>
-#include <ctype.>
+#include <ctype.h>
 #include <libopticon/log.h>
 #include "tproc.h"
 #include "wordlist.h"
@@ -322,7 +322,8 @@ var *runprobe_io (probe *self)
 			}
 			
 			/* make copy of the device name with digits stripped off */
-			strncpy (buf, split->argv[0]);
+			strncpy (buf, split->argv[0], 255);
+			buf[255] = 0;
 			c = buf;
 			while (isalpha (*c)) c++;
 			if (isdigit (*c)) *c = 0;
