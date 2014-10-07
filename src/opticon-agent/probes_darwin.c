@@ -6,6 +6,33 @@
 #include <string.h>
 #include <sys/sysctl.h>
 
+var *runprobe_distro (probe *self) {
+    var *res = var_alloc();
+    char *distro = NULL;
+    char *c;
+    FILE *F;
+    char buf[256];
+    F = popen ("/usr/sbin/system_profiler SPSoftwareDataType","r");
+    if (! F) return res;
+    while (! feof (F)) {
+        *buf = 0;
+        fgets (buf, 255, F);
+        if (strncmp (buf, "      System Version: ", 22) == 0) {
+            distro = buf+22;
+            c = strchr (distro, '\n');
+            if (c) *c = 0;
+            log_debug ("(probe_distro) snarked distro: %s", distro);
+            break;
+        }
+    }
+    pclose (F);
+    if (distro) {
+        var *res_os = var_get_dict_forkey (res, "os");
+        var_set_str_forkey (res_os, "distro", distro);
+    }
+    return res;
+}
+
 /** Structure for keeping track of top records */
 typedef struct toprec_s {
     uint32_t pid;
@@ -384,6 +411,7 @@ builtinfunc BUILTINS[] = {
     {"probe_top", runprobe_top},
     {"probe_df", runprobe_df},
     {"probe_uptime", runprobe_uptime},
+    {"probe_distro", runprobe_distro},
     {NULL, NULL}
 };
 
