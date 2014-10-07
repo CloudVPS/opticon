@@ -309,16 +309,19 @@ var *runprobe_io (probe *self)
 		while (! feof (F)) {
 			buf[0] = 0;
 			fgets (buf, 255, F);
-			if (! strlen (buf)) continue;
+			if (strlen (buf) <15) continue;
 			
-			split = wordlist_make (buf);
-			if (split->argc < 14) {
+			split = wordlist_make (buf+14);
+			if (split->argc < 8) {
 				wordlist_free (split);
 				continue;
 			}
 			
-			totalblk_r += atoll (split->argv[5]);
-			totalblk_w += atoll (split->argv[9]);
+			totalblk_r += atoll (split->argv[3]);
+			totalblk_w += atoll (split->argv[7]);
+			
+			log_info ("disk %s r/%llu w/%llu", split->argv[0], totalblk_r,
+			          totalblk_w);
 			
 			wordlist_free (split);
 		}
