@@ -256,6 +256,43 @@ var *runprobe_loadavg (probe *self) {
 }
 
 /* ======================================================================= */
+/* PROBE probe_distro                                                      */
+/* ======================================================================= */
+var *runprobe_distro (probe *self) {
+    FILE *F;
+    char buf[256];
+    char *distro = NULL;
+    var *res = var_alloc();
+    
+    F = fopen ("/etc/lsb-release","r");
+    if (F) {
+        while (! feof (F)) {
+            *buf = 0;
+            fgets (buf, 255, F);
+            if (strncmp (buf, "DISTRIB_DESCRIPTION=", 20) == 0) {
+                distro = buf+20;
+                break;
+            }
+        }
+        fclose (F);
+    }
+    else {
+        F = fopen ("/etc/redhat-release","r");
+        if (! F) return res;
+        *buf = 0;
+        fgets (buf, 255, F);
+        if (*buf) distro = buf;
+    }
+    
+    if (distro) {
+        var *res_os = var_get_dict_forkey (res, "os");
+        var_set_str_forkey (res_os, "distro", distro);
+    }
+    
+    return res;
+}
+
+/* ======================================================================= */
 /* PROBE probe_meminfo                                                     */
 /* ======================================================================= */
 var *runprobe_meminfo (probe *self) {
@@ -767,6 +804,7 @@ builtinfunc BUILTINS[] = {
     {"probe_meminfo", runprobe_meminfo},
     {"probe_df", runprobe_df},
     {"probe_net", runprobe_net},
+    {"probe_distro", runprobe_distro},
     {NULL, NULL}
 };
 
