@@ -94,9 +94,13 @@ double fs_used (const char *fs) {
     double res = 0.0;
     
     if (statfs (fs, &sfs) == 0) {
+        log_debug ("(fs_used) %s %i %i", fs, sfs.f_blocks, sfs.f_bfree);
         blkuse = (sfs.f_blocks - sfs.f_bfree);
         blksz = (sfs.f_blocks+1);
         res = 100.0 * blkuse / blksz;
+    }
+    else {
+        log_error ("(fs_used) error from stats %s", fs);
     }
     return res;
 }
