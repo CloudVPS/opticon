@@ -533,6 +533,8 @@ int cmd_get_record (int argc, const char *argv[]) {
     print_value ("Uptime","%s",uptimestr);
     print_value ("OS/Hardware","%s %s (%s)", VDstr("os","kernel"),
                  VDstr("os","version"), VDstr("os","arch"));
+    const char *dist = VDstr("os","distro");
+    if (dist) print_value ("Distro", "%s", dist);
     Vdone("os");
     
     /* -------------------------------------------------------------*/
