@@ -53,12 +53,14 @@ void probe_run (thread *t) {
     
     while (1) {
         var *nvar = self->func (self);
-        volatile var *ovar = self->vold;
         if (nvar) {
+            if (self->vold) {
+                var_free ((var *) self->vold);
+                self->vold = NULL;
+            }
             self->vold = self->vcurrent;
             self->vcurrent = nvar;
             self->lastreply = time (NULL);
-            if (ovar) var_free ((var *)ovar);
         }
 
         conditional_wait_fresh (&self->pulse);

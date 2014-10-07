@@ -14,6 +14,10 @@
 static int KMEMTOTAL = 1024;
 
 /* ======================================================================= */
+/* PROBE probe_net                                                         */
+/* ======================================================================= */
+
+/** Tallies */
 static struct linuxprobe_net_info_s {
     time_t      lastrun;
     uint64_t    net_in_kbits;
@@ -22,6 +26,7 @@ static struct linuxprobe_net_info_s {
     uint64_t    net_out_packets;
 } NETPROBE = {0,0,0,0,0};
 
+/** Probe function */
 var *runprobe_net (probe *self) {
     FILE *F;
     char buf[256];
@@ -87,6 +92,14 @@ var *runprobe_net (probe *self) {
 }
 
 /* ======================================================================= */
+/* PROBE probe_df                                                          */
+/* ======================================================================= */
+
+/** Get the %used of a mounted filesystem. We don't worry about timeouts,
+  * if the thread stalls, it stalls.
+  * \param fs The mountpoint.
+  * \return Usage percentage.
+  */
 double fs_used (const char *fs) {
     struct statfs sfs;
     double blkuse;
@@ -105,6 +118,10 @@ double fs_used (const char *fs) {
     return res;
 }
 
+/** Query the os for the size of a disk device, convert to megabytes.
+  * \param devname The name of the device node.
+  * \return Number of megabytes, 0 on any kind of failure.
+  */
 uint64_t diskdevice_size_in_mb (const char *devname) {
 	struct stat 		 st;
 	wordlist 			*args;
@@ -151,6 +168,7 @@ uint64_t diskdevice_size_in_mb (const char *devname) {
 	return 0;
 }
 
+/** Probe function */
 var *runprobe_df (probe *self) {
 	FILE *F;
 	char buf[256];
@@ -203,6 +221,8 @@ var *runprobe_df (probe *self) {
 }
 
 /* ======================================================================= */
+/* PROBE probe_loadavg                                                     */
+/* ======================================================================= */
 var *runprobe_loadavg (probe *self) {
     FILE *F;
     char buf[256];
@@ -235,6 +255,8 @@ var *runprobe_loadavg (probe *self) {
     return res;
 }
 
+/* ======================================================================= */
+/* PROBE probe_meminfo                                                     */
 /* ======================================================================= */
 var *runprobe_meminfo (probe *self) {
     FILE *F;
@@ -271,6 +293,8 @@ var *runprobe_meminfo (probe *self) {
 }
 
 /* ======================================================================= */
+/* PROBE probe_uptime                                                      */
+/* ======================================================================= */
 var *runprobe_uptime (probe *self) {
     char buf[256];
     var *res = var_alloc();
@@ -285,6 +309,10 @@ var *runprobe_uptime (probe *self) {
 }
 
 /* ======================================================================= */
+/* PROBE probe_io                                                          */
+/* ======================================================================= */
+
+/** Tallies */
 static struct linuxprobe_io_info_s {
     time_t      lastrun;
     uint64_t    total_cpu;
@@ -295,6 +323,7 @@ static struct linuxprobe_io_info_s {
     uint64_t    io_wait;
 } IOPROBE;
 
+/** Probe function */
 var *runprobe_io (probe *self)
 {
 	wordlist *split;
@@ -395,6 +424,12 @@ var *runprobe_io (probe *self)
 }
 
 /* ======================================================================= */
+/* PROBE probe_top                                                         */
+/* ======================================================================= */
+
+/** When collecting processes from tproc, they get sorted into an array
+  * of these babies, before things get sent to var heaven.
+  */
 typedef struct topentry_s {
 	char				username[16];
 	pid_t				pid;
@@ -404,14 +439,16 @@ typedef struct topentry_s {
 	char				ptitle[48];
 } topentry;
 
-#define NR_TPROCS 24
-#define MAX_NTOP 16
+#define NR_TPROCS 24 /**< Needless headroom FTW */
+#define MAX_NTOP 16 /**< Maximum number of records we'll return */
 
+/** Array carrier for the topentry nodes */
 typedef struct topinfo_s {
 	short				 ntop;
 	topentry        	 tprocs[NR_TPROCS];
 } topinfo;
 
+/** Perform a sample round on a procrun */
 void sample_tprocs (procrun *run) {
 	struct dirent	*de;
 	DIR				*D;
@@ -533,6 +570,8 @@ void sample_tprocs (procrun *run) {
 	closedir (D);
 }
 
+/** Utility function for inserting a hole in the topinfo array, to make room
+  * for a higher ranked process to enter the folds. */
 void make_top_hole (topinfo *inf, int pos) {
 	int tailsz;
 	
@@ -546,6 +585,8 @@ void make_top_hole (topinfo *inf, int pos) {
 	if (inf->ntop < MAX_NTOP) inf->ntop++;
 }
 
+/** Function that reaps the procrun data gathered and sorts it into the
+  * topinfo array. */
 var *gather_tprocs (procrun *procs) {
     int i;
     int j;
@@ -628,12 +669,22 @@ var *gather_tprocs (procrun *procs) {
     return res;
 }
 
+/** Structure for safely allowing other threads to consume data out of the
+  * probe, provided they take less than 30 seconds to copy the var.
+  */
 static struct topthreadinfo_s {
     var *oldres;
     var *res;
     thread *thread;
 } TOPTHREAD = {NULL,NULL, NULL};
 
+/** We oversample the procrun, to allow us to catch information at a higher
+  * frequency. The lower the frequency of sampling, the higher the chance that
+  * a process has a chance to be created, do something nasty that you'd like
+  * to know, and disappear before the next sample is taken, leaving you none
+  * the wiser. This function runs the background thread that feeds the actual
+  * probe function the same way probe threads feed the main aggregator.
+  */
 void run_top (thread *self) {
     FILE *F;
     char buf[256];
@@ -686,6 +737,7 @@ void run_top (thread *self) {
     }
 }
 
+/** Probe function */
 var *runprobe_top (probe *self) {
     if (! TOPTHREAD.thread) {
         TOPTHREAD.thread = thread_create (run_top, NULL);

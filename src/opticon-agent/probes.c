@@ -53,7 +53,7 @@ var *runprobe_who (probe *self) {
             if (c) *c = 0;
             var_set_str_forkey (rec, "remote", cremote);
         }
-        var_free (args);
+        wordlist_free (args);
     }
     pclose (f);
     return res;
