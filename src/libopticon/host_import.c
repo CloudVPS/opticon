@@ -50,6 +50,7 @@ static int dictarray_to_host (host *h, const char *prefix, var *v) {
 
         int pos = 0;
         int count = v->parent->value.arr.count;
+        if (count > SZ_MAX_ARRAY) count = SZ_MAX_ARRAY;
         meter_setcount (m, count);
         
         while (crsr && (pos < count)) {
@@ -127,6 +128,7 @@ int host_import (host *h, var *val) {
                 }
                 else if (vv->type == VAR_DOUBLE) {
                     count = v->value.arr.count;
+                    if (count > SZ_MAX_ARRAY) count = SZ_MAX_ARRAY;
                     mid = makeid (v->id, MTYPE_FRAC,0);
                     m = host_get_meter (h, mid);
                     meter_setcount (m, count);
@@ -137,6 +139,7 @@ int host_import (host *h, var *val) {
                 }
                 else if (vv->type == VAR_INT) {
                     count = v->value.arr.count;
+                    if (count > SZ_MAX_ARRAY) count = SZ_MAX_ARRAY;
                     mid = makeid (v->id, MTYPE_INT,0);
                     m = host_get_meter (h, mid);
                     meter_setcount (m, count);
@@ -147,6 +150,7 @@ int host_import (host *h, var *val) {
                 }
                 else if (vv->type == VAR_STR) {
                     count = v->value.arr.count;
+                    if (count > SZ_MAX_ARRAY) count = SZ_MAX_ARRAY;
                     mid = makeid (v->id, MTYPE_STR,0);
                     m = host_get_meter (h, mid);
                     meter_setcount (m, count);
