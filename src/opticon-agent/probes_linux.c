@@ -6,6 +6,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <pwd.h>
+#include <ctype.>
+#include <libopticon/log.h>
 #include "tproc.h"
 #include "wordlist.h"
 
