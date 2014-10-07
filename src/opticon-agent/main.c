@@ -125,7 +125,7 @@ int daemon_main (int argc, const char *argv[]) {
                     /* Filter probes for the current lane */
                     if ((slowround && p->interval>60) ||
                         ((!slowround) && p->interval<61)) {
-                        log_debug ("Collecting '%s'", p->call);
+                        log_debug ("Collecting <%s>", p->call);
                         
                         host_import (h, (var *) v);
                         p->lastdispatch = tnow;
@@ -134,7 +134,7 @@ int daemon_main (int argc, const char *argv[]) {
                 }
                 else {
                     if (tnow - p->lastreply > (2*(p->interval))) {
-                        log_warn ("Probe '%s' seems stuck after %i seconds",
+                        log_warn ("Probe <%s> seems stuck after %i seconds",
                                   p->call, tnow - p->lastreply);
                     }
                 }
@@ -263,7 +263,7 @@ int conf_probe (const char *id, var *v, updatetype tp) {
             return 1;
         }
         else {
-            log_error ("Error adding probe-call '%s'", call);
+            log_error ("Error adding probe-call <%s>", call);
         }
     }
     return 0;

@@ -35,7 +35,7 @@ var *runprobe_exec (probe *self) {
     pclose (proc);
     var *res = var_alloc();
     if (! var_parse_json (res, buffer)) {
-        log_error ("Error parsing output from %s: %s", self->call,
+        log_error ("Error parsing output from <%s>: %s", self->call,
                     parse_error());
         var_free (res);
         return NULL;
@@ -49,7 +49,7 @@ var *runprobe_exec (probe *self) {
 void probe_run (thread *t) {
     probe *self = (probe *) t;
     self->vold = self->vcurrent = NULL;
-    log_info ("Starting probe %s", self->call);
+    log_info ("Starting probe <%s>", self->call);
     
     while (1) {
         var *nvar = self->func (self);
@@ -60,11 +60,9 @@ void probe_run (thread *t) {
             self->lastreply = time (NULL);
             if (ovar) var_free ((var *)ovar);
         }
-        else {
-            log_error ("No suitable response from probe");
-        }
+
         conditional_wait_fresh (&self->pulse);
-        log_debug ("Probe %s pulse received", self->call);
+        log_debug ("Probe <%s> pulse received", self->call);
     }
 }
 
