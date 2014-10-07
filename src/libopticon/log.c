@@ -68,7 +68,7 @@ void log_open_syslog (const char *name, int maxprio) {
     LOG->write = syslog_write;
     LOG->maxprio = maxprio;
     LOG->data = NULL;
-    openlog (name, LOG_PID, LOG_DAEMON);
+    openlog (name, 0, LOG_DAEMON);
 }
 
 /** Open a file-based logger.
