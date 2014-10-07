@@ -11,8 +11,9 @@ probe *probe_alloc (void) {
     res->call = NULL;
     res->prev = res->next = NULL;
     res->vcurrent = res->vold = NULL;
-    res->lastpulse = res->lastreply = 0;
+    res->lastpulse = 0;
     res->lastdispatch = time (NULL);
+    res->lastreply = res->lastdispatch - 1;
     res->interval = 0;
     return res;
 }
