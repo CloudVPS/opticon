@@ -6,11 +6,11 @@
 #include <sys/stat.h>
 
 static const char *VALIDUNQUOTED = "abcdefghijklmnopqrstuvwxyz"
-                                   "ABCDEFGHIJKLMNOPQRSTUVWXUZ"
+                                   "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
                                    "0123456789-_.*/";
 
 static const char *VALIDUNQUOTEDV = "abcdefghijklmnopqrstuvwxyz"
-                                    "ABCDEFGHIJKLMNOPQRSTUVWXUZ"
+                                    "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
                                     "0123456789-_./:*%";
 
 static char LAST_PARSE_ERROR[4096];
