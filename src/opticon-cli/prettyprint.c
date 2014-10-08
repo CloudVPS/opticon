@@ -70,13 +70,13 @@ void print_array (const char *key, var *arr) {
         if (cnt) strncat (out, ",", 4096);
         switch (crsr->type) {
             case VAR_INT:
-                snprintf (out+strlen(out), 4095-strlen(out), "%llu",
-                          var_get_int (crsr));
+                snprintf (out+strlen(out), 4095-strlen(out), 
+                          "\033[1m%llu\033[0m", var_get_int (crsr));
                 break;
             
             case VAR_DOUBLE:
-                snprintf (out+strlen(out), 4095-strlen(out), "%.2f",
-                          var_get_double (crsr));
+                snprintf (out+strlen(out), 4095-strlen(out), 
+                         "\033[1m%.2f\033[0m", var_get_double (crsr));
                 break;
             
             case VAR_STR:
@@ -131,12 +131,14 @@ void print_values (var *apires, const char *pfx) {
                 break;
             
             case VAR_INT:
-                sprintf (valbuf, "%llu %s", var_get_int(crsr), unit);
+                sprintf (valbuf, "\033[1m%llu\033[0m %s",
+                         var_get_int(crsr), unit);
                 print_value (name, "%s", valbuf);
                 break;
             
             case VAR_DOUBLE:
-                sprintf (valbuf, "%.2f %s", var_get_double(crsr), unit);
+                sprintf (valbuf, "\033[1m%.2f\033[0m %s", 
+                         var_get_double(crsr), unit);
                 print_value (name, "%s", valbuf);
                 break;
             
@@ -167,8 +169,9 @@ void print_values (var *apires, const char *pfx) {
 void print_table (var *arr, const char **hdr, const char **fld,
                   columnalign *align, vartype *typ, int *wid,
                   const char **suffx, int *div) {
-    char fmt[16];
+    char fmt[128];
     char buf[1024];
+    char tsuffx[64];
     
     int col = 0;
     while (hdr[col]) {
@@ -185,6 +188,7 @@ void print_table (var *arr, const char **hdr, const char **fld,
     while (node) {
         col = 0;
         while (hdr[col]) {
+            int isbold = 0;
             switch (typ[col]) {
                 case VAR_STR:
                     strncpy (buf, var_get_str_forkey (node, fld[col]),512);
@@ -198,28 +202,50 @@ void print_table (var *arr, const char **hdr, const char **fld,
                         
                         nval = nval / ((double) div[col]);
                         sprintf (buf, "%.2f", nval);
+                        isbold = 1;
                     }
                     else {
                         sprintf (buf, "%llu",
                                  var_get_int_forkey (node, fld[col]));
+                        isbold = 1;
                     }
                     break;
                 
                 case VAR_DOUBLE:
                     sprintf (buf, "%.2f",
                              var_get_double_forkey (node, fld[col]));
+                    isbold = 1;
                     break;
                 
                 default:
                     buf[0] = 0;
                     break;
             }
-            if (suffx[col][0] && suffx[col][0] != ' ') strcat (buf, " ");
-            strcat (buf, suffx[col]);
-            strcpy (fmt, "%");
+            int sufwidth = 0;
+            if (suffx[col][0]) {
+                strcpy (tsuffx, (suffx[col][0] != ' ') ? " " : "");
+                int wpos = strlen (tsuffx);
+                int i;
+                for (i=0; i<62 && wpos<62 && suffx[col][i]; ++i) {
+                    if (suffx[col][i] == '%') tsuffx[wpos++] = '%';
+                    tsuffx[wpos++] = suffx[col][i];
+                }
+                tsuffx[wpos] = 0;
+                sufwidth = i;
+            }
+            else {
+                tsuffx[0] = 0;
+            }
+            strcpy (fmt, isbold ? "\033[1m" : "");
+            strcat (fmt, "%");
             if (align[col] == CA_L) strcat (fmt, "-");
-            if (wid[col]) sprintf (fmt+strlen(fmt), "%i", wid[col]);
-            strcat (fmt, "s ");
+            if (wid[col]) {
+                sprintf (fmt+strlen(fmt),"%i",wid[col]-sufwidth);
+            }
+            strcat (fmt, "s");
+            if (isbold) strcat (fmt, "\033[0m");
+            strcat (fmt, tsuffx);
+            strcat (fmt, " ");
             printf (fmt, buf);
             col++;
         }

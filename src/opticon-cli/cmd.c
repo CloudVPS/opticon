@@ -502,7 +502,7 @@ int cmd_get_record (int argc, const char *argv[]) {
     print_value ("UUID", "%s", OPTIONS.host);
     print_value ("Hostname", "%s", Vstr("hostname"));
     print_value ("Address", "%s", VDstr("agent","ip"));
-    print_value ("Status", "%s", Vstr("status"));
+    print_value ("Status", "\033[1m%s\033[0m", Vstr("status"));
     
     print_array ("Problems", Arr("problems"));
     
@@ -539,19 +539,23 @@ int cmd_get_record (int argc, const char *argv[]) {
     
     /* -------------------------------------------------------------*/
     print_hdr ("RESOURCES");
-    print_value ("Processes","%llu (%llu running, %llu stuck)",
+    print_value ("Processes","\033[1m%llu\033[0m "
+                             "(\033[1m%llu\033[0m running, "
+                             "\033[1m%llu\033[0m stuck)",
                              VDint("proc","total"),
                              VDint("proc","run"),
                              VDint("proc","stuck"));
     Vdone("proc");
  
-     print_value ("Load Average", "%6.2f / %6.2f / %6.2f",
+     print_value ("Load Average", "\033[1m%6.2f\033[0m / "
+                                  "\033[1m%6.2f\033[0m / "
+                                  "\033[1m%6.2f\033[0m",
                  VAfrac ("loadavg",0), VAfrac ("loadavg", 1),
                  VAfrac ("loadavg",2));
     Vdone ("loadavg");
 
     char cpubuf[128];
-    sprintf (cpubuf, "%6.2f %%", Vfrac("pcpu"));
+    sprintf (cpubuf, "\033[1m%6.2f \033[0m%%", Vfrac("pcpu"));
     
     char meter[32];
     strcpy (meter, "-[                      ]+");
@@ -569,19 +573,24 @@ int cmd_get_record (int argc, const char *argv[]) {
     
     
     print_value ("CPU", "%-32s %s", cpubuf, meter);
-    if (iowait>0.001) print_value ("CPU iowait", "%6.2f %%", iowait);
-    print_value ("Available RAM", "%.2f MB",
+    if (iowait>0.001) print_value ("CPU iowait", 
+                                   "\033[1m%6.2f %%\033[0m", iowait);
+    print_value ("Available RAM", "\033[1m%.2f\033[0m MB",
                  ((double)VDint("mem","total"))/1024.0);
-    print_value ("Free RAM", "%.2f MB",
+    print_value ("Free RAM", "\033[1m%.2f\033[0m MB",
                  ((double)VDint("mem","free"))/1024.0);
     
-    print_value ("Network in/out", "%i Kb/s (%i pps) / %i Kb/s (%i pps)",
+    print_value ("Network in/out", "\033[1m%i\033[0m Kb/s "
+                                   "(\033[1m%i\033[0m pps) / "
+                                   "\033[1m%i\033[0m Kb/s "
+                                   "(\033[1m%i\033[0m pps)",
                                    VDint("net","in_kbs"),
                                    VDint("net","in_pps"),
                                    VDint("net","out_kbs"),
                                    VDint("net","out_pps"));
     
-    print_value ("Disk i/o", "%i rdops / %i wrops",
+    print_value ("Disk i/o", "\033[1m%i\033[0m rdops / "
+                             "\033[1m%i\033[0m wrops",
                  VDint("io","rdops"), VDint("io","wrops"));
     
     Vdone("mem");
