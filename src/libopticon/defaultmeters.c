@@ -77,8 +77,6 @@ static const char *DEFMETERS =
 "        description: \"CPU Usage\""
 "        unit: %"
 "        warning { cmp: gt, val: 90.0, weight: 1.0 }"
-"        alert { cmp: gt, val: 95.0, weight: 1.0 }"
-"        critical { cmp: gt, val: 99.0, weight: 1.0 }"
 "    }"
 "    loadavg {"
 "        type: frac"
