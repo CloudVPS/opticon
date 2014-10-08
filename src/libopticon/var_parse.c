@@ -245,7 +245,7 @@ static int var_parse_json_level (var *v, const char **buf,
                 }
                 if (! strchr (VALIDUNQUOTEDV, *c)) {
                     sprintf (LAST_PARSE_ERROR, "Invalid character in "
-                             "value: '%c'", *c);
+                             "value for '%s': '%c'", keybuf, *c);
                     return 0;
                 }
                 if (*c == '.') value_dots++;
