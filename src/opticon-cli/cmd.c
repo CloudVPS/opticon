@@ -494,7 +494,7 @@ int cmd_get_record (int argc, const char *argv[]) {
     #define Vfrac(x) var_get_double_forkey(apires,x)
     #define VDint(x,y) var_get_int_forkey(var_get_dict_forkey(apires,x),y)
     #define VDstr(x,y) var_get_str_forkey(var_get_dict_forkey(apires,x),y)
-    #define VDfrac(x,y) var_get-double_forkey(var_get_dict_forkey(apires,x),y)
+    #define VDfrac(x,y) var_get_double_forkey(var_get_dict_forkey(apires,x),y)
     #define VAfrac(x,y) var_get_double_atindex(var_get_array_forkey(apires,x),y)
     #define Vdone(x) var_delete_key(apires,x)
     /* -------------------------------------------------------------*/
@@ -544,24 +544,32 @@ int cmd_get_record (int argc, const char *argv[]) {
                              VDint("proc","run"),
                              VDint("proc","stuck"));
     Vdone("proc");
+ 
+     print_value ("Load Average", "%6.2f / %6.2f / %6.2f",
+                 VAfrac ("loadavg",0), VAfrac ("loadavg", 1),
+                 VAfrac ("loadavg",2));
+    Vdone ("loadavg");
+
     char cpubuf[128];
-    sprintf (cpubuf, "%.2f (%.2f %%)", VAfrac("loadavg",0), Vfrac("pcpu"));
-    Vdone("loadavg");
+    sprintf (cpubuf, "%6.2f %%", Vfrac("pcpu"));
     
     char meter[32];
     strcpy (meter, "-[                      ]+");
     
+    double iowait = VDfrac("io","pwait");
     double pcpu = Vfrac("pcpu"); Vdone("pcpu");
-    double level = 4.99;
+    double level = 4.5;
     
     int pos = 2;
     while (level < 100.0 && pos < 22) {
         if (level < pcpu) meter[pos++] = '#';
         else meter[pos++] = ' ';
-        level += 5.0;
+        level += 4.5;
     }
     
-    print_value ("Load/CPU", "%-32s %s", cpubuf, meter);
+    
+    print_value ("CPU", "%-32s %s", cpubuf, meter);
+    if (iowait>0.001) print_value ("CPU iowait", "%6.2f %%", iowait);
     print_value ("Available RAM", "%.2f MB",
                  ((double)VDint("mem","total"))/1024.0);
     print_value ("Free RAM", "%.2f MB",
