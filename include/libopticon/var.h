@@ -61,6 +61,7 @@ void         var_copy (var *into, var *orig);
 
 var         *var_find_key (var *, const char *);
 var         *var_find_index (var *, int);
+var         *var_get_or_make (var *, const char *, vartype);
 int          var_get_count (var *);
 uint64_t     var_get_int (var *);
 double       var_get_double (var *);
