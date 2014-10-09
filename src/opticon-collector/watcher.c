@@ -14,26 +14,6 @@
 #include <libopticon/transport_udp.h>
 #include <libopticon/summary.h>
 
-/** Structure for inline definition of a meterwatch */
-typedef struct watchdef_s {
-    const char  *id;
-    watchtype    tp;
-    const char  *watchstr;
-    double       badness;
-} watchdef;
-
-watchdef DEFAULT_WATCHERS[] = {
-    {"pcpu",        WATCH_FRAC_GT,  "80.0",   3.0},
-    {"pcpu",        WATCH_FRAC_GT,  "98.0",  10.0},
-    {"loadavg",     WATCH_FRAC_GT,  "8.0",    3.0},
-    {"loadavg",     WATCH_FRAC_GT,  "25.0",  12.0},
-    {"mem/free",    WATCH_UINT_LT,  "65536",  5.0},
-    {"swap/free",   WATCH_UINT_LT,  "65536", 15.0},
-    {"piowait",     WATCH_FRAC_GT,  "50.0",   5.0},
-    {"piowait",     WATCH_FRAC_GT,  "80.0",  10.0},
-    {NULL,          0,              NULL,     0.0}
-};
-
 watchlist WATCHERS;
 
 /** Use a meterwatch definition to turn a meter value into a badness
