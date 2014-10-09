@@ -1,4 +1,5 @@
 #include "opticon-collector.h"
+#include <pthread.h>
 #include <libopticondb/db_local.h>
 #include <libopticon/auth.h>
 #include <libopticon/ioport.h>
@@ -11,6 +12,7 @@
 #include <libopticon/log.h>
 #include <libopticon/cliopt.h>
 #include <libopticon/transport_udp.h>
+#include <libopticon/summary.h>
 
 /** Structure for inline definition of a meterwatch */
 typedef struct watchdef_s {
@@ -285,6 +287,18 @@ void watchthread_handle_host (host *host) {
     }
     
     pthread_rwlock_unlock (&host->lock);
+    
+    /* for tallying the summaries we only need read access */
+
+    if (! host->tenant) return;
+    
+    pthread_rwlock_rdlock (&host->lock);
+    m = host->first;
+    while (m) {
+        summaryinfo_add_meterdata (&host->tenant->summ, m->id, &m->d);
+        m = m->next;
+    }
+    pthread_rwlock_unlock (&host->lock);
 }
 
 /** Main loop for the watchthread */
@@ -300,11 +314,15 @@ void watchthread_run (thread *self) {
     while (1) {
         tcrsr = TENANTS.first;
         while (tcrsr) {
+            summaryinfo_start_round (&tcrsr->summ);
             hcrsr = tcrsr->first;
             while (hcrsr) {
                 watchthread_handle_host (hcrsr);
                 hcrsr = hcrsr->next;
             }
+            var *tally = summaryinfo_tally_round (&tcrsr->summ);
+            /* FIXME: do something */
+            var_free (tally);
             tcrsr = tcrsr->next;
         }
         

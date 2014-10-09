@@ -3,6 +3,7 @@
 
 #include <libopticon/aes.h>
 #include <libopticon/watchlist.h>
+#include <libopticon/summary.h>
 
 /* =============================== TYPES =============================== */
 
@@ -15,6 +16,7 @@ typedef struct tenant_s {
     uuid             uuid; /**< The tenant's uuid */
     aeskey           key; /**< Key used for auth packets */
     watchlist        watch; /**< Tenant-specific watchers */
+    summaryinfo      summ; /**< Per tenant meter summaries */
 } tenant;
 
 /** List of tenants */
