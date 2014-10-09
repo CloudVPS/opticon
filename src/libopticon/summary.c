@@ -32,6 +32,7 @@ void summarydata_clear (summarydata *self) {
     }
 }
 
+/** Reset all sample data back to zero */
 void summarydata_clear_sample (summarydata *self) {
     if ((self->meter & MMASK_TYPE) == MTYPE_STR) {
         self->samplecount = 0;
@@ -40,6 +41,7 @@ void summarydata_clear_sample (summarydata *self) {
     summarydata_clear (self);
 }
 
+/** Perform an average calculation */
 void summarydata_calc_avg (summarydata *self, var *into) {
     if (! self->samplecount) return;
     if (! self->d.any) return;
@@ -58,6 +60,7 @@ void summarydata_calc_avg (summarydata *self, var *into) {
     }
 }
 
+/** Perform a sum calculation */
 void summarydata_calc_total (summarydata *self, var *into) {
     if (! self->d.any) return;
     switch (self->meter & MMASK_TYPE) {
@@ -135,6 +138,8 @@ void summarydata_add (summarydata *self, meterdata *d, metertype_t tp) {
         
         case MTYPE_STR:
             if (! self->d.str) {
+                /* We really shouldn't be here, but this will make
+                 * the whole thing fail softly. */
                 self->d.str = (fstring *) malloc (sizeof (fstring));
                 self->d.str->str[0] = 0;
             }
@@ -150,11 +155,13 @@ void summarydata_add (summarydata *self, meterdata *d, metertype_t tp) {
     }
 }
 
+/** Initialize a summaryinfo structure */
 void summaryinfo_init (summaryinfo *self) {
     self->count = 0;
     self->array = NULL;
 }
 
+/** Clear all summary data */
 void summaryinfo_clear (summaryinfo *self) {
     if (self->count) {
         for (int i=0; i<self->count; ++i) {
@@ -166,6 +173,7 @@ void summaryinfo_clear (summaryinfo *self) {
     }
 }
 
+/** Backend function to add_summary_total and add_summary_avg */
 void summaryinfo_add_summary_any (summaryinfo *self, const char *name,
                                   meterid_t mid, summarytype mytype) {
     size_t sz;
@@ -189,16 +197,33 @@ void summaryinfo_add_summary_any (summaryinfo *self, const char *name,
     self->array[self->count-1] = newdt;
 }
 
+/** Add an averaging summary to the list.
+  * \param self The summaryinfo
+  * \param name The name of the summary
+  * \param mid The meterid to summarize
+  */
 void summaryinfo_add_summary_avg (summaryinfo *self, const char *name,
                                   meterid_t mid) {
     summaryinfo_add_summary_any (self, name, mid, SUMMARY_AVG);
 }
 
+/** Add a summing summary to the list.
+  * \param self The summaryinfo
+  * \param name The name of the summary
+  * \param mid The meterid to summarize
+  */
 void summaryinfo_add_summary_total (summaryinfo *self, const char *name,
                                     meterid_t mid) {
     summaryinfo_add_summary_any (self, name, mid, SUMMARY_TOTAL);
 }
 
+/** Add a counting summary to the list. This is necessarily a string
+  * match, that will count the number of matches.
+  * \param self The summaryinfo
+  * \param name The name of the summary
+  * \param mid The meterid to summarize
+  * \param match The matchstr
+  */
 void summaryinfo_add_summary_count (summaryinfo *self, const char *name,
                                     meterid_t _mid, const char *match) {
     /* Our match meter is going to be a string no matter what */
@@ -227,12 +252,21 @@ void summaryinfo_add_summary_count (summaryinfo *self, const char *name,
     self->array[self->count-1] = newdt;
 }
 
+/** Indicate a beginning of a summary round. This will typically be followed
+  * by going over all hosts and feeding the meters to be summarized.
+  * This function itself just clears the sample data.
+  */
 void summaryinfo_start_round (summaryinfo *self) {
     for (int i=0; i<self->count; ++i) {
         summarydata_clear_sample(self->array[i]);
     }
 }
 
+/** Feed the summarizer metering data.
+  * \param self The summaryinfo
+  * \param mid The meter's id and type
+  * \param d The meter's data
+  */
 void summaryinfo_add_meterdata (summaryinfo *self, meterid_t mid, meterdata *d) {
     for (int i=0; i<self->count; ++i) {
         if ((self->array[i]->meter & MMASK_NAME) == (mid & MMASK_NAME)) {
@@ -241,6 +275,9 @@ void summaryinfo_add_meterdata (summaryinfo *self, meterid_t mid, meterdata *d) 
     }
 }
 
+/** Tally up all summary data and dump it into a var, with value indexed
+  * by summary name.
+  */
 var *summaryinfo_tally_round (summaryinfo *self) {
     var *res = var_alloc();
     
