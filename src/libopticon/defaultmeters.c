@@ -3,6 +3,15 @@
 #include <libopticon/log.h>
 #include <assert.h>
 
+static const char *DEFSUMMARY =
+"   cpu { meter: pcpu, type: frac, func: avg }"
+"   ok { meter: status, type: string, func: count, match: OK }"
+"   warning { meter: status, type: string, func: count, match: WARN }"
+"   alert { meter: status, type: string, func: count, match: ALERT }"
+"   critical { meter: status, type: string, func: count, match: CRITICAL }"
+"   netin { meter: netin/kbs, type: int, func: total }"
+"   netout { meter: netout/kbs, type: int, func: total }";
+
 static const char *DEFMETERS = 
 "    agent/ip {"
 "        type: string"
@@ -174,8 +183,20 @@ var *get_default_meterdef (void) {
     if (! PARSED_DEFMETERS) {
         PARSED_DEFMETERS = var_alloc();
         if (! var_parse_json (PARSED_DEFMETERS, DEFMETERS)) {
-            log_error ("Parse error: %s", parse_error);
+            log_error ("Parse error: %s", parse_error());
         }
     }
     return PARSED_DEFMETERS;
+}
+
+static var *PARSED_DEFSUMMARY;
+
+var *get_default_summarydef (void) {
+    if (! PARSED_DEFSUMMARY) {
+        PARSED_DEFSUMMARY = var_alloc();
+        if (! var_parse_json (PARSED_DEFSUMMARY, DEFSUMMARY)) {
+            log_error ("Parse error (defsum): %s", parse_error());
+        }
+    }
+    return PARSED_DEFSUMMARY;
 }

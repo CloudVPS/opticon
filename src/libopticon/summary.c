@@ -3,6 +3,7 @@
 #include <unistd.h>
 #include <inttypes.h>
 #include <string.h>
+#include <pthread.h>
 #include <libopticon/log.h>
 #include <libopticon/summary.h>
 
@@ -159,6 +160,7 @@ void summarydata_add (summarydata *self, meterdata *d, metertype_t tp) {
 void summaryinfo_init (summaryinfo *self) {
     self->count = 0;
     self->array = NULL;
+    pthread_mutex_init (&self->mutex, NULL);
 }
 
 /** Clear all summary data */

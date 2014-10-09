@@ -135,6 +135,47 @@ void watchlist_populate (watchlist *w, var *v_meters) {
     pthread_mutex_unlock (&w->mutex);
 }
 
+/** Populate summaryinfo. Format:
+  * [ { id: cpu, meter: pcpu, type: frac, func: avg } ]
+  */
+void summaryinfo_populate (summaryinfo *into, var *v_summary) {
+    pthread_mutex_lock (&into->mutex);
+    var *crsr = v_summary->value.arr.first;
+    while (crsr) {
+        const char *s_id = crsr->id;
+        const char *s_meterid = var_get_str_forkey (crsr, "meter");
+        if (! s_meterid) break;
+        const char *s_type = var_get_str_forkey (crsr, "type");
+        if (! s_type) break;
+        const char *s_func = var_get_str_forkey (crsr, "func");
+        if (! s_func) break;
+        const char *s_match = var_get_str_forkey (crsr, "match");
+        
+        meterid_t mid;
+        metertype_t mtype;
+        if (strncmp (s_type, "int", 3) == 0) mtype = MTYPE_INT;
+        else if (strncmp (s_type, "frac", 4) == 0) mtype = MTYPE_FRAC;
+        else if (strncmp (s_type, "str", 3) == 0) mtype = MTYPE_STR;
+        else break;
+        
+        mid = makeid (s_id, mtype, 0);
+        
+        if (strcmp (s_func, "avg")) {
+            summaryinfo_add_summary_avg (into, s_id, mid);
+        }
+        else if (strcmp (s_func, "total")) {
+            summaryinfo_add_summary_total (into, s_id, mid);
+        }
+        else if (strcmp (s_func, "count")) {
+            if (! s_match) break;
+            summaryinfo_add_summary_count (into, s_id, mid, s_match);
+        }
+        
+        crsr = crsr->next;
+    }
+    pthread_mutex_unlock (&into->mutex);
+}
+
 /** Look up a tenant in memory and in the database, do the necessary
   * bookkeeping, then returns the AES key for that tenant.
   * \param tenantid The tenant UUID.
@@ -182,6 +223,11 @@ aeskey *resolve_tenantkey (uuid tenantid, uint32_t serial) {
        put it in the tenant's watchlist */    
     var *v_meters = var_get_dict_forkey (meta, "meter");
     if (v_meters) watchlist_populate (&T->watch, v_meters);
+    
+    var *v_summary = var_get_array_forkey (meta, "summary");
+    if (! var_get_count (v_summary)) {
+        
+    }
     
     db_close (APP.db);
     var_free (meta);
@@ -582,6 +628,10 @@ int main (int _argc, const char *_argv[]) {
     var *defmeters = get_default_meterdef();
     sprintf (defmeters->id, "meter");
     var_link (defmeters, APP.conf);
+    
+    var *defsummary = get_default_summarydef();
+    sprintf (defsummary->id, "summary");
+    var_link (defsummary, APP.conf);
     
     /* Load other meters from meter.conf */
     if (! var_load_json (defmeters, APP.mconfpath)) {

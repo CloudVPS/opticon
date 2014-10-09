@@ -51,6 +51,8 @@ typedef struct db_s {
     list_hosts_f     list_hosts; /** Method */
     get_metadata_f   get_metadata; /** Method */
     set_metadata_f   set_metadata; /** Method */
+    get_metadata_f   get_summary; /** method */
+    set_metadata_f   set_summary; /** method */
     close_db_f       close; /** Method */
     list_tenants_f   list_tenants; /** Unbound method */
     create_tenant_f  create_tenant; /** Unbound method */
@@ -80,6 +82,8 @@ int          db_get_usage (db *d, usage_info *into, uuid hostid);
 uuid        *db_list_hosts (db *d, int *outsz);
 var         *db_get_metadata (db *d);
 int          db_set_metadata (db *d, var *v);
+var         *db_get_summary (db *d);
+int          db_set_summary (db *d, var *v);
 void         db_close (db *d);
 void         db_free (db *d);
 uuid        *db_list_tenants (db *d, int *outsz);

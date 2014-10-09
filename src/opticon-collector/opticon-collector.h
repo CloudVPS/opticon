@@ -6,6 +6,7 @@
 #include <libopticondb/db.h>
 #include <libopticon/var.h>
 #include <libopticon/packetqueue.h>
+#include <libopticon/summary.h>
 #include <libopticon/transport.h>
 #include <libopticon/thread.h>
 
@@ -24,6 +25,7 @@ typedef struct appcontext_s {
     packetqueue     *queue;
     intransport     *transport;
     watchlist        watch;
+    summaryinfo      summ;
     thread          *watchthread;
     conf_reloader   *reloader;
     var             *conf;

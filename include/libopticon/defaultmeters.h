@@ -4,5 +4,6 @@
 #include <libopticon/var.h>
 
 var *get_default_meterdef (void);
+var *get_default_summarydef (void);
 
 #endif

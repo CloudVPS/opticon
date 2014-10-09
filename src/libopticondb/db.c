@@ -136,6 +136,18 @@ int db_set_metadata (db *d, var *v) {
     return d->set_metadata (d, v);
 }
 
+/** Retrieve tenant summary information */
+var *db_get_summary (db *d) {
+    if (! d->opened) return NULL;
+    return d->get_summary (d);
+}
+
+/** Set tenant summary information */
+int db_set_summary (db *d, var *v) {
+    if (! d->opened) return 0;
+    return d->set_summary (d, v);
+}
+
 /** Close a database handle
   * \param d The handle to close
   */

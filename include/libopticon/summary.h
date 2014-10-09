@@ -20,8 +20,9 @@ typedef struct summarydata_s {
 } summarydata;
 
 typedef struct summaryinfo_s {
-    int              count;
-    summarydata    **array;
+    pthread_mutex_t      mutex;
+    int                  count;
+    summarydata        **array;
 } summaryinfo;
 
 summarydata *summarydata_create (void);

@@ -640,15 +640,15 @@ uuid *localdb_list_hosts (db *d, int *outsz) {
     return res;
 }
 
-/** Implementation for db_get_metadata() */
-var *localdb_get_metadata (db *d) {
+var *localdb_get_tenantdata (db *d, const char *suffx) {
     localdb *self = (localdb *) d;
     struct stat st;
     FILE *F;
     
     char *metapath = (char *) malloc (strlen (self->path) + 16);
     strcpy (metapath, self->path);
-    strcat (metapath, "tenant.metadata");
+    strcat (metapath, "tenant.");
+    strcat (metapath, suffx);
     if (stat (metapath, &st) != 0) {
         free (metapath);
         return NULL;
@@ -675,17 +675,29 @@ var *localdb_get_metadata (db *d) {
     return res;
 }
 
-/** Implementation for db_set_metadata */
-int localdb_set_metadata (db *d, var *v) {
+/** Implementation for db_get_metadata() */
+var *localdb_get_metadata (db *d) {
+    return localdb_get_tenantdata (d, "metadata");
+}
+
+/** Implementation for db_get_summary() */
+var *localdb_get_summary (db *d) {
+    return localdb_get_tenantdata (d, "summary");
+}
+
+int localdb_store_tenantdata (db *d, var *v, const char *suffx) {
     localdb *self = (localdb *) d;
     int res = 0;
     FILE *F;
-    char *metapath = (char *) malloc (strlen (self->path) + 17);
-    char *tmppath = (char *) malloc (strlen (self->path) + 24);
+    char *metapath = (char *) malloc (strlen (self->path) + 64);
+    char *tmppath = (char *) malloc (strlen (self->path) + 96);
     strcpy (metapath, self->path);
     strcpy (tmppath, self->path);
-    strcat (metapath, "tenant.metadata");
-    strcat (tmppath, ".tenant.metadata.new");
+    strcat (metapath, "tenant.");
+    strcat (metapath, suffx);
+    strcat (tmppath, ".tenant.");
+    strcat (tmppath, suffx);
+    strcat (tmppath, ".new");
     F = fopen (tmppath, "w");
     if (F) {
         res = var_dump (v, F);
@@ -704,6 +716,16 @@ int localdb_set_metadata (db *d, var *v) {
     free (metapath);
     free (tmppath);
     return res;
+}
+
+/** Implementation for db_set_metadata */
+int localdb_set_metadata (db *d, var *v) {
+    return localdb_store_tenantdata (d, v, "metadata");
+}
+
+/** Implementation for db_set_summary */
+int localdb_set_summary (db *d, var *v) {
+    return localdb_store_tenantdata (d, v, "summary");
 }
 
 /** Implementation for db_get_hostmeta */
@@ -875,6 +897,8 @@ db *localdb_create (const char *prefix) {
     self->db.list_hosts = localdb_list_hosts;
     self->db.get_metadata = localdb_get_metadata;
     self->db.set_metadata = localdb_set_metadata;
+    self->db.get_summary = localdb_get_summary;
+    self->db.set_summary = localdb_set_summary;
     self->db.close = localdb_close;
     self->db.list_tenants = localdb_list_tenants;
     self->db.create_tenant = localdb_create_tenant;
