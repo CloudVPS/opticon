@@ -207,6 +207,7 @@ void summaryinfo_clear (summaryinfo *self) {
 /** Backend function to add_summary_total and add_summary_avg */
 void summaryinfo_add_summary_any (summaryinfo *self, const char *name,
                                   meterid_t mid, summarytype mytype) {
+    log_debug ("(add_summary_any) %s", name);
     size_t sz;
     summarydata *newdt = summarydata_create();
     newdt->meter = mid;
@@ -257,7 +258,7 @@ void summaryinfo_add_summary_total (summaryinfo *self, const char *name,
   */
 void summaryinfo_add_summary_count (summaryinfo *self, const char *name,
                                     meterid_t _mid, const char *match) {
-    log_debug ("(add_summary_count) match: %s",match);
+    log_debug ("(add_summary_count) name: %s, match: %s",name,match);
     /* Our match meter is going to be a string no matter what */
     meterid_t mid = (_mid & MMASK_NAME) | MTYPE_STR;
     size_t sz;

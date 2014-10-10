@@ -161,13 +161,13 @@ void summaryinfo_populate (summaryinfo *into, var *v_summary) {
         
         mid = makeid (s_meterid, mtype, 0);
         
-        if (strcmp (s_func, "avg")) {
+        if (strcmp (s_func, "avg") == 0) {
             summaryinfo_add_summary_avg (into, s_id, mid);
         }
-        else if (strcmp (s_func, "total")) {
+        else if (strcmp (s_func, "total") == 0) {
             summaryinfo_add_summary_total (into, s_id, mid);
         }
-        else if (strcmp (s_func, "count")) {
+        else if (strcmp (s_func, "count") == 0) {
             if (! s_match) break;
             summaryinfo_add_summary_count (into, s_id, mid, s_match);
         }
