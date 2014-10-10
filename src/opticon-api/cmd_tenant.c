@@ -380,10 +380,9 @@ int cmd_tenant_get_overview (req_context *ctx, req_arg *a,
         db_free (DB);
         return err_not_found (ctx, a, env, status);
     }
-    var *v_meta = var_get_dict_forkey (env, "overview");
     var *summ = db_get_overview (DB);
     if (! summ) summ = var_alloc();
-    var_copy (v_meta, summ);
+    var_copy (env, summ);
     var_free (summ);
     db_free (DB);
     *status = 200;
