@@ -140,6 +140,7 @@ void watchlist_populate (watchlist *w, var *v_meters) {
   */
 void summaryinfo_populate (summaryinfo *into, var *v_summary) {
     pthread_mutex_lock (&into->mutex);
+    summaryinfo_clear (into);
     var *crsr = v_summary->value.arr.first;
     while (crsr) {
         const char *s_id = crsr->id;

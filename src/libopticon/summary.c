@@ -300,6 +300,7 @@ var *summaryinfo_tally_round (summaryinfo *self) {
                 break;
             
             default:
+                var_set_int (tlly, 0);
                 break;
         }
     }
