@@ -101,6 +101,47 @@ int cmd_tenant_get_summary (int argc, const char *argv[]) {
     return 0;
 }
 
+int cmd_tenant_get_overview (int argc, const char *argv[]) {
+    if (OPTIONS.tenant[0] == 0) {
+        fprintf (stderr, "%% No tenantid provided\n");
+        return 1;
+    }
+
+    var *ov = api_get ("/%s/overview", OPTIONS.tenant);
+    if (! var_get_count (ov)) return 0;
+
+    printf ("Name                            Status     "
+            "Load  Net i/o      CPU");
+    printf ("---------------------------------------------"
+            "-----------------------------------\n");
+    
+    var *ov_dict = var_get_dict_forkey (ov, "overview");
+    if (! var_get_count (ov_dict)) return 0;
+    var *crsr = ov_dict->value.arr.first;
+    while (crsr) {
+        const char *hname = var_get_str_forkey (crsr, "hostname");
+        if (! hname) hname = "";
+        const char *hstat = var_get_str_forkey (crsr, "status");
+        if (! hstat ) hstat = "UNSET";
+        double load = var_get_double_forkey (crsr, "loadavg");
+        uint64_t netio = var_get_int_forkey (crsr, "net/in_kbs");
+        netio += var_get_int_forkey (crsr, "net/out_kbs");
+        double cpu = var_get_double_forkey (crsr, "pcpu");
+        int rcpu = cpu / 10;
+        printf ("%-31s %-8s %6.2f %8llu %6.2f %% -[",
+                hname, hstat, load, netio, cpu);
+        for (int i=0; i<10; i++) {
+            if (i<= rcpu) printf ("#");
+            else printf (" ");
+        }
+        printf ("]+\n");
+        crsr = crsr->next;
+    }
+    var_free (ov);
+    return 0;
+}    
+    
+    
 /** The meter-create command */
 int cmd_meter_create (int argc, const char *argv[]) {
     if (OPTIONS.tenant[0] == 0) {

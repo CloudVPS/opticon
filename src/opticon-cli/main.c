@@ -307,6 +307,7 @@ clicmd CLICMD[] = {
     {"meter-create",cmd_meter_create},
     {"meter-delete",cmd_meter_delete},
     {"host-list",cmd_host_list},
+    {"host-overview",cmd_tenant_get_overview},
     {"watcher-set",cmd_watcher_set},
     {"watcher-delete",cmd_watcher_delete},
     {"watcher-list",cmd_watcher_list},
