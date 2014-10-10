@@ -293,8 +293,9 @@ void summaryinfo_start_round (summaryinfo *self) {
   * \param d The meter's data
   */
 void summaryinfo_add_meterdata (summaryinfo *self, meterid_t mid, meterdata *d) {
-    log_debug ("(summaryinfo_add_meterdata) mid %16llx", mid);
+    log_debug ("(summaryinfo_add_meterdata) mid %16llx", mid & MMASK_NAME);
     for (int i=0; i<self->count; ++i) {
+        log_debug ("(summaryinfo_add_meterdata) >> chk %16llx", self->array[i]->meter & MMASK_NAME)
         if ((self->array[i]->meter & MMASK_NAME) == (mid & MMASK_NAME)) {
             summarydata_add (self->array[i], d, mid);
         }
