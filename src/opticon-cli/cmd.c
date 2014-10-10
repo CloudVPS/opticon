@@ -111,7 +111,7 @@ int cmd_tenant_get_overview (int argc, const char *argv[]) {
     if (! var_get_count (ov)) return 0;
 
     printf ("Name                            Status     "
-            "Load  Net i/o      CPU");
+            "Load  Net i/o      CPU\n");
     printf ("---------------------------------------------"
             "-----------------------------------\n");
     
@@ -121,6 +121,9 @@ int cmd_tenant_get_overview (int argc, const char *argv[]) {
     while (crsr) {
         const char *hname = var_get_str_forkey (crsr, "hostname");
         if (! hname) hname = "";
+        char shortname[32];
+        strncpy (shortname, hname, 31);
+        shortname[31] = 0;
         const char *hstat = var_get_str_forkey (crsr, "status");
         if (! hstat ) hstat = "UNSET";
         double load = var_get_double_forkey (crsr, "loadavg");
@@ -129,15 +132,17 @@ int cmd_tenant_get_overview (int argc, const char *argv[]) {
         double cpu = var_get_double_forkey (crsr, "pcpu");
         int rcpu = cpu / 10;
         printf ("%-31s %-8s %6.2f %8llu %6.2f %% -[",
-                hname, hstat, load, netio, cpu);
+                shortname, hstat, load, netio, cpu);
         for (int i=0; i<10; i++) {
-            if (i<= rcpu) printf ("#");
+            if (i< rcpu) printf ("#");
             else printf (" ");
         }
         printf ("]+\n");
         crsr = crsr->next;
     }
     var_free (ov);
+    printf ("---------------------------------------------"
+            "-----------------------------------\n");
     return 0;
 }    
     
