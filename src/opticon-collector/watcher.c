@@ -31,6 +31,8 @@ void host_to_overview (host *h, var *ovdict) {
         
         if ((strncmp (mid, "top/", 4) == 0) ||
             (strncmp (mid, "df/", 3) == 0) ||
+            (strncmp (mid, "proc/", 5) == 0) ||
+            (strncmp (mid, "os/", 3) == 0) ||
             (strncmp (mid, "who/", 4) == 0)) {
             m = m->next;
             continue;
