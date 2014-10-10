@@ -226,10 +226,10 @@ aeskey *resolve_tenantkey (uuid tenantid, uint32_t serial) {
     
     var *v_summary = var_get_dict_forkey (meta, "summary");
     if (! var_get_count (v_summary)) {
-        var_copy (v_summary, var_get_get_dict_forkey (APP.conf, "summary"));
+        var_copy (v_summary, var_get_dict_forkey (APP.conf, "summary"));
     }
     else {
-        var *conf = var_get_get_dict_forkey (APP.conf, "summary");
+        var *conf = var_get_dict_forkey (APP.conf, "summary");
         var *crsr = conf->value.arr.first;
         while (crsr) {
             var *summc = var_get_dict_forkey (v_summary, crsr->id);
