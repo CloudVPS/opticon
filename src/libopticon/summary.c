@@ -257,6 +257,7 @@ void summaryinfo_add_summary_total (summaryinfo *self, const char *name,
   */
 void summaryinfo_add_summary_count (summaryinfo *self, const char *name,
                                     meterid_t _mid, const char *match) {
+    log_debug ("(add_summary_count) match: %s",match);
     /* Our match meter is going to be a string no matter what */
     meterid_t mid = (_mid & MMASK_NAME) | MTYPE_STR;
     size_t sz;
