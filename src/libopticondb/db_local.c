@@ -60,6 +60,41 @@ int localdb_open (db *d, uuid tenant, var *options) {
     return 1;
 }
 
+FILE *localdb_open_newcurrent (localdb *ctx, uuid hostid) {
+    char uuidstr[40];
+    struct stat st;
+    char *dbpath = (char *) malloc (strlen (ctx->path) + 64);
+    if (! dbpath) return NULL;
+
+    uuid2str (hostid, uuidstr);
+    sprintf (dbpath, "%s/%s/current.new", ctx->path, uuidstr);
+    FILE *res = fopen (dbpath, "w");
+    if (! res) {
+        sprintf (dbpath, "%s/%s", ctx->path, uuidstr);
+        if (mkdir (dbpath, 0750) != 0) {
+            free (dbpath);
+            return NULL;
+        }
+        sprintf (dbpath, "%s/%s/current.new", ctx->path, uuidstr);
+        res = fopen (dbpath, "w");
+    }
+    free (dbpath);
+    fseek (res, 0, SEEK_SET);
+    return res;
+}
+
+void localdb_commit_newcurrent (localdb *ctx, uuid hostid) {
+    char uuidstr[40];
+    char *tmppath = (char *) malloc (strlen (ctx->path) + 64);
+    char *dbpath = (char *)  malloc (strlen (ctx->path) + 64);
+    uuid2str (hostid, uuidstr);
+    sprintf (tmppath, "%s/%s/current.new", ctx->path, uuidstr);
+    sprintf (dbpath, "%s/%s/current", ctx->path, uuidstr);
+    if (! rename (tmppath, dbpath)) unlink (tmppath);
+    free (tmppath);
+    free (dbpath);
+}
+
 /** Open the database file for a specified datestamp */
 FILE *localdb_open_dbfile (localdb *ctx, uuid hostid, datestamp dt, int flags) {
     char uuidstr[40];
@@ -312,7 +347,15 @@ int localdb_save_record (db *dbctx, time_t when, host *h) {
         fclose (dbf);
         return 0;
     }
-    ioport *dbport = ioport_create_filewriter (dbf);
+    FILE *curf = localdb_open_newcurrent (self, h->uuid);
+    if (! curf) {
+        flock (fileno (dbf), LOCK_UN);
+        fclose (dbf);
+        fclose (ixf);
+        return 0;
+    }
+    
+    ioport *dbport = ioport_create_dualfilewriter (dbf, curf);
     ioport *ixport = ioport_create_filewriter (ixf);
     
     fseek (dbf, 0, SEEK_END);
@@ -328,8 +371,10 @@ int localdb_save_record (db *dbctx, time_t when, host *h) {
     ioport_close (dbport);
     ioport_close (ixport);
     flock (fileno (dbf), LOCK_UN);
+    localdb_commit_newcurrent (self, h->uuid);
     fclose (dbf);
     fclose (ixf);
+    fclose (curf);
     return 1;
 }
 

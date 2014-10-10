@@ -6,6 +6,7 @@
 /* ============================= FUNCTIONS ============================= */
 
 ioport      *ioport_create_filewriter (FILE *);
+ioport      *ioport_create_dualfilewriter (FILE *, FILE *);
 ioport      *ioport_create_filereader (FILE *);
 
 #endif
