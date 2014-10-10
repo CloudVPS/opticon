@@ -435,7 +435,7 @@ POST /{TENANT}/watcher/{METER}
 1. The alert levels `warning`, `alert`, and `critical` are all optional.
    If only a `warning` is defined, the watcher settings for the other
    two levels are unaffected by the update.
-2. Valid matchfunctions for `int` and `frac` types are `lt`, and `gt.
+2. Valid matchfunctions for `int` and `frac` types are `lt`, and `gt`.
    For string types, `eq` is available.
 3. If no `weight` is provided, a default weight of `1.0` is chosen.
 
