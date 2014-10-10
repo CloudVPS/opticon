@@ -16,6 +16,45 @@
 
 watchlist WATCHERS;
 
+void host_to_overview (host *h, var *ovdict) {
+    char mid[16];
+    char uuidstr[40];
+    uuid2str (h->uuid, uuidstr);
+    var *res = var_get_dict_forkey (ovdict, uuidstr);
+    meter *m = h->first;
+    while (m) {
+        id2str (m->id, mid);
+        switch (m->id & MMASK_TYPE) {
+            case MTYPE_INT:
+                var_set_int_forkey (res, mid, meter_get_uint (m, 0));
+                break;
+            
+            case MTYPE_FRAC:
+                var_set_double_forkey (res, mid, meter_get_frac (m, 0));
+                break;
+            
+            case MTYPE_STR:
+                var_set_str_forkey (res, mid, m->d.str[0].str);
+                break;
+            
+            default:
+                break;
+        }
+        m = m->next;
+    }
+}
+
+var *tenant_overview (tenant *t) {
+    var *res = var_alloc();
+    var *ov = var_get_dict_forkey (res, "overview");
+    host *h = t->first;
+    while (h) {
+        host_to_overview (h, ov);
+        h = h->next;
+    }
+    return res;
+}
+
 /** Use a meterwatch definition to turn a meter value into a badness
   * number.
   * \param m The meter to inspect
@@ -300,13 +339,16 @@ void watchthread_run (thread *self) {
                 watchthread_handle_host (hcrsr);
                 hcrsr = hcrsr->next;
             }
+            var *overv = tenant_overview (tcrsr);
             var *tally = summaryinfo_tally_round (&tcrsr->summ);
             if (db_open (APP.writedb, tcrsr->uuid, NULL)) {
                 db_set_summary (APP.writedb, tally);
+                db_set_overview (APP.writedb, overv);
                 db_close (APP.writedb);
             }
             
             var_free (tally);
+            var_free (overv);
             tcrsr = tcrsr->next;
         }
         

@@ -148,6 +148,18 @@ int db_set_summary (db *d, var *v) {
     return d->set_summary (d, v);
 }
 
+/** Get tenant host overview information */
+var *db_get_overview (db *d) {
+    if (! d->opened) return NULL;
+    return d->get_overview (d);
+}
+
+/** Write tenant host overview */
+int db_set_overview (db *d, var *v) {
+    if (! d->opened) return 0;
+    return d->set_overview (d, v);
+}
+
 /** Close a database handle
   * \param d The handle to close
   */

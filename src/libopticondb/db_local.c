@@ -366,7 +366,6 @@ int localdb_save_record (db *dbctx, time_t when, host *h) {
     flock (fileno (dbf), LOCK_UN);
     fclose (dbf);
     fclose (ixf);
-    fclose (curf);
     return 1;
 }
 
@@ -722,6 +721,11 @@ var *localdb_get_summary (db *d) {
     return localdb_get_tenantdata (d, "summary");
 }
 
+/** Implementation for db_get_overview() */
+var *localdb_get_overview (db *d) {
+    return localdb_get_tenantdata (d, "overview");
+}
+
 int localdb_store_tenantdata (db *d, var *v, const char *suffx) {
     localdb *self = (localdb *) d;
     int res = 0;
@@ -763,6 +767,10 @@ int localdb_set_metadata (db *d, var *v) {
 /** Implementation for db_set_summary */
 int localdb_set_summary (db *d, var *v) {
     return localdb_store_tenantdata (d, v, "summary");
+}
+
+int localdb_set_overview (db *d, var *v) {
+    return localdb_store_tenantdata (d, v, "overview");
 }
 
 /** Implementation for db_get_hostmeta */
@@ -937,6 +945,8 @@ db *localdb_create (const char *prefix) {
     self->db.set_metadata = localdb_set_metadata;
     self->db.get_summary = localdb_get_summary;
     self->db.set_summary = localdb_set_summary;
+    self->db.get_overview = localdb_get_overview;
+    self->db.set_overview = localdb_set_overview;
     self->db.close = localdb_close;
     self->db.list_tenants = localdb_list_tenants;
     self->db.create_tenant = localdb_create_tenant;
