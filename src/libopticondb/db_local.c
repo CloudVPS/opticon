@@ -774,6 +774,7 @@ time_t localdb_get_hostmeta_changed (db *d, uuid hostid) {
     char *metapath = (char *) malloc (strlen (self->path) + 64);
     sprintf (metapath, "%s%s.metadata", self->path, uuidstr);
     if (stat (metapath, &st) != 0) return 0;
+    free (metapath);
     return st.st_mtime;
 }
 
@@ -816,8 +817,8 @@ int localdb_set_global (db *d, const char *id, var *v) {
     FILE *F;
     localdb *self = (localdb *) d;
     size_t sz = strlen (self->pathprefix) + strlen (id);
-    char *metapath = (char *) malloc (sz+4);
-    char *tmppath = (char *) malloc (sz + 20);
+    char *metapath = (char *) malloc (sz+32);
+    char *tmppath = (char *) malloc (sz + 64);
     sprintf (metapath, "%s/%s.json", self->pathprefix, id);
     sprintf (tmppath, "%s/%s.json.new", self->pathprefix, id);
     F = fopen (tmppath, "w");

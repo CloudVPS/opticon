@@ -18,6 +18,7 @@ host *host_alloc (void) {
     res->lastserial = 0;
     res->badness = 0.0;
     res->lastmetasync = 0;
+    res->lastmodified = 0;
     res->mcount = 0;
     adjustlist_init (&res->adjust);
     pthread_rwlock_init (&res->lock, NULL);

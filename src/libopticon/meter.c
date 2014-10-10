@@ -11,6 +11,7 @@ meter *meter_alloc (void) {
     res->count = -1;
     res->d.u64 = NULL;
     res->host = NULL;
+    res->badness = 0.0;
     return res;
 }
 
