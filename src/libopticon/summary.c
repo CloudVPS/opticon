@@ -109,6 +109,8 @@ void summarydata_calc_total (summarydata *self, var *into) {
   * \param d The meterdata to process.
   */
 void summarydata_add (summarydata *self, meterdata *d, metertype_t tp) {
+    log_debug ("(summarydata_add) self->mtype %08x "
+               "tp %08x\n", self->meter & MMASK_TYPE, tp & MMASK_TYPE);
     switch (self->meter & MMASK_TYPE) {
         case MTYPE_INT:
             if (! self->d.u64) {
