@@ -203,7 +203,7 @@ int cmd_token (req_context *ctx, req_arg *a, var *env, int *status) {
             break;
         
         case AUTH_ADMIN:
-            var_set_str_forkey (env_token, "userlevel", "AUT_ADMIN");
+            var_set_str_forkey (env_token, "userlevel", "AUTH_ADMIN");
             break;
     }
     *status = 200;
