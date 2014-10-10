@@ -173,7 +173,7 @@ void summarydata_add (summarydata *self, meterdata *d, metertype_t tp) {
             }
             if ((tp & MMASK_TYPE) != MTYPE_STR) break;
 
-            log_debug ("(summarydata_add_str) from_s %f", d->str.str);
+            log_debug ("(summarydata_add_str) from_s %f", d->str->str);
             
             if (strcmp (self->d.str->str, d->str->str) == 0) {
                 self->samplecount++;
