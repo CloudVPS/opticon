@@ -347,15 +347,8 @@ int localdb_save_record (db *dbctx, time_t when, host *h) {
         fclose (dbf);
         return 0;
     }
-    FILE *curf = localdb_open_newcurrent (self, h->uuid);
-    if (! curf) {
-        flock (fileno (dbf), LOCK_UN);
-        fclose (dbf);
-        fclose (ixf);
-        return 0;
-    }
     
-    ioport *dbport = ioport_create_dualfilewriter (dbf, curf);
+    ioport *dbport = ioport_create_filewriter (dbf);
     ioport *ixport = ioport_create_filewriter (ixf);
     
     fseek (dbf, 0, SEEK_END);
@@ -371,7 +364,6 @@ int localdb_save_record (db *dbctx, time_t when, host *h) {
     ioport_close (dbport);
     ioport_close (ixport);
     flock (fileno (dbf), LOCK_UN);
-    localdb_commit_newcurrent (self, h->uuid);
     fclose (dbf);
     fclose (ixf);
     fclose (curf);
