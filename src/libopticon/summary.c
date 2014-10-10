@@ -44,8 +44,18 @@ void summarydata_clear_sample (summarydata *self) {
 
 /** Perform an average calculation */
 void summarydata_calc_avg (summarydata *self, var *into) {
-    if (! self->samplecount) return;
-    if (! self->d.any) return;
+    if (! (self->samplecount && self->d.any)) {
+        switch (self->meter & MMASK_TYPE) {
+            case MTYPE_FRAC:
+                var_set_double (into, 0.0);
+                break;
+            
+            default:
+                var_set_int (into, 0);
+                break;
+        }
+        return;
+    }
     switch (self->meter & MMASK_TYPE) {
         case MTYPE_INT:
             var_set_int (into, self->d.u64[0]/(uint64_t)self->samplecount);
@@ -63,7 +73,18 @@ void summarydata_calc_avg (summarydata *self, var *into) {
 
 /** Perform a sum calculation */
 void summarydata_calc_total (summarydata *self, var *into) {
-    if (! self->d.any) return;
+    if (! self->d.any) {
+        switch (self->meter & MMASK_TYPE) {
+            case MTYPE_FRAC:
+                var_set_double (into, 0.0);
+                break;
+            
+            default:
+                var_set_int (into, 0);
+                break;
+        }
+        return;
+    }
     switch (self->meter & MMASK_TYPE) {
         case MTYPE_INT:
             var_set_int (into, self->d.u64[0]);
@@ -286,6 +307,7 @@ var *summaryinfo_tally_round (summaryinfo *self) {
     for (int i=0; i<self->count; ++i) {
         summarydata *crsr = self->array[i];
         var *tlly = var_get_or_make (res, crsr->name.str, VAR_NULL);
+        log_info ("tally %s type %08x", crsr->name.str, crsr->type);
         switch (crsr->type) {
             case SUMMARY_AVG:
                 summarydata_calc_avg (crsr, tlly);
@@ -303,6 +325,7 @@ var *summaryinfo_tally_round (summaryinfo *self) {
                 var_set_int (tlly, 0);
                 break;
         }
+        log_info ("tllytype %08x\n", tlly->type);
     }
     
     return res;
