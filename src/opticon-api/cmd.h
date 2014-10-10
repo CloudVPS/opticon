@@ -26,6 +26,7 @@ int cmd_tenant_update (req_context *, req_arg *, var *, int *);
 int cmd_tenant_delete (req_context *, req_arg *, var *, int *);
 int cmd_tenant_get_meta (req_context *, req_arg *, var *, int *);
 int cmd_tenant_set_meta (req_context *, req_arg *, var *, int *);
+int cmd_tenant_get_summary (req_context *, req_arg *, var *, int *);
 int cmd_tenant_list_meters (req_context *, req_arg *, var *, int *);
 int cmd_tenant_set_meter (req_context *, req_arg *, var *, int *);
 int cmd_tenant_delete_meter (req_context *, req_arg *, var *, int *);

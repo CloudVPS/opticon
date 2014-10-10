@@ -352,6 +352,25 @@ int cmd_tenant_get_meta (req_context *ctx, req_arg *a,
     return 1;
 }
 
+/** GET /$TENANT/summary */
+int cmd_tenant_get_summary (req_context *ctx, req_arg *a,
+                            var *env, int *status) {
+    
+    db *DB = localdb_create (OPTIONS.dbpath);
+    if (! db_open (DB, ctx->tenantid, NULL)) {
+        db_free (DB);
+        return err_not_found (ctx, a, env, status);
+    }
+    var *v_meta = var_get_dict_forkey (env, "summary");
+    var *summ = db_get_summary (DB);
+    if (! summ) summ = var_alloc();
+    var_copy (v_meta, summ);
+    var_free (summ);
+    db_free (DB);
+    *status = 200;
+    return 1;
+}
+
 /** POST /$TENANT/meta 
   * metadata: {
   *    key: value, ...

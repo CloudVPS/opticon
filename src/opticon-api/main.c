@@ -254,6 +254,7 @@ void setup_matches (void) {
     _P_ ("/%U",                       REQ_PUT,    cmd_tenant_update);
     _P_ ("/%U",                       REQ_DELETE, flt_check_admin);
     _P_ ("/%U",                       REQ_DELETE, cmd_tenant_delete);
+    _P_ ("/%U/summary",               REQ_GET,    cmd_tenant_get_summary);
     _P_ ("/%U/meta",                  REQ_GET,    cmd_tenant_get_meta);
     _P_ ("/%U/meta",                  REQ_UPDATE, cmd_tenant_set_meta);
     _P_ ("/%U/meta",                  REQ_ANY,    err_method_not_allowed);

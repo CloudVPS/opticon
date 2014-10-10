@@ -88,6 +88,19 @@ int cmd_tenant_set_metadata (int argc, const char *argv[]) {
     return 0;
 }
 
+/** The tenant-get-summary command */
+int cmd_tenant_get_summary (int argc, const char *argv[]) {
+    if (OPTIONS.tenant[0] == 0) {
+        fprintf (stderr, "%% No tenantid provided\n");
+        return 1;
+    }
+
+    var *summ = api_get ("/%s/summary", OPTIONS.tenant);
+    var_dump (summ, stdout);
+    var_free (summ);
+    return 0;
+}
+
 /** The meter-create command */
 int cmd_meter_create (int argc, const char *argv[]) {
     if (OPTIONS.tenant[0] == 0) {
