@@ -83,6 +83,7 @@ static int dictarray_to_host (host *h, const char *prefix, var *v) {
   * \return 1 on success, 0 on failure.
   */
 int host_import (host *h, var *val) {
+    if (val->type != VAR_DICT) return 0;
     var *v = val->value.arr.first;
     int count;
     char firstlevel[16];
