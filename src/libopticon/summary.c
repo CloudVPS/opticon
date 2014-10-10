@@ -109,8 +109,6 @@ void summarydata_calc_total (summarydata *self, var *into) {
   * \param d The meterdata to process.
   */
 void summarydata_add (summarydata *self, meterdata *d, metertype_t tp) {
-    log_debug ("(summarydata_add) self->mtype %016llx "
-               "tp %016llx", self->meter & MMASK_TYPE, tp & MMASK_TYPE);
     switch (self->meter & MMASK_TYPE) {
         case MTYPE_INT:
             if (! self->d.u64) {
@@ -119,12 +117,10 @@ void summarydata_add (summarydata *self, meterdata *d, metertype_t tp) {
             }
             switch (tp & MMASK_TYPE) {
                 case MTYPE_INT:
-                    log_debug ("(summarydata_add_int) from_int %llu", *(d->u64));
                     *(self->d.u64) += *(d->u64);
                     break;
                 
                 case MTYPE_FRAC:
-                    log_debug ("(summarydata_add_int) from_f %f", *(d->frac));
                     *(self->d.u64) += (uint64_t) *(d->frac);
                     break;
                 
@@ -145,12 +141,10 @@ void summarydata_add (summarydata *self, meterdata *d, metertype_t tp) {
             }
             switch (tp & MMASK_TYPE) {
                 case MTYPE_INT:
-                    log_debug ("(summarydata_add_f) from_int %llu", *(d->u64));
                     *(self->d.frac) += (double) *(d->u64);
                     break;
                 
                 case MTYPE_FRAC:
-                    log_debug ("(summarydata_add_f) from_f %f", *(d->frac));
                     *(self->d.frac) += *(d->frac);
                     break;
                     
@@ -173,8 +167,6 @@ void summarydata_add (summarydata *self, meterdata *d, metertype_t tp) {
             }
             if ((tp & MMASK_TYPE) != MTYPE_STR) break;
 
-            log_debug ("(summarydata_add_str) from_s %s", d->str->str);
-            log_debug ("                      cmp %s", self->d.str->str);
             if (strcmp (self->d.str->str, d->str->str) == 0) {
                 self->samplecount++;
             }
@@ -207,7 +199,6 @@ void summaryinfo_clear (summaryinfo *self) {
 /** Backend function to add_summary_total and add_summary_avg */
 void summaryinfo_add_summary_any (summaryinfo *self, const char *name,
                                   meterid_t mid, summarytype mytype) {
-    log_debug ("(add_summary_any) %s", name);
     size_t sz;
     summarydata *newdt = summarydata_create();
     newdt->meter = mid;
@@ -258,7 +249,6 @@ void summaryinfo_add_summary_total (summaryinfo *self, const char *name,
   */
 void summaryinfo_add_summary_count (summaryinfo *self, const char *name,
                                     meterid_t _mid, const char *match) {
-    log_debug ("(add_summary_count) name: %s, match: %s",name,match);
     /* Our match meter is going to be a string no matter what */
     meterid_t mid = (_mid & MMASK_NAME) | MTYPE_STR;
     size_t sz;
@@ -301,9 +291,6 @@ void summaryinfo_start_round (summaryinfo *self) {
   * \param d The meter's data
   */
 void summaryinfo_add_meterdata (summaryinfo *self, meterid_t mid, meterdata *d) {
-    char midstr[16];
-    id2str (mid&MMASK_NAME, midstr);
-    log_debug ("(summaryinfo_add_meterdata) mid %s", midstr);
     for (int i=0; i<self->count; ++i) {
         if ((self->array[i]->meter & MMASK_NAME) == (mid & MMASK_NAME)) {
             summarydata_add (self->array[i], d, mid);
