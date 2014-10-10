@@ -130,7 +130,7 @@ int cmd_tenant_get_overview (int argc, const char *argv[]) {
         uint64_t netio = var_get_int_forkey (crsr, "net/in_kbs");
         netio += var_get_int_forkey (crsr, "net/out_kbs");
         double cpu = var_get_double_forkey (crsr, "pcpu");
-        int rcpu = cpu / 10;
+        int rcpu = (cpu+5.0) / 10;
         printf ("%-31s %-8s %6.2f %8llu %6.2f %% -[",
                 shortname, hstat, load, netio, cpu);
         for (int i=0; i<10; i++) {
