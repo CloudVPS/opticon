@@ -23,7 +23,19 @@ void host_to_overview (host *h, var *ovdict) {
     var *res = var_get_dict_forkey (ovdict, uuidstr);
     meter *m = h->first;
     while (m) {
+        if (m->count >= SZ_EMPTY_VAL) {
+            m = m->next;
+            continue;
+        }
         id2str (m->id, mid);
+        
+        if ((strncmp (mid, "top/", 4) == 0) ||
+            (strncmp (mid, "df/", 3) == 0) ||
+            (strncmp (mid, "who/", 4) == 0)) {
+            m = m->next;
+            continue;
+        }
+        
         switch (m->id & MMASK_TYPE) {
             case MTYPE_INT:
                 var_set_int_forkey (res, mid, meter_get_uint (m, 0));
