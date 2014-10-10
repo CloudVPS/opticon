@@ -159,7 +159,7 @@ void summaryinfo_populate (summaryinfo *into, var *v_summary) {
         else if (strncmp (s_type, "str", 3) == 0) mtype = MTYPE_STR;
         else break;
         
-        mid = makeid (s_id, mtype, 0);
+        mid = makeid (s_meterid, mtype, 0);
         
         if (strcmp (s_func, "avg")) {
             summaryinfo_add_summary_avg (into, s_id, mid);

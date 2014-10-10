@@ -293,9 +293,10 @@ void summaryinfo_start_round (summaryinfo *self) {
   * \param d The meter's data
   */
 void summaryinfo_add_meterdata (summaryinfo *self, meterid_t mid, meterdata *d) {
-    log_debug ("(summaryinfo_add_meterdata) mid %16llx", mid & MMASK_NAME);
+    char midstr[16];
+    id2str (mid&MMASK_NAME, midstr);
+    log_debug ("(summaryinfo_add_meterdata) mid %s", midstr);
     for (int i=0; i<self->count; ++i) {
-        log_debug ("(summaryinfo_add_meterdata) >> chk %16llx", self->array[i]->meter & MMASK_NAME)
         if ((self->array[i]->meter & MMASK_NAME) == (mid & MMASK_NAME)) {
             summarydata_add (self->array[i], d, mid);
         }
@@ -311,7 +312,6 @@ var *summaryinfo_tally_round (summaryinfo *self) {
     for (int i=0; i<self->count; ++i) {
         summarydata *crsr = self->array[i];
         var *tlly = var_get_or_make (res, crsr->name.str, VAR_NULL);
-        log_info ("tally %s type %08x", crsr->name.str, crsr->type);
         switch (crsr->type) {
             case SUMMARY_AVG:
                 summarydata_calc_avg (crsr, tlly);
@@ -329,7 +329,6 @@ var *summaryinfo_tally_round (summaryinfo *self) {
                 var_set_int (tlly, 0);
                 break;
         }
-        log_info ("tllytype %08x\n", tlly->type);
     }
     
     return res;
