@@ -109,8 +109,8 @@ void summarydata_calc_total (summarydata *self, var *into) {
   * \param d The meterdata to process.
   */
 void summarydata_add (summarydata *self, meterdata *d, metertype_t tp) {
-    log_debug ("(summarydata_add) self->mtype %08x "
-               "tp %08x\n", self->meter & MMASK_TYPE, tp & MMASK_TYPE);
+    log_debug ("(summarydata_add) self->mtype %016llx "
+               "tp %016llx\n", self->meter & MMASK_TYPE, tp & MMASK_TYPE);
     switch (self->meter & MMASK_TYPE) {
         case MTYPE_INT:
             if (! self->d.u64) {
@@ -119,10 +119,12 @@ void summarydata_add (summarydata *self, meterdata *d, metertype_t tp) {
             }
             switch (tp & MMASK_TYPE) {
                 case MTYPE_INT:
+                    log_debug ("(summarydata_add_int) from_int %llu", *(d->u64));
                     *(self->d.u64) += *(d->u64);
                     break;
                 
                 case MTYPE_FRAC:
+                    log_debug ("(summarydata_add_int) from_f %f", *(d->frac));
                     *(self->d.u64) += (uint64_t) *(d->frac);
                     break;
                 
@@ -143,10 +145,12 @@ void summarydata_add (summarydata *self, meterdata *d, metertype_t tp) {
             }
             switch (tp & MMASK_TYPE) {
                 case MTYPE_INT:
+                    log_debug ("(summarydata_add_f) from_int %llu", *(d->u64));
                     *(self->d.frac) += (double) *(d->u64);
                     break;
                 
                 case MTYPE_FRAC:
+                    log_debug ("(summarydata_add_f) from_f %f", *(d->frac));
                     *(self->d.frac) += *(d->frac);
                     break;
                     
@@ -168,6 +172,8 @@ void summarydata_add (summarydata *self, meterdata *d, metertype_t tp) {
                 self->d.str->str[0] = 0;
             }
             if ((tp & MMASK_TYPE) != MTYPE_STR) break;
+
+            log_debug ("(summarydata_add_str) from_s %f", d->str.str);
             
             if (strcmp (self->d.str->str, d->str->str) == 0) {
                 self->samplecount++;
