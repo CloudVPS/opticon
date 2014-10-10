@@ -243,6 +243,27 @@ POST /{TENANT}/meta
 
 **OUTPUT:** Irrelevant
 
+GET /{TENANT}/summary
+---------------------
+
+**INPUT:** None
+
+**OUTPUT:**
+
+```javascript
+{
+    "summary": {
+        "cpu": 13.276786,
+        "warning": 2,
+        "alert": 0,
+        "critical": 0,
+        "stake": 0,
+        "netin": 548,
+        "netout": 790
+    }
+}
+```
+
 GET /{TENANT}/meter
 -------------------
 
@@ -461,6 +482,35 @@ GET /{TENANT}/host
 
 1. Times are in UTC
 2. The `usage` field describes the database size, in bytes.
+
+GET /{TENANT}/host/overview
+---------------------------
+
+**INPUT:** None
+
+**OUTPUT:**
+
+```javascript
+{
+    "overview": {
+        "65d13b37-41d0-4579-9331-ed4ed4c01259": {
+            "status": "WARN",
+            "pcpu": 7.406250,
+            "loadavg": 1.406250,
+            "net/in_kbs": 1,
+            "net/in_pps": 1,
+            ...
+        }
+        "1caf0cbc-0968-478d-b17d-d3dd63dc8d11": {
+            "status": "OK",
+            "pcpu": 2.15,
+            "loadavg": 0.02188,
+            ...
+        }
+        ...
+    }
+}
+```
 
 GET /{TENANT}/host/{HOST}
 -------------------------
