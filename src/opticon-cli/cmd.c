@@ -101,13 +101,13 @@ int cmd_tenant_get_summary (int argc, const char *argv[]) {
     return 0;
 }
 
-int cmd_tenant_get_overview (int argc, const char *argv[]) {
+int cmd_host_overview (int argc, const char *argv[]) {
     if (OPTIONS.tenant[0] == 0) {
         fprintf (stderr, "%% No tenantid provided\n");
         return 1;
     }
 
-    var *ov = api_get ("/%s/overview", OPTIONS.tenant);
+    var *ov = api_get ("/%s/host/overview", OPTIONS.tenant);
     if (! var_get_count (ov)) return 0;
 
     printf ("Name                            Status     "

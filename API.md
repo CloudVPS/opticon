@@ -11,7 +11,8 @@ Opticon API Reference
 | /{TENANT}                        | PUT          | Update a tenant                                                            |
 | /{TENANT}                        | DELETE       | Delete a tenant                                                            |
 | /{TENANT}/meta                   | GET          | Sends back tenant's metadata                                               |
-| /{TENANT}/meta                   | PUT/POST^1   | ​Update tenant's metadata                                                  |
+| /{TENANT}/meta                   | PUT/POST^1   | ​Update tenant's metadata                                                   |
+| /{TENANT}/summary                | GET          | Get tenant meter summaries                                                 |
 | /{TENANT}/meter                  | GET          | Sends a list of all default and custom meters active for the tenant        |
 | /{TENANT}/meter/{MID}            | PUT/POST^1   | Create or update a custom meter definition                                 |
 | /{TENANT}/meter/{MID}            | DELETE       | Remove a meter definition (and associated watchers)                        |
@@ -19,6 +20,7 @@ Opticon API Reference
 | /{TENANT}/watcher/{MID}          | PUT/POST^1   | Create or update a watcher                                                 |
 | /{TENANT}/watcher/{MID}          | DELETE       | Remove a watcher (host-level watchers may still apply)                     |
 | /{TENANT}/host                   | GET          | Sends a list of all the tenant's hosts                                     |
+| /{TENANT}/host/overview          | GET          | Get an overview of host data                                               |
 | /{TENANT}/host/{H}               | GET          | Sends the current record for the host                                      |
 | /{TENANT}/host/{H}/watcher       | GET          | Sends a list of all default and custom watchers (host & tenant)            |
 | /{TENANT}/host/{H}/watcher/{MID} | PUT/POST^1   | Create or update a host-level watcher                                      |

@@ -255,7 +255,6 @@ void setup_matches (void) {
     _P_ ("/%U",                       REQ_DELETE, flt_check_admin);
     _P_ ("/%U",                       REQ_DELETE, cmd_tenant_delete);
     _P_ ("/%U/summary",               REQ_GET,    cmd_tenant_get_summary);
-    _P_ ("/%U/overview",              REQ_GET,    cmd_tenant_get_overview);
     _P_ ("/%U/meta",                  REQ_GET,    cmd_tenant_get_meta);
     _P_ ("/%U/meta",                  REQ_UPDATE, cmd_tenant_set_meta);
     _P_ ("/%U/meta",                  REQ_ANY,    err_method_not_allowed);
@@ -271,6 +270,7 @@ void setup_matches (void) {
     _P_ ("/%U/watcher/%s/%s",         REQ_DELETE, cmd_tenant_delete_watcher);
     _P_ ("/%U/host",                  REQ_GET,    cmd_tenant_list_hosts);
     _P_ ("/%U/host",                  REQ_ANY,    err_method_not_allowed);
+    _P_ ("/%U/host/overview",         REQ_GET,    cmd_host_overview);
     _P_ ("/%U/host/%U*",              REQ_ANY,    flt_check_host);
     _T_ ("/%U/host/%U",               REQ_GET,    cmd_host_get);
     _P_ ("/%U/host/%U",               REQ_ANY,    err_method_not_allowed);
