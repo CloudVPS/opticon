@@ -9,8 +9,8 @@ static const char *DEFSUMMARY =
 "   warning { meter: status, type: string, func: count, match: WARN }"
 "   alert { meter: status, type: string, func: count, match: ALERT }"
 "   critical { meter: status, type: string, func: count, match: CRITICAL }"
-"   netin { meter: netin/kbs, type: int, func: total }"
-"   netout { meter: netout/kbs, type: int, func: total }";
+"   netin { meter: net/in_kbs, type: int, func: total }"
+"   netout { meter: net/out_kbs, type: int, func: total }";
 
 static const char *DEFMETERS = 
 "    agent/ip {"

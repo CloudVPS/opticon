@@ -110,7 +110,7 @@ void summarydata_calc_total (summarydata *self, var *into) {
   */
 void summarydata_add (summarydata *self, meterdata *d, metertype_t tp) {
     log_debug ("(summarydata_add) self->mtype %016llx "
-               "tp %016llx\n", self->meter & MMASK_TYPE, tp & MMASK_TYPE);
+               "tp %016llx", self->meter & MMASK_TYPE, tp & MMASK_TYPE);
     switch (self->meter & MMASK_TYPE) {
         case MTYPE_INT:
             if (! self->d.u64) {
@@ -173,8 +173,8 @@ void summarydata_add (summarydata *self, meterdata *d, metertype_t tp) {
             }
             if ((tp & MMASK_TYPE) != MTYPE_STR) break;
 
-            log_debug ("(summarydata_add_str) from_s %f", d->str->str);
-            
+            log_debug ("(summarydata_add_str) from_s %s", d->str->str);
+            log_debug ("                      cmp %s", self->d.str->str);
             if (strcmp (self->d.str->str, d->str->str) == 0) {
                 self->samplecount++;
             }
