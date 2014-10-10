@@ -276,7 +276,6 @@ void watchthread_handle_host (host *host) {
     m = host->first;
     while (m) {
         summaryinfo_add_meterdata (&host->tenant->summ, m->id, &m->d);
-        summaryinfo_add_meterdata (&APP.summ, m->id, &m->d);
         m = m->next;
     }
     pthread_rwlock_unlock (&host->lock);

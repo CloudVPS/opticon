@@ -17,6 +17,7 @@ tenant *tenant_alloc (void) {
     res->prev = res->next = NULL;
     memset (&res->key, 0, sizeof (aeskey));
     watchlist_init (&res->watch);
+    summaryinfo_init (&res->summ);
     return res;
 }
 
