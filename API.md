@@ -257,7 +257,7 @@ GET /{TENANT}/summary
         "warning": 2,
         "alert": 0,
         "critical": 0,
-        "stake": 0,
+        "stale": 0,
         "netin": 548,
         "netout": 790
     }

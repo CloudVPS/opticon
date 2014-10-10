@@ -8,7 +8,7 @@ static const char *DEFSUMMARY =
 "   warning { meter: status, type: string, func: count, match: WARN }"
 "   alert { meter: status, type: string, func: count, match: ALERT }"
 "   critical { meter: status, type: string, func: count, match: CRITICAL }"
-"   stake { meter: status, type: string, func: count, match: STALE }"
+"   stale { meter: status, type: string, func: count, match: STALE }"
 "   netin { meter: net/in_kbs, type: int, func: total }"
 "   netout { meter: net/out_kbs, type: int, func: total }";
 
