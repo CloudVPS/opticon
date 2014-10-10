@@ -199,9 +199,11 @@ int daemon_main (int argc, const char *argv[]) {
 
             ioport_close (wrapped);
             ioport_close (encoded);
-            host_delete (h);
         }
         
+        /* Done with the host object */
+        host_delete (h);
+
         /* Figure out what the next scheduled wake-up time is */
         tnow = time (NULL);
         if (nextsend < wakenext) wakenext = nextsend;
