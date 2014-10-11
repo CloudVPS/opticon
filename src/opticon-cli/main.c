@@ -222,6 +222,7 @@ char *domain_from_url (const char *url) {
   * to the cache-file if succesful.
   */
 int keystone_login (void) {
+    /* Ask user for credentials */
     char username[256];
     printf ("%% Login required\n\n");
     char *domain = domain_from_url (OPTIONS.keystone_url);
@@ -235,6 +236,7 @@ int keystone_login (void) {
 
     printf ("\n");
 
+    /* Build up keystone call */
     char *kurl = (char *) malloc (strlen (OPTIONS.keystone_url) + 10);
     sprintf (kurl, "%s/tokens", OPTIONS.keystone_url);
     var *req = var_alloc();
@@ -245,6 +247,7 @@ int keystone_login (void) {
     var *hdr = var_alloc();
     var_set_str_forkey (hdr, "Content-Type", "application/json");
     
+    /* Dispatch http request */
     var *err = var_alloc();
     var *kres = http_call ("POST", kurl, hdr, req, err, NULL);
     if (! kres) {
@@ -256,6 +259,7 @@ int keystone_login (void) {
         return 0;
     }
     
+    /* Handle keystone reply */
     var *res_xs = var_get_dict_forkey (kres, "access");
     var *res_tok = var_get_dict_forkey (res_xs, "token");
     const char *token = var_get_str_forkey (res_tok, "id");
@@ -410,6 +414,7 @@ int main (int _argc, const char *_argv[]) {
 
     OPTIONS.conf = var_alloc();
     
+    /* Load in global config */
     if (stat (OPTIONS.config_file, &st) == 0) {
         if (! var_load_json (OPTIONS.conf, OPTIONS.config_file)) {
             log_error ("Error loading %s: %s\n",
@@ -418,6 +423,7 @@ int main (int _argc, const char *_argv[]) {
         }
     }
     
+    /* Load in opticonrc */
     char *rcpath = malloc(strlen(getenv("HOME")) + 32);
     sprintf (rcpath, "%s/.opticonrc", getenv("HOME"));
     
@@ -429,26 +435,37 @@ int main (int _argc, const char *_argv[]) {
     }
     
     free (rcpath);
+    
+    /* Throw the config at the handlers */
     opticonf_handle_config (OPTIONS.conf);
+    
+    /* Make sure we have the information we need */
     if (OPTIONS.api_url[0] == 0) {
         fprintf (stderr, "%% No opticon endpoint found\n");
         return 1;
     }
+    
     if (OPTIONS.keystone_url[0] == 0 && OPTIONS.opticon_token[0] == 0) {
         fprintf (stderr, "%% No keystone endpoint found\n");
         return 1;
     }
 
+    /* If no explicit keystone, or opticon token were defined, see if we
+     * can find a cached keystone token. If that doesn't work, request
+     * the user to log in. */
     if (OPTIONS.keystone_token[0] == 0 && OPTIONS.opticon_token[0] == 0) {
         if (! load_cached_token()) {
             if (! keystone_login()) return 1;
         }
     }
     
+    /* If the --host provided is not a uuid, assume it to be a --hostname
+     * and resolve the uuid from /$tenant/host/overview */
     if (OPTIONS.host[0] && (! isuuid (OPTIONS.host))) {
         OPTIONS.hostname = OPTIONS.host;
     }
     
+    /* Resolve a hostname */
     if (OPTIONS.tenant[0] && OPTIONS.hostname[0]) {
         var *ov = api_get ("/%s/host/overview", OPTIONS.tenant);
         if (! ov) return 1;
@@ -470,6 +487,7 @@ int main (int _argc, const char *_argv[]) {
         }
     }
     
+    /* Dispatch command */
     const char *cmd = argv[1];
     return cliopt_runcommand (CLICMD, cmd, argc, argv);
 }

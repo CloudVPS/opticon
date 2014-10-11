@@ -41,19 +41,28 @@ var *api_call (const char *mth, var *data, const char *fmt, ...)
     char tmpurl[1024];
     var *outhdr = var_alloc();
     var *errinfo = var_alloc();
+    
+    /* Set token headers */
     if (OPTIONS.keystone_token[0]) {
         var_set_str_forkey (outhdr, "X-Auth-Token", OPTIONS.keystone_token);
     }
     else if (OPTIONS.opticon_token[0]) {
         var_set_str_forkey (outhdr, "X-Opticon-Token", OPTIONS.opticon_token);
     }
+    
+    /* Set up the url */
     strcpy (tmpurl, OPTIONS.api_url);
     int len = strlen (tmpurl);
     if (! len) { var_free (outhdr); return NULL; }
     
+    /* Cut off slash suffix */
     if (tmpurl[len-1] == '/') tmpurl[len-1] = 0;
+    
+    /* Add path */
     strncat (tmpurl, path, 1023);
     tmpurl[1023] = 0;
+    
+    /* Dispatch call */
     var *res = http_call (mth, tmpurl, outhdr, data, errinfo, NULL);
     if (! res) {
         int st = var_get_int_forkey (errinfo, "status");
@@ -63,6 +72,8 @@ var *api_call (const char *mth, var *data, const char *fmt, ...)
             }
         }
     }
+    
+    /* Catch error */
     if (! res) {
         const char *errstr = var_get_str_forkey (errinfo, "error");
         if (! errstr) errstr = "Unknown error";
@@ -84,12 +95,16 @@ var *api_get_raw (const char *path, int exiterror) {
     var *outhdr = var_alloc();
     var *errinfo = var_alloc();
     var *data = var_alloc();
+    
+    /* Set up token headers */
     if (OPTIONS.keystone_token[0]) {
         var_set_str_forkey (outhdr, "X-Auth-Token", OPTIONS.keystone_token);
     }
     else if (OPTIONS.opticon_token[0]) {
         var_set_str_forkey (outhdr, "X-Opticon-Token", OPTIONS.opticon_token);
     }
+    
+    /* Set up url */
     strcpy (tmpurl, OPTIONS.api_url);
     int len = strlen (tmpurl);
     if (! len) {
@@ -101,6 +116,8 @@ var *api_get_raw (const char *path, int exiterror) {
     if (tmpurl[len-1] == '/') tmpurl[len-1] = 0;
     strncat (tmpurl, path, 1023);
     tmpurl[1023] = 0;
+    
+    /* Dispatch http request */
     var *res = http_call ("GET", tmpurl, outhdr, data, errinfo, NULL);
     if (! res) {
         int st = var_get_int_forkey (errinfo, "status");
@@ -110,6 +127,8 @@ var *api_get_raw (const char *path, int exiterror) {
             }
         }
     }
+    
+    /* Catch error */
     if (! res) {
         if (! exiterror) return NULL;
         const char *errstr = var_get_str_forkey (errinfo, "error");
