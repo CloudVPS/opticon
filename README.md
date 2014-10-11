@@ -366,7 +366,7 @@ jones:opticon pi$ opticon host-overview
 Name                            Status     Load  Net i/o      CPU
 --------------------------------------------------------------------------------
 jones.local                     ALERT      0.95        6  15.36 % -[##        ]+
-Jander.local                    OK         1.42        7   4.75 % -[          ]+
+Jander.local                    OK         1.34        7   4.91 % -[          ]+
 --------------------------------------------------------------------------------
 ```
 
@@ -376,36 +376,40 @@ You can use a host's uuid, or its hostname (if it is unique) to get at it:
 ```Apex
 $ opticon host-show --host Jander.local
 ---( HOST )---------------------------------------------------------------------
-UUID............: 2b331038-aac4-4d8b-a7cd-5271b603bd1e
-Hostname........: Jander.local
-Address.........: fe80::8a53:95ff:fe32:557
-Status..........: OK
-Problems........: 
-Uptime..........: 21 days, 0:46:06
-OS/Hardware.....: Darwin 13.3.0 (x86_64)
+UUID..............: 2b331038-aac4-4d8b-a7cd-5271b603bd1e
+Hostname..........: Jander.local
+Address...........: ::ffff:92.108.228.195
+Status............: OK
+Problems..........: 
+Uptime............: 7 days, 11:22:58
+OS/Hardware.......: Darwin 13.4.0 (x86_64)
+Distribution......: OS X 10.9.5 (13F34)
 ---( RESOURCES )----------------------------------------------------------------
-Processes.......: 161 (2 running, 5 stuck)
-Load/CPU........: 1.42 (4.75 %)                    -[                      ]+
-Available RAM...: 16734.00 MB
-Free RAM........: 15197.00 MB
-Network in/out..: 7 Kb/s (6 pps) / 4 Kb/s (5 pps)
-Disk i/o........: 0 rdops / 0 wrops
+Processes.........: 167 (2 running, 2 stuck)
+Load Average......:   1.33 /   1.61 /   1.57
+CPU...............:   4.91 %                         -[#                     ]+
+Available RAM.....: 16375.00 MB
+Free RAM..........: 14947.00 MB
+Network in/out....: 5 Kb/s (3 pps) / 2 Kb/s (3 pps)
+Disk i/o..........: 0 rdops / 0 wrops
 ---( PROCESS LIST )-------------------------------------------------------------
-USER                PID       CPU       MEM NAME 
-pi                  226    7.20 %    0.00 % EuControl 
-root                  0    6.20 %    0.00 % kernel_task 
-pi                 7833    6.00 %    0.00 % Pianoteq 5 
-_coreaudiod         227    3.59 %    0.00 % coreaudiod 
-root                118    1.69 %    0.00 % SGProtocolServi 
-pi                  349    1.39 %    0.00 % MC_Client 
-pi                 7840    0.49 %    0.00 % MIDIServer 
-root                  1    0.09 %    0.00 % launchd 
+USER                PID       CPU       MEM NAME 
+pi                  561    9.00 %    0.00 % UA Mixer Engine 
+root                  0    7.00 %    0.00 % kernel_task 
+pi                  467    5.79 %    0.00 % Pianoteq 5 
+pi                  224    5.69 %    0.00 % EuControl 
+_coreaudiod         419    3.59 %    0.00 % coreaudiod 
+root                122    1.69 %    0.00 % SGProtocolServi 
+pi                 1104    0.79 %    0.00 % Console 
+pi                  517    0.49 %    0.00 % MIDIServer 
+root                  1    0.09 %    0.00 % launchd 
+_locationd          102    0.09 %    0.00 % locationd 
 ---( STORAGE )------------------------------------------------------------------
-DEVICE                 SIZE FS         USED MOUNTPOINT 
-/dev/disk0s2      464.84 GB hfs     57.00 % / 
-/dev/disk1s2      931.19 GB hfs     20.00 % /Volumes/Audio 
-/dev/disk6       5588.40 GB hfs     49.00 % /Volumes/Oodle Nova 
-/dev/disk7       5588.40 GB hfs     31.00 % /Volumes/Storage 
+DEVICE                 SIZE FS         USED MOUNTPOINT 
+/dev/disk0s2      464.84 GB hfs     57.00 % / 
+/dev/disk1s2      931.19 GB hfs     20.00 % /Volumes/Audio 
+/dev/disk7       5588.40 GB hfs     49.00 % /Volumes/Oodle Nova 
+/dev/disk6       5588.40 GB hfs     31.00 % /Volumes/Storage 
 --------------------------------------------------------------------------------
 ```
 
