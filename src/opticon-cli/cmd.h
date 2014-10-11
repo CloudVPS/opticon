@@ -15,6 +15,7 @@ typedef struct optinfo {
     const char  *path;
     const char  *name;
     const char  *host;
+    const char  *hostname;
     const char  *meter;
     const char  *type;
     const char  *description;

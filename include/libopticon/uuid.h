@@ -8,6 +8,7 @@ typedef struct { uint64_t msb; uint64_t lsb; } uuid;
 
 int          uuidcmp (uuid first, uuid second);
 uuid         mkuuid (const char *str);
+int          isuuid (const char *str);
 uuid         uuidgen (void);
 uuid         uuidnil (void);
 int          uuidvalid (uuid);

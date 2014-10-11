@@ -38,6 +38,7 @@ STRINGOPT(tenant)
 STRINGOPT(key)
 STRINGOPT(path)
 STRINGOPT(host)
+STRINGOPT(hostname)
 FLAGOPT(json)
 STRINGOPT(name)
 STRINGOPT(meter)
@@ -274,6 +275,7 @@ cliopt CLIOPT[] = {
     {"--tenant","-t",OPT_VALUE,"",set_tenant},
     {"--key","-k",OPT_VALUE,"",set_key},
     {"--host","-h",OPT_VALUE,"",set_host},
+    {"--hostname","-H",OPT_VALUE,"",set_hostname},
     {"--time","-T",OPT_VALUE,"now",set_time},
     {"--path","-p",OPT_VALUE,"/var/opticon/db",set_path},
     {"--json","-j",OPT_FLAG,NULL,set_json},
@@ -442,6 +444,31 @@ int main (int _argc, const char *_argv[]) {
             if (! keystone_login()) return 1;
         }
     }
+    
+    if (OPTIONS.host[0] && (! isuuid (OPTIONS.host))) {
+        OPTIONS.hostname = OPTIONS.host;
+    }
+    
+    if (OPTIONS.tenant[0] && OPTIONS.hostname[0]) {
+        var *ov = api_get ("/%s/host/overview", OPTIONS.tenant);
+        if (! ov) return 1;
+        var *overview = var_get_dict_forkey (ov, "overview");
+        if (! var_get_count (overview)) return 1;
+        var *crsr = overview->value.arr.first;
+        while (crsr) {
+            const char *ohostname = var_get_str_forkey (crsr, "hostname");
+            if (ohostname && (strcmp (OPTIONS.hostname, ohostname) == 0)) {
+                OPTIONS.host = crsr->id;
+                break;
+            }
+            crsr = crsr->next;
+        }
+        if (OPTIONS.host[0] == 0) {
+            fprintf (stderr, "%% Could not find host\n");
+            return 1;
+        }
+    }
+    
     const char *cmd = argv[1];
     return cliopt_runcommand (CLICMD, cmd, argc, argv);
 }

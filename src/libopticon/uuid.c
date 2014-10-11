@@ -51,6 +51,22 @@ uuid mkuuid (const char *str) {
     return res;
 }
 
+int isuuid (const char *str) {
+    int hexcnt = 0;
+    int dashcnt = 0;
+    const char *c = str;
+    while (*c) {
+        if ((*c>='0') && (*c<='9')) hexcnt++;
+        else if ((*c>='a')&&(*c<='f')) hexcnt++;
+        else if (*c == '-') dashcnt++;
+        else return 0;
+        if (hexcnt >32) return 0;
+        if (dashcnt > 4) return 0;
+        c++;
+    }
+    return (hexcnt == 32);
+}
+
 /** Generate a random uuid */
 uuid uuidgen (void) {
     uuid res = {0,0};
