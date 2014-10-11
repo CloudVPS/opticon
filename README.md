@@ -357,12 +357,25 @@ UUID                                    Size First record   
 --------------------------------------------------------------------------------
 ```
 
-The times provided throughout opticon are always normalized to UTC.
+The times provided throughout opticon are always normalized to UTC. You can also
+get a nice overview of the state your hosts using `host-overview`:
 
-Use the `host-show` sub-command to get the latest record available for a host:
+```
+$ opticon host-overview
+jones:opticon pi$ opticon host-overview 
+Name                            Status     Load  Net i/o      CPU
+--------------------------------------------------------------------------------
+jones.local                     ALERT      0.95        6  15.36 % -[##        ]+
+Jander.local                    OK         1.42        7   4.75 % -[          ]+
+opticon-dev                     OK         0.01        1   0.00 % -[          ]+
+--------------------------------------------------------------------------------
+```
+
+Use the `host-show` sub-command to get the latest record available for a host.
+You can use a host's uuid, or its hostname (if it is unique) to get at it:
 
 ```Apex
-$ opticon host-show --host 2b331038-aac4-4d8b-a7cd-5271b603bd1e
+$ opticon host-show --host Jander.local
 ---( HOST )---------------------------------------------------------------------
 UUID............: 2b331038-aac4-4d8b-a7cd-5271b603bd1e
 Hostname........: Jander.local
