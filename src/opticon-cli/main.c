@@ -463,7 +463,7 @@ int main (int _argc, const char *_argv[]) {
             }
             crsr = crsr->next;
         }
-        if (OPTIONS.host[0] == 0) {
+        if (OPTIONS.host == OPTIONS.hostname) {
             fprintf (stderr, "%% Could not find host\n");
             return 1;
         }
