@@ -457,7 +457,8 @@ int main (int _argc, const char *_argv[]) {
         var *crsr = overview->value.arr.first;
         while (crsr) {
             const char *ohostname = var_get_str_forkey (crsr, "hostname");
-            if (ohostname && (strcmp (OPTIONS.hostname, ohostname) == 0)) {
+            if (ohostname && (strcasecmp (OPTIONS.hostname,
+                                          ohostname) == 0)) {
                 OPTIONS.host = crsr->id;
                 break;
             }
