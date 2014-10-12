@@ -32,7 +32,7 @@ host *host_alloc (void) {
 host *host_find (uuid tenantid, uuid hostid) {
     host *h = NULL;
     host *nh = NULL;
-    tenant *t = tenant_find (tenantid);
+    tenant *t = tenant_find (tenantid, TENANT_LOCK_WRITE);
     if (! t) return NULL;
     
     h = t->first;
@@ -41,11 +41,15 @@ host *host_find (uuid tenantid, uuid hostid) {
         h->uuid = hostid;
         h->tenant = t;
         t->first = t->last = h;
+        tenant_done (t);
         return h;
     }
     
     while (h) {
-        if (uuidcmp (h->uuid, hostid)) return h;
+        if (uuidcmp (h->uuid, hostid)) {
+            tenant_done (t);
+            return h;
+        }
         if (h->next) h = h->next;
         else {
             nh = host_alloc();
@@ -54,10 +58,11 @@ host *host_find (uuid tenantid, uuid hostid) {
             h->next = nh;
             nh->prev = h;
             t->last = nh;
+            tenant_done (t);
             return nh;
         }
     }
-    
+    tenant_done (t);
     return NULL;
 }
 

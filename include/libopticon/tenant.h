@@ -22,9 +22,15 @@ typedef struct tenant_s {
 
 /** List of tenants */
 typedef struct {
-    tenant          *first; /**< First tenant in the list */
-    tenant          *last; /**< Last tenant in the list */
+    tenant              *first; /**< First tenant in the list */
+    tenant              *last; /**< Last tenant in the list */
+    pthread_rwlock_t     lock; /**< Lock */
 } tenantlist;
+
+typedef enum tenantlock_e {
+    TENANT_LOCK_READ,
+    TENANT_LOCK_WRITE
+} tenantlock;
 
 /* ============================== GLOBALS ============================== */
 
@@ -33,7 +39,11 @@ extern tenantlist TENANTS;
 /* ============================= FUNCTIONS ============================= */
 
 void         tenant_init (void);
-tenant      *tenant_find (uuid tenantid);
+void         tenant_delete (tenant *);
+tenant      *tenant_find (uuid tenantid, tenantlock);
+tenant      *tenant_first (tenantlock);
+tenant      *tenant_next (tenant *, tenantlock);
+void         tenant_done (tenant *);
 tenant      *tenant_create (uuid tenantid, aeskey key);
 
 #endif

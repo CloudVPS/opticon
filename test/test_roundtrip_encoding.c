@@ -104,8 +104,10 @@ int main (int argc, const char *argv[]) {
     sessionlist_init();
     
     aeskey tenantkey = aeskey_create();
-    tenant_create (tenantid, tenantkey);
-    tenant *T = tenant_find (tenantid);
+    tenant *T = tenant_create (tenantid, tenantkey);
+    tenant_done (T);
+    
+    T = tenant_find (tenantid, TENANT_LOCK_WRITE);
     assert (T->uuid.msb == 0x001b71534f4b4f1c);
     assert (T->uuid.lsb == 0xb281cc06b134f98f);
     host *H = host_find (tenantid, hostid);
@@ -270,5 +272,6 @@ int main (int argc, const char *argv[]) {
     assert (M != NULL);
     host_delete (H);
     host_delete (HH);
+    tenant_delete (T);
     return 0;
 }

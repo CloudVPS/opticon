@@ -345,7 +345,7 @@ void watchthread_run (thread *self) {
     t_next += 60;
     
     while (1) {
-        tcrsr = TENANTS.first;
+        tcrsr = tenant_first (TENANT_LOCK_READ);
         while (tcrsr) {
             summaryinfo_start_round (&tcrsr->summ);
             hcrsr = tcrsr->first;
@@ -363,7 +363,7 @@ void watchthread_run (thread *self) {
             
             var_free (tally);
             var_free (overv);
-            tcrsr = tcrsr->next;
+            tcrsr = tenant_next (tcrsr, TENANT_LOCK_READ);
         }
         
         t_now = time (NULL);

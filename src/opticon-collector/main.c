@@ -184,7 +184,8 @@ void summaryinfo_populate (summaryinfo *into, var *v_summary) {
   * \return Pointer to the key, or NULL if resolving failed.
   */
 aeskey *resolve_tenantkey (uuid tenantid, uint32_t serial) {
-    tenant *T = tenant_find (tenantid);
+    tenant *T = tenant_find (tenantid, TENANT_LOCK_WRITE);
+    
     var *meta;
     const char *b64;
     aeskey *res = NULL;
@@ -193,6 +194,7 @@ aeskey *resolve_tenantkey (uuid tenantid, uint32_t serial) {
     if (! db_open (APP.db, tenantid, NULL)) {
         // FIXME remove tenant
         log_error ("(resolve_tenantkey) Packet for unknown tenantid");
+        tenant_delete (T);
         return NULL;
     }
     
@@ -200,6 +202,7 @@ aeskey *resolve_tenantkey (uuid tenantid, uint32_t serial) {
     if (! (meta = db_get_metadata (APP.db))) {
         log_error ("(resolve_tenantkey) Error reading metadata");
         db_close (APP.db);
+        tenant_done (T);
         return NULL;
     }
     
@@ -240,9 +243,9 @@ aeskey *resolve_tenantkey (uuid tenantid, uint32_t serial) {
     }
     summaryinfo_populate (&T->summ, v_summary);
     var_free (v_summary);
-    
     db_close (APP.db);
     var_free (meta);
+    tenant_done (T);
     return res;
 }
 
@@ -479,6 +482,8 @@ int daemon_main (int argc, const char *argv[]) {
     }
 
     log_info ("--- Opticon-collector ready for action ---");
+
+    tenant_init();
     
     var *slist = db_get_global (APP.db, "sessions");
     if (slist) {
