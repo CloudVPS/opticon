@@ -9,14 +9,15 @@
 
 /** Structure representing a keystone tenant */
 typedef struct tenant_s {
-    struct tenant_s *next; /**< List link */
-    struct tenant_s *prev; /**< List link */
-    host            *first; /**< First linked host */
-    host            *last; /**< Last linked host */
-    uuid             uuid; /**< The tenant's uuid */
-    aeskey           key; /**< Key used for auth packets */
-    watchlist        watch; /**< Tenant-specific watchers */
-    summaryinfo      summ; /**< Per tenant meter summaries */
+    struct tenant_s     *next; /**< List link */
+    struct tenant_s     *prev; /**< List link */
+    host                *first; /**< First linked host */
+    host                *last; /**< Last linked host */
+    uuid                 uuid; /**< The tenant's uuid */
+    aeskey               key; /**< Key used for auth packets */
+    watchlist            watch; /**< Tenant-specific watchers */
+    summaryinfo          summ; /**< Per tenant meter summaries */
+    pthread_rwlock_t     lock; /**< Lock */
 } tenant;
 
 /** List of tenants */

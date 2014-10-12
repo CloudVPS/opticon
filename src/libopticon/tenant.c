@@ -18,6 +18,7 @@ tenant *tenant_alloc (void) {
     memset (&res->key, 0, sizeof (aeskey));
     watchlist_init (&res->watch);
     summaryinfo_init (&res->summ);
+    pthread_rwlock_init (&lock, NULL);
     return res;
 }
 
