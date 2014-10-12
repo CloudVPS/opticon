@@ -346,7 +346,7 @@ void overviewthread_run (thread *self) {
         tcrsr = tenant_first (TENANT_LOCK_READ);
         while (tcrsr) {
             var *overv = tenant_overview (tcrsr);
-            if (db_open (APP.overviewdb, NULL)) {
+            if (db_open (APP.overviewdb, tcrsr->uuid, NULL)) {
                 db_set_overview (APP.overviewdb, overv);
                 db_close (APP.overviewdb);
             }

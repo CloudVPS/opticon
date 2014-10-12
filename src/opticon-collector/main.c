@@ -498,6 +498,7 @@ int daemon_main (int argc, const char *argv[]) {
     APP.queue = packetqueue_create (1024, APP.transport);
     APP.reloader = conf_reloader_create();
     APP.watchthread = thread_create (watchthread_run, NULL);
+    APP.overviewthread = thread_create (overviewthread_run, NULL);
     
     signal (SIGHUP, daemon_sighup_handler);
     
@@ -595,9 +596,11 @@ int conf_db_path (const char *id, var *v, updatetype tp) {
     if (tp == UPDATE_CHANGE) {
         db_free (APP.db);
         db_free (APP.writedb);
+        db_free (APP.overviewdb);
     }
     APP.db = localdb_create (var_get_str (v));
     APP.writedb = localdb_create (var_get_str (v));
+    APP.overviewdb = localdb_create (var_get_str (v));
     return 1;
 }
 
