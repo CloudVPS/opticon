@@ -30,6 +30,7 @@ tenant *tenant_alloc (void) {
   * manipulate their next/prev pointers.
   */
 void tenant_delete (tenant *t) {
+    if (! t) return;
     pthread_rwlock_wrlock (&TENANTS.lock);
     
     if (t->prev) {
@@ -128,6 +129,7 @@ tenant *tenant_first (tenantlock lockt) {
 }
 
 tenant *tenant_next (tenant *t, tenantlock lockt) {
+    if (! t) return NULL;
     pthread_rwlock_rdlock (&TENANTS.lock);
     tenant *next = t->next;
     if (next) {
@@ -144,7 +146,7 @@ tenant *tenant_next (tenant *t, tenantlock lockt) {
 }
 
 void tenant_done (tenant *t) {
-    pthread_rwlock_unlock (&t->lock);
+    if (t) pthread_rwlock_unlock (&t->lock);
 }
 
 /** Create a new tenant */

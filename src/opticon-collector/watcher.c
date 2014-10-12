@@ -334,6 +334,38 @@ void watchthread_handle_host (host *host) {
     pthread_rwlock_unlock (&host->lock);
 }
 
+void overviewthread_run (thread *self) {
+    tenant *tcrsr;
+    time_t t_now = time (NULL);
+    time_t t_next = (t_now+60)-((t_now+60)%60)+2;
+    log_debug ("Overviewthread started");
+    sleep (t_next - t_now);
+    t_next += 60;
+    
+    while (1) {
+        tcrsr = tenant_first (TENANT_LOCK_READ);
+        while (tcrsr) {
+            var *overv = tenant_overview (tcrsr);
+            if (db_open (APP.overviewdb, NULL)) {
+                db_set_overview (APP.overviewdb, overv);
+                db_close (APP.overviewdb);
+            }
+            tcrsr = tenant_next (tcrsr, TENANT_LOCK_READ);
+        }
+        
+        t_now = time (NULL);
+        if (t_now < t_next) {
+            log_debug ("Overview took %i seconds", 60-(t_next-t_now));
+            sleep (t_next-t_now);
+        }
+        else {
+            log_error ("Overview round cannot keep up");
+        }
+        t_next += 60;
+        while (t_next < t_now) t_next += 60;
+    }
+}
+
 /** Main loop for the watchthread */
 void watchthread_run (thread *self) {
     tenant *tcrsr;
