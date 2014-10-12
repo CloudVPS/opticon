@@ -23,6 +23,12 @@ tenant *tenant_alloc (void) {
     return res;
 }
 
+/** Delete a tenant. This tenant is assumed to have been
+  * previously obtained through, e.g., tenant_find(), and
+  * will have been properly locked. This function will first
+  * put a write lock on neighbouring nodes, so we can safely
+  * manipulate their next/prev pointers.
+  */
 void tenant_delete (tenant *t) {
     pthread_rwlock_wrlock (&TENANTS.lock);
     
@@ -102,6 +108,9 @@ tenant *tenant_find (uuid tenantid, tenantlock lockt) {
     return t;
 }
 
+/** Get a pointer to the first tenant. It will be locked with the
+  * required lock type.
+  */
 tenant *tenant_first (tenantlock lockt) {
     tenant *res = NULL;
     pthread_rwlock_rdlock (&TENANTS.lock);
