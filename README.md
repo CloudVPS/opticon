@@ -617,7 +617,7 @@ $ /usr/local/scripts/getpower.sh
 
 Now we can add this script to the `probes` section of `opticon-agent.conf`:
 
-```javascript
+```
 probes {
     power {
         type: exec
@@ -631,7 +631,7 @@ After restarting the agent, and waiting for the next minute mark to pass, and
 collector to write out its data, the value should be visible in the `host-show`
 JSON output:
 
-```javascript
+```
     "mem": {
         "total": 8386560,
         "free": 6928384
@@ -756,7 +756,7 @@ $ /usr/local/scripts/who.sh
 
 We’ll bind it to a probe in `opticon-agent.conf` like before:
 
-```javascript
+```
     who {
         type: exec
         call: /usr/local/scripts/who.sh
