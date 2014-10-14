@@ -40,7 +40,7 @@ the opticon cli, so we’ll get to that after setting up the API server.
 The collector has a very simple base configuration in
 `/etc/opticon/opticon-collector.conf`, only dealing with system resources:
 
-```javascript
+```
 network {
     port: 1047
     address: *
@@ -53,7 +53,7 @@ database {
 Additionally, system-wide custom meters and watchers can be configured in
 `/etc/opticon/opticon-meter.conf`, like this:
 
-```javascript
+```
 # Custom meter and watcher definitions
 "pcpu" {
     type: frac
@@ -78,7 +78,7 @@ Configuring opticon-api
 The API server keeps its configuration in `/etc/opticon/opticon-api.conf`. This
 is how it typically looks:
 
-```javascript
+```
 network {
     port: 8888
 }
@@ -114,7 +114,7 @@ The client gets its configuration from both `/etc/opticon/opticon-cli.conf` and
 `$HOME/.opticonrc` (the latter having precedence, but both files are parsed and
 merged). First let’s configure the global configuration file with the endpoint:
 
-``` javascript
+```
 endpoints {
   opticon: "http://127.0.0.1:8888/"
 }
@@ -123,7 +123,7 @@ endpoints {
 In `.opticonrc` you can configure the `admin_token` as it was configured in the
 api configuration:
 
-``` javascript
+```
 defaults {
   admin_token: a666ed1e-24dc-4533-acab-1efb2bb55081
 }
@@ -205,7 +205,7 @@ opticon-agent on servers that you would like to monitor. The agent reads its
 configuration from `/etc/opticon/opticon-agent.conf`. First let’s take a look at
 a rather straightforward configuration:
 
-```javascript
+```
 collector {
     config: manual
     address: 192.168.1.1
@@ -271,7 +271,7 @@ the rest of the functionality from any machine running an opticon client. To
 allow for keystone authentication, add the endpoint to `opticon-cli.conf` like
 this:
 
-```javascript
+```
 endpoints {
   keystone: "https://identity.stack.cloudvps.com/v2.0"
   opticon: "http://192.168.1.1:8888/"
@@ -283,7 +283,7 @@ some convenience to the workflow by picking a default tenant for commands; most
 users are likely to work with a single tenant and can do fine without typing
 `--tenant`, and a huge UUID after each command:
 
-```javascript
+```
 defaults {
   tenant: 001b7153-4f4b-4f1c-b281-cc06b134f98f
 }
@@ -322,7 +322,7 @@ Every tenant object in the opticon database has freeform metadata. Some of it is
 used internally, like the tenant AES key. Use the `tenant-get-metadata`
 sub-command to view a tenant’s metadata in JSON format:
 
-```Apex
+```
 $ opticon tenant-get-metadata
 {
     "metadata": {
