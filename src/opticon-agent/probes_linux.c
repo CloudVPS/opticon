@@ -123,56 +123,56 @@ double fs_used (const char *fs) {
   * \return Number of megabytes, 0 on any kind of failure.
   */
 uint64_t diskdevice_size_in_mb (const char *devname) {
-	struct stat 		 st;
-	wordlist 			*args;
-	int         		 iminor, imajor;
-	FILE 				*F;
-	char        		 buf[256];
-	unsigned long long 	 sizebytes;
+    struct stat          st;
+    wordlist            *args;
+    int                  iminor, imajor;
+    FILE                *F;
+    char                 buf[256];
+    unsigned long long   sizebytes;
 
-	if (stat (devname, &st)) return 0;
-	iminor = minor (st.st_rdev);
-	imajor = major (st.st_rdev);
+    if (stat (devname, &st)) return 0;
+    iminor = minor (st.st_rdev);
+    imajor = major (st.st_rdev);
 
-	F = fopen ("/proc/partitions","r");
-	if (!F) return 0;
+    F = fopen ("/proc/partitions","r");
+    if (!F) return 0;
 
-	while (! feof (F))
-	{
-	    *buf = 0;
-		fgets (buf, 255, F);
-		buf[255] = 0;
-		if (*buf) buf[strlen(buf)-1] = 0;
-		if (! (*buf)) continue;
+    while (! feof (F))
+    {
+        *buf = 0;
+        fgets (buf, 255, F);
+        buf[255] = 0;
+        if (*buf) buf[strlen(buf)-1] = 0;
+        if (! (*buf)) continue;
 
-		args = wordlist_make (buf);
-		if (args->argc < 3)
-		{
-			wordlist_free (args);
-			continue;
-		}
+        args = wordlist_make (buf);
+        if (args->argc < 3)
+        {
+            wordlist_free (args);
+            continue;
+        }
 
-		if (imajor == atoi (args->argv[0]))
-		{
-			if (iminor == atoi (args->argv[1]))
-			{
-				sizebytes = atoll (args->argv[2]);
-				wordlist_free (args);
-				fclose (F);
-				return sizebytes/1024;
-			}
-		}
-		wordlist_free (args);
-	}
-	fclose (F);
-	return 0;
+        if (imajor == atoi (args->argv[0]))
+        {
+            if (iminor == atoi (args->argv[1]))
+            {
+                sizebytes = atoll (args->argv[2]);
+                wordlist_free (args);
+                fclose (F);
+                return sizebytes/1024;
+            }
+        }
+        wordlist_free (args);
+    }
+    fclose (F);
+    return 0;
 }
 
 /** Probe function */
 var *runprobe_df (probe *self) {
-	FILE *F;
-	char buf[256];
-	wordlist *args;
+    FILE *F;
+    char buf[256];
+    wordlist *args;
     var *res = var_alloc();
     var *res_df = var_get_array_forkey (res, "df");
 
@@ -374,107 +374,107 @@ static struct linuxprobe_io_info_s {
 /** Probe function */
 var *runprobe_io (probe *self)
 {
-	wordlist *split;
-	FILE *F;
-	time_t ti;
-	char buf[256];
-	char *c;
-	uint64_t totalblk_r = 0;
-	uint64_t totalblk_w = 0;
-	uint64_t delta_r;
-	uint64_t delta_w;
-	uint64_t delta;
-	uint64_t cpudelta;
-	uint64_t totalcpu;
-	uint64_t totalwait = 0;
-	var *res = var_alloc();
-	var *toplevels = var_alloc(); /* to skip hda1 if we already did hda */
-	
-	F = fopen ("/proc/diskstats", "r");
-	if (F) {
-		while (! feof (F)) {
-			buf[0] = 0;
-			fgets (buf, 255, F);
-			if (strlen (buf) <15) continue;
-			
-			split = wordlist_make (buf+13);
-			if (split->argc < 8) {
-				wordlist_free (split);
-				continue;
-			}
-			
-			/* make copy of the device name with digits stripped off */
-			strncpy (buf, split->argv[0], 255);
-			buf[255] = 0;
-			c = buf;
-			while (isalpha (*c)) c++;
-			if (isdigit (*c)) *c = 0;
-			
-			if (var_find_key (toplevels, buf)) {
-			    wordlist_free (split);
-			    continue;
-			}
-			if (strncmp (split->argv[0], "ram", 3) == 0) {
-			    wordlist_free (split);
-			    continue;
-			}
-			var_set_int_forkey (toplevels, split->argv[0], 1);
-			
-			totalblk_r += atoll (split->argv[3]);
-			totalblk_w += atoll (split->argv[7]);
-			
-			log_debug ("disk %s r/%llu w/%llu", split->argv[0], totalblk_r,
-			            totalblk_w);
-			
-			wordlist_free (split);
-		}
-		
-		fclose (F);
-	}
-	
-	var_free (toplevels);
+    wordlist *split;
+    FILE *F;
+    time_t ti;
+    char buf[256];
+    char *c;
+    uint64_t totalblk_r = 0;
+    uint64_t totalblk_w = 0;
+    uint64_t delta_r;
+    uint64_t delta_w;
+    uint64_t delta;
+    uint64_t cpudelta;
+    uint64_t totalcpu;
+    uint64_t totalwait = 0;
+    var *res = var_alloc();
+    var *toplevels = var_alloc(); /* to skip hda1 if we already did hda */
+    
+    F = fopen ("/proc/diskstats", "r");
+    if (F) {
+        while (! feof (F)) {
+            buf[0] = 0;
+            fgets (buf, 255, F);
+            if (strlen (buf) <15) continue;
+            
+            split = wordlist_make (buf+13);
+            if (split->argc < 8) {
+                wordlist_free (split);
+                continue;
+            }
+            
+            /* make copy of the device name with digits stripped off */
+            strncpy (buf, split->argv[0], 255);
+            buf[255] = 0;
+            c = buf;
+            while (isalpha (*c)) c++;
+            if (isdigit (*c)) *c = 0;
+            
+            if (var_find_key (toplevels, buf)) {
+                wordlist_free (split);
+                continue;
+            }
+            if (strncmp (split->argv[0], "ram", 3) == 0) {
+                wordlist_free (split);
+                continue;
+            }
+            var_set_int_forkey (toplevels, split->argv[0], 1);
+            
+            totalblk_r += atoll (split->argv[3]);
+            totalblk_w += atoll (split->argv[7]);
+            
+            log_debug ("disk %s r/%llu w/%llu", split->argv[0], totalblk_r,
+                        totalblk_w);
+            
+            wordlist_free (split);
+        }
+        
+        fclose (F);
+    }
+    
+    var_free (toplevels);
 
-	F = fopen ("/proc/stat","r");
-	if (F) {
-		fgets (buf, 255, F);
-		split = wordlist_make (buf);
-		totalwait = atoll (split->argv[5]);
-		totalcpu = atoll (split->argv[1]) + atoll (split->argv[2]) +
-				   atoll (split->argv[3]) + atoll (split->argv[4]);
-		wordlist_free (split);
-		fclose (F);
-	}
-	
-	delta_r = totalblk_r - IOPROBE.io_blk_r;
-	delta_w = totalblk_w - IOPROBE.io_blk_w;
-	
-	ti = time (NULL);
-	if (ti == IOPROBE.lastrun) IOPROBE.lastrun--;
-	if (IOPROBE.io_blk_r || IOPROBE.io_blk_w) {
-	    var *res_io = var_get_dict_forkey (res, "io");
-	    if (IOPROBE.io_blk_r) {
-    	    var_set_int_forkey (res_io, "rdops", delta_r / (ti - IOPROBE.lastrun));
-    	}
-    	if (IOPROBE.io_blk_w) {
-    	    var_set_int_forkey (res_io, "wrops", delta_w / (ti - IOPROBE.lastrun));
-    	}
-	}
+    F = fopen ("/proc/stat","r");
+    if (F) {
+        fgets (buf, 255, F);
+        split = wordlist_make (buf);
+        totalwait = atoll (split->argv[5]);
+        totalcpu = atoll (split->argv[1]) + atoll (split->argv[2]) +
+                   atoll (split->argv[3]) + atoll (split->argv[4]);
+        wordlist_free (split);
+        fclose (F);
+    }
+    
+    delta_r = totalblk_r - IOPROBE.io_blk_r;
+    delta_w = totalblk_w - IOPROBE.io_blk_w;
+    
+    ti = time (NULL);
+    if (ti == IOPROBE.lastrun) IOPROBE.lastrun--;
+    if (IOPROBE.io_blk_r || IOPROBE.io_blk_w) {
+        var *res_io = var_get_dict_forkey (res, "io");
+        if (IOPROBE.io_blk_r) {
+            var_set_int_forkey (res_io, "rdops", delta_r / (ti - IOPROBE.lastrun));
+        }
+        if (IOPROBE.io_blk_w) {
+            var_set_int_forkey (res_io, "wrops", delta_w / (ti - IOPROBE.lastrun));
+        }
+    }
 
-	delta = totalwait - IOPROBE.io_wait;
-	cpudelta = totalcpu - IOPROBE.total_cpu;
+    delta = totalwait - IOPROBE.io_wait;
+    cpudelta = totalcpu - IOPROBE.total_cpu;
 
-	if (IOPROBE.io_wait) {
-	    var *res_io = var_get_dict_forkey (res, "io");
-	    var_set_double_forkey (res_io, "pwait", (100.0 * delta) / (1.0 * cpudelta));
-	}
+    if (IOPROBE.io_wait) {
+        var *res_io = var_get_dict_forkey (res, "io");
+        var_set_double_forkey (res_io, "pwait", (100.0 * delta) / (1.0 * cpudelta));
+    }
 
-	IOPROBE.io_blk_r = totalblk_r;
-	IOPROBE.io_blk_w = totalblk_w;
-	IOPROBE.io_wait = totalwait;
-	IOPROBE.total_cpu = totalcpu;
-	IOPROBE.lastrun = ti;
-	
-	return res;
+    IOPROBE.io_blk_r = totalblk_r;
+    IOPROBE.io_blk_w = totalblk_w;
+    IOPROBE.io_wait = totalwait;
+    IOPROBE.total_cpu = totalcpu;
+    IOPROBE.lastrun = ti;
+    
+    return res;
 }
 
 /* ======================================================================= */
@@ -485,12 +485,12 @@ var *runprobe_io (probe *self)
   * of these babies, before things get sent to var heaven.
   */
 typedef struct topentry_s {
-	char				username[16];
-	pid_t				pid;
-	unsigned short		pcpu;
-	unsigned short		pmem;
-	time_t				secrun;
-	char				ptitle[48];
+    char                username[16];
+    pid_t               pid;
+    unsigned short      pcpu;
+    unsigned short      pmem;
+    time_t              secrun;
+    char                ptitle[48];
 } topentry;
 
 #define NR_TPROCS 24 /**< Needless headroom FTW */
@@ -498,145 +498,145 @@ typedef struct topentry_s {
 
 /** Array carrier for the topentry nodes */
 typedef struct topinfo_s {
-	short				 ntop;
-	topentry        	 tprocs[NR_TPROCS];
+    short                ntop;
+    topentry             tprocs[NR_TPROCS];
 } topinfo;
 
 /** Perform a sample round on a procrun */
 void sample_tprocs (procrun *run) {
-	struct dirent	*de;
-	DIR				*D;
-	FILE			*F;
-	pid_t			 pid;
-	unsigned long	 utime;
-	unsigned long	 stime;
-	uid_t			 tuid;
-	gid_t			 tgid;
-	struct stat		 st;
-	char			 buf[256];
-	char			*c;
-	wordlist		*words;
-	struct timeval	 tv;
-	int				 pausetimer;
-	long long		 rss;
-	long long		 tpmem;
-	int				 pmem;
-	
-	procrun_initsample (run);
-	D = opendir ("/proc");
-	if (!D) return;
-	pausetimer = 0;
-	
-	while ( (de = readdir (D)) ) {
-		pid = atoi (de->d_name);
-		
-		/* Don't spike CPU on machines with lots of processes */
-		pausetimer++;
-		if (pausetimer & 15) {
-			tv.tv_sec = 0;
-			tv.tv_usec = 64;
-			select (0, NULL, NULL, NULL, &tv);
-		}
-		
-		if (pid>0) {
-			sprintf (buf, "/proc/%d", pid);
-			if (stat (buf, &st) == 0) {
-				tuid = st.st_uid;
-				tgid = st.st_gid;
-			}
-			else continue;
+    struct dirent   *de;
+    DIR             *D;
+    FILE            *F;
+    pid_t            pid;
+    unsigned long    utime;
+    unsigned long    stime;
+    uid_t            tuid;
+    gid_t            tgid;
+    struct stat      st;
+    char             buf[256];
+    char            *c;
+    wordlist        *words;
+    struct timeval   tv;
+    int              pausetimer;
+    long long        rss;
+    long long        tpmem;
+    int              pmem;
+    
+    procrun_initsample (run);
+    D = opendir ("/proc");
+    if (!D) return;
+    pausetimer = 0;
+    
+    while ( (de = readdir (D)) ) {
+        pid = atoi (de->d_name);
+        
+        /* Don't spike CPU on machines with lots of processes */
+        pausetimer++;
+        if (pausetimer & 15) {
+            tv.tv_sec = 0;
+            tv.tv_usec = 64;
+            select (0, NULL, NULL, NULL, &tv);
+        }
+        
+        if (pid>0) {
+            sprintf (buf, "/proc/%d", pid);
+            if (stat (buf, &st) == 0) {
+                tuid = st.st_uid;
+                tgid = st.st_gid;
+            }
+            else continue;
 
-			sprintf (buf, "/proc/%d/stat", pid);
-			if ( (F = fopen (buf, "r")) ) {
-				fgets (buf, 255, F);
-				buf[255] = 0;
-				
-				c = buf;
-				while (strchr (c, ')')) {
-					c = strchr (c, ')') + 1;
-				}
-					
-				/* 11=u 12=s */
-				words = wordlist_make (c);
-				if (words->argc > 12) {
-					utime = atol (words->argv[11]);
-					stime = atol (words->argv[12]);
-				}
-				fclose (F);
-				wordlist_free (words);
+            sprintf (buf, "/proc/%d/stat", pid);
+            if ( (F = fopen (buf, "r")) ) {
+                fgets (buf, 255, F);
+                buf[255] = 0;
+                
+                c = buf;
+                while (strchr (c, ')')) {
+                    c = strchr (c, ')') + 1;
+                }
+                    
+                /* 11=u 12=s */
+                words = wordlist_make (c);
+                if (words->argc > 12) {
+                    utime = atol (words->argv[11]);
+                    stime = atol (words->argv[12]);
+                }
+                fclose (F);
+                wordlist_free (words);
 
-				sprintf (buf, "/proc/%d/statm", pid);
-				if ((F = fopen (buf, "r"))) {
-					memset (buf, 0, 255);
-					fgets (buf, 255, F);
-					c = strchr (buf, ' ');
-					if (c) {
-						++c;
-						rss = 4 * atoll (c);
-						
-						tpmem = rss;
-						tpmem *= 10000;
-						tpmem /= KMEMTOTAL;
-						pmem = (int) (tpmem & 0xffffffff);
-					}
-					fclose (F);
-				}
-				else {
-					rss = 128000;
-				}
-				
-				sprintf (buf, "/proc/%d/cmdline", pid);
-				if ((F = fopen (buf, "r"))) {
-					memset (buf, 0, 255);
-					fread (buf, 0, 255, F);
-					fclose (F);
-					
-					if (*buf == 0) {
-						sprintf (buf, "/proc/%d/status", pid);
-						if ((F = fopen (buf, "r"))) {
-							memset (buf, 0, 255);
-							fgets (buf, 255, F);
-							c = strchr (buf, ':');
-							if (! c) {
-								fclose (F);
-								continue;
-							}
-							++c;
-							while (*c <= ' ') ++c;
-							if (strlen (c)) {
-								c[strlen(c)-1] = 0;
-							}
-							
-							fclose (F);
-							
-							procrun_setproc (run, pid, utime, stime,
-											 tuid, tgid, c, pmem);
-						}
-					}
-					else {
-						procrun_setproc (run, pid, utime, stime,
-										 tuid, tgid, buf, pmem);
-					}
-				}
-			}
-		}
-	}
-	closedir (D);
+                sprintf (buf, "/proc/%d/statm", pid);
+                if ((F = fopen (buf, "r"))) {
+                    memset (buf, 0, 255);
+                    fgets (buf, 255, F);
+                    c = strchr (buf, ' ');
+                    if (c) {
+                        ++c;
+                        rss = 4 * atoll (c);
+                        
+                        tpmem = rss;
+                        tpmem *= 10000;
+                        tpmem /= KMEMTOTAL;
+                        pmem = (int) (tpmem & 0xffffffff);
+                    }
+                    fclose (F);
+                }
+                else {
+                    rss = 128000;
+                }
+                
+                sprintf (buf, "/proc/%d/cmdline", pid);
+                if ((F = fopen (buf, "r"))) {
+                    memset (buf, 0, 255);
+                    fread (buf, 0, 255, F);
+                    fclose (F);
+                    
+                    if (*buf == 0) {
+                        sprintf (buf, "/proc/%d/status", pid);
+                        if ((F = fopen (buf, "r"))) {
+                            memset (buf, 0, 255);
+                            fgets (buf, 255, F);
+                            c = strchr (buf, ':');
+                            if (! c) {
+                                fclose (F);
+                                continue;
+                            }
+                            ++c;
+                            while (*c <= ' ') ++c;
+                            if (strlen (c)) {
+                                c[strlen(c)-1] = 0;
+                            }
+                            
+                            fclose (F);
+                            
+                            procrun_setproc (run, pid, utime, stime,
+                                             tuid, tgid, c, pmem);
+                        }
+                    }
+                    else {
+                        procrun_setproc (run, pid, utime, stime,
+                                         tuid, tgid, buf, pmem);
+                    }
+                }
+            }
+        }
+    }
+    closedir (D);
 }
 
 /** Utility function for inserting a hole in the topinfo array, to make room
   * for a higher ranked process to enter the folds. */
 void make_top_hole (topinfo *inf, int pos) {
-	int tailsz;
-	
-	if (pos>(MAX_NTOP-2)) return;
-	tailsz = ((MAX_NTOP-1) - pos);
-	
-	memmove (inf->tprocs + pos + 1,
-			 inf->tprocs + pos,
-			 tailsz * sizeof (topentry));
-	
-	if (inf->ntop < MAX_NTOP) inf->ntop++;
+    int tailsz;
+    
+    if (pos>(MAX_NTOP-2)) return;
+    tailsz = ((MAX_NTOP-1) - pos);
+    
+    memmove (inf->tprocs + pos + 1,
+             inf->tprocs + pos,
+             tailsz * sizeof (topentry));
+    
+    if (inf->ntop < MAX_NTOP) inf->ntop++;
 }
 
 /** Function that reaps the procrun data gathered and sorts it into the
@@ -761,20 +761,20 @@ void run_top (thread *self) {
         fclose (F);
     }
 
-	F = fopen ("/proc/cpuinfo","r");
-	if (F) {
-		while (! feof (F)) {
-			buf[0] = 0;
-			fgets (buf, 255, F);
-			if (strncasecmp (buf, "processor", 9) == 0) {
-				p->ncpu++;
-			}
-		}
-		fclose (F);
-	}
-	else {
-		p->ncpu = 1;
-	}
+    F = fopen ("/proc/cpuinfo","r");
+    if (F) {
+        while (! feof (F)) {
+            buf[0] = 0;
+            fgets (buf, 255, F);
+            if (strncasecmp (buf, "processor", 9) == 0) {
+                p->ncpu++;
+            }
+        }
+        fclose (F);
+    }
+    else {
+        p->ncpu = 1;
+    }
 
     while (1) {
         for (i=0; i<3; ++i) {
