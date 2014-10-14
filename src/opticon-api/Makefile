@@ -1,3 +1,5 @@
+include ../../makeinclude
+
 ifdef STATIC
   CFLAGS+=-DSTATIC
   LDFLAGS+=-static
@@ -12,16 +14,10 @@ ifeq (freebsd,$(OSNAME))
 endif
 
 LIBS = ../../lib/libopticondb.a ../../lib/libhttp.a ../../lib/libopticon.a 
-LIBCURL = -lcurl
-
-ifeq (darwin,$(OSNAME))
-  CFLAGS+=-I/usr/local/include 
-  LIBS+=/usr/local/lib/libmicrohttpd.a
-endif
 
 ifeq (linux,$(OSNAME))
   CFLAGS+=-std=c99 -D_GNU_SOURCE
-  LDFLAGS+=-lpthread -lm -lmicrohttpd
+  LDFLAGS+=-lpthread -lm
 endif
 
 CFLAGS+=-DOSNAME=$(OSNAME) -DOSREL=$(OSREL) -DOSRELMAJOR=$(OSRELMAJOR)
@@ -33,7 +29,8 @@ all: ../../bin/opticon-api
 
 ../../bin/opticon-api: $(OBJS_OPTICONAPI) $(LIBS)
 	@echo "[LINK ] opticon-api"
-	@$(CC) $(LDFLAGS) -o ../../bin/opticon-api $(OBJS_OPTICONAPI) $(LIBS) $(LIBCURL) -lz 
+	@$(CC) $(LDFLAGS) -o ../../bin/opticon-api $(OBJS_OPTICONAPI) $(LIBS) \
+		   $(LIBMICROHTTPD) $(LIBCURL) -lz 
 
 clean:
 	rm -f *.o ../../bin/opticon-api
@@ -41,4 +38,4 @@ clean:
 .SUFFIXES: .c .o
 .c.o:
 	@echo "[BUILD] $<"
-	@$(CC) $(CFLAGS) -I../../include -c $<
+	@$(CC) $(CFLAGS) $(INCLUDES) -I../../include -c $<

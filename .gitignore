@@ -9,3 +9,6 @@ test/*.db
 test/*.idx
 lib/*.a
 playground/
+makeinclude
+platform.h
+configure.paths

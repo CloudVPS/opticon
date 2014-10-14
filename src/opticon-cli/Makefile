@@ -1,3 +1,5 @@
+include ../../makeinclude
+
 ifdef STATIC
   CFLAGS+=-DSTATIC
   LDFLAGS+=-static
@@ -12,12 +14,9 @@ ifeq (freebsd,$(OSNAME))
 endif
 
 LIBS = ../../lib/libopticondb.a ../../lib/libhttp.a ../../lib/libopticon.a 
-LIBCURL = -lcurl
 
 ifeq (darwin,$(OSNAME))
-  CFLAGS+=-I/usr/local/include
   LDFLAGS+=-L/usr/local/lib -framework Security -framework CoreFoundation
-  LIBCURL=/usr/local/lib/libcurl.a
 endif
 
 CFLAGS+=-DOSNAME=$(OSNAME) -DOSREL=$(OSREL) -DOSRELMAJOR=$(OSRELMAJOR)
@@ -41,4 +40,4 @@ clean:
 .SUFFIXES: .c .o
 .c.o:
 	@echo "[BUILD] $<"
-	@$(CC) $(CFLAGS) -I../../include -c $<
+	@$(CC) $(CFLAGS) $(INCLUDES_CURL) -I../../include -c $<

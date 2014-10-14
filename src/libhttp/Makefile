@@ -1,3 +1,5 @@
+include ../../makeinclude
+
 ifdef STATIC
   CFLAGS+=-DSTATIC
   LDFLAGS+=-static
@@ -31,4 +33,4 @@ clean:
 .SUFFIXES: .c .o
 .c.o:
 	@echo "[BUILD] $<"
-	@$(CC) $(CFLAGS) -I../../include -c $<
+	@$(CC) $(CFLAGS) $(INCLUDES_CURL) -I../../include -c $<

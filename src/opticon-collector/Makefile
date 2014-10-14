@@ -1,3 +1,5 @@
+include ../../makeinclude
+
 ifdef STATIC
   CFLAGS+=-DSTATIC
   LDFLAGS+=-static
