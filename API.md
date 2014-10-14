@@ -46,9 +46,9 @@ Error Replies
 **OUTPUT:** HTTP error, plus JSON data with a specific error message:
 
 ```javascript
-{
-    "error": "You're stupid"
-}
+    {
+        "error": "You're stupid"
+    }
 ```
 
 **STATUS** **CODES:**
@@ -71,15 +71,15 @@ GET /
 **OUTPUT:**
 
 ```javascript
-{
-    "tenant": [
-        {
-            "id": "001b7153-4f4b-4f1c-b281-cc06b134f98f",
-            "name": "compute-pim",
-            "hostcount": 3
-        }
-    ]
-}
+    {
+        "tenant": [
+            {
+                "id": "001b7153-4f4b-4f1c-b281-cc06b134f98f",
+                "name": "compute-pim",
+                "hostcount": 3
+            }
+        ]
+    }
 ```
 
 GET /token
@@ -90,11 +90,11 @@ GET /token
 **OUTPUT:**
 
 ```javascript
-{
-    "token": {
-        "userlevel": "AUTH_USER"
-    }
-}
+    {
+        "token": {
+            "userlevel": "AUTH_USER"
+        }
+    }
 ```
 
 GET /session
@@ -105,28 +105,28 @@ GET /session
 **OUTPUT:**
 
 ```javascript
-{
-    "session": [
-        {
-            "tenantid": "001b7153-4f4b-4f1c-b281-cc06b134f98f",
-            "hostid": "0d19d114-55c8-4077-9cab-348579c70612",
-            "addr": 1008430172,
-            "sessid": 1325435585,
-            "lastcycle": "2014-10-05T11:44:41Z",
-            "lastserial": 1412498933,
-            "remote": "::ffff:192.168.1.1"
-        },
-        {
-            "tenantid": "001b7153-4f4b-4f1c-b281-cc06b134f98f",
-            "hostid": "65d13b37-41d0-4579-9331-ed4ed4c01259",
-            "addr": 3316034127,
-            "sessid": 2716013145,
-            "lastcycle": "2014-10-05T11:45:43Z",
-            "lastserial": 1412445083,
-            "remote": "::ffff:192.168.1.2"
-        }
-    ]
-}
+    {
+        "session": [
+            {
+                "tenantid": "001b7153-4f4b-4f1c-b281-cc06b134f98f",
+                "hostid": "0d19d114-55c8-4077-9cab-348579c70612",
+                "addr": 1008430172,
+                "sessid": 1325435585,
+                "lastcycle": "2014-10-05T11:44:41Z",
+                "lastserial": 1412498933,
+                "remote": "::ffff:192.168.1.1"
+            },
+            {
+                "tenantid": "001b7153-4f4b-4f1c-b281-cc06b134f98f",
+                "hostid": "65d13b37-41d0-4579-9331-ed4ed4c01259",
+                "addr": 3316034127,
+                "sessid": 2716013145,
+                "lastcycle": "2014-10-05T11:45:43Z",
+                "lastserial": 1412445083,
+                "remote": "::ffff:192.168.1.2"
+            }
+        ]
+    }
 ```
 
 GET /{TENANT}
@@ -137,15 +137,15 @@ GET /{TENANT}
 **OUTPUT:**
 
 ```javascript
-{
-    "tenant": {
-        "key": "fAM9aZdUoNzdytgqLoS2y44dfZeqWeBY9wkGWAq72C4=",
-        "name": "compute-pim",
-        "meta": {
-            "alles": "tof"
-        }
-    }
-}
+    {
+        "tenant": {
+            "key": "fAM9aZdUoNzdytgqLoS2y44dfZeqWeBY9wkGWAq72C4=",
+            "name": "compute-pim",
+            "meta": {
+                "alles": "tof"
+            }
+        }
+    }
 ```
 
 POST /{TENANT}
@@ -153,31 +153,31 @@ POST /{TENANT}
 **INPUT:** 
 
 ```javascript
-{
-    "tenant": {
-        "key": "fAM9aZdUoNzdytgqLoS2y44dfZeqWeBY9wkGWAq72C4=",
-        "name": "cowboy-henk"
+    {
+        "tenant": {
+            "key": "fAM9aZdUoNzdytgqLoS2y44dfZeqWeBY9wkGWAq72C4=",
+            "name": "cowboy-henk"
+        }
     }
-}
 ```
 
 **ALTINPUT:**
 
 ```javascript
-{
-    "tenant": {}
-}
+    {
+        "tenant": {}
+    }
 ```
 
 **OUTPUT:**
 
 ```javascript
-{
-    "tenant": {
-        "key": "fAM9aZdUoNzdytgqLoS2y44dfZeqWeBY9wkGWAq72C4=",
-        "name": "cowboy-henk"
+    {
+        "tenant": {
+            "key": "fAM9aZdUoNzdytgqLoS2y44dfZeqWeBY9wkGWAq72C4=",
+            "name": "cowboy-henk"
+        }
     }
-}
 ```
 
 **NOTES:**
@@ -192,12 +192,12 @@ PUT /{TENANT}
 **INPUT:** 
 
 ```javascript
-{
-    "tenant": {
-        "key": "fAM9aZdUoNzdytgqLoS2y44dfZeqWeBY9wkGWAq72C4=",
-        "name": "cowboy-henk"
+    {
+        "tenant": {
+            "key": "fAM9aZdUoNzdytgqLoS2y44dfZeqWeBY9wkGWAq72C4=",
+            "name": "cowboy-henk"
+        }
     }
-}
 ```
 
 **OUTPUT:** Irrelevant
@@ -221,11 +221,11 @@ GET /{TENANT}/meta
 **OUTPUT:**
 
 ```javascript
-{
-    "metadata": {
-        "alles": "tof"
+    {
+        "metadata": {
+            "alles": "tof"
+        }
     }
-}
 ```
 
 POST /{TENANT}/meta
@@ -234,11 +234,11 @@ POST /{TENANT}/meta
 **INPUT:**
 
 ```javascript
-{
-    "metadata": {
-        "key": "value"
+    {
+        "metadata": {
+            "key": "value"
+        }
     }
-}
 ```
 
 **OUTPUT:** Irrelevant
@@ -251,17 +251,17 @@ GET /{TENANT}/summary
 **OUTPUT:**
 
 ```javascript
-{
-    "summary": {
-        "cpu": 13.276786,
-        "warning": 2,
-        "alert": 0,
-        "critical": 0,
-        "stale": 0,
-        "netin": 548,
-        "netout": 790
+    {
+        "summary": {
+            "cpu": 13.276786,
+            "warning": 2,
+            "alert": 0,
+            "critical": 0,
+            "stale": 0,
+            "netin": 548,
+            "netout": 790
+        }
     }
-}
 ```
 
 GET /{TENANT}/meter
@@ -272,45 +272,45 @@ GET /{TENANT}/meter
 **OUTPUT:**
 
 ```javascript
-{
-    "meter": {
-        "agent/ip": {
-            "type": "string",
-            "description": "Remote IP Address"
-        },
-        "os/kernel": {
-            "type": "string",
-            "description": "Version"
-        },
-        "os/arch": {
-            "type": "string",
-            "description": "CPU Architecture"
-        },
+    {
+        "meter": {
+            "agent/ip": {
+                "type": "string",
+                "description": "Remote IP Address"
+            },
+            "os/kernel": {
+                "type": "string",
+                "description": "Version"
+            },
+            "os/arch": {
+                "type": "string",
+                "description": "CPU Architecture"
+            },
 
-...
+            /* ... */
 
-        "who/user": {
-            "type": "string",
-            "description": "User",
-            "origin": "tenant"
-        },
-        "who/tty": {
-            "type": "string",
-            "description": "TTY",
-            "origin": "tenant"
-        },
-        "who/remote": {
-            "type": "string",
-            "description": "Remote IP",
-            "origin": "tenant"
-        },
-        "who": {
-            "type": "table",
-            "description": "Remote Users",
-            "origin": "tenant"
+            "who/user": {
+                "type": "string",
+                "description": "User",
+                "origin": "tenant"
+            },
+            "who/tty": {
+                "type": "string",
+                "description": "TTY",
+                "origin": "tenant"
+            },
+            "who/remote": {
+                "type": "string",
+                "description": "Remote IP",
+                "origin": "tenant"
+            },
+            "who": {
+                "type": "table",
+                "description": "Remote Users",
+                "origin": "tenant"
+            }
         }
     }
-}
 ```
 
 **NOTES:**
@@ -324,13 +324,13 @@ POST /{TENANT}/meter/{METER}
 **INPUT:**
 
 ```javascript
-{
-    "meter": {
-        "type": "{METERTYPE}",
-        "description": "My Meter",
-        "unit": "fl/mftn"
+    {
+        "meter": {
+            "type": "{METERTYPE}",
+            "description": "My Meter",
+            "unit": "fl/mftn"
+        }
     }
-}
 ```
 
 **OUTPUT:** Irrelevant
@@ -355,48 +355,48 @@ GET /{TENANT}/watcher
 **OUTPUT:**
 
 ```javascript
-{
-    "watcher": {
-        "df/pused": {
-            "type": "frac",
-            "warning": {
-                "cmp": "gt",
-                "val": 90.000000,
-                "weight": 1.000000
+    {
+        "watcher": {
+            "df/pused": {
+                "type": "frac",
+                "warning": {
+                    "cmp": "gt",
+                    "val": 90.000000,
+                    "weight": 1.000000
+                },
+                "alert": {
+                    "cmp": "gt",
+                    "val": 95.000000,
+                    "weight": 1.000000
+                },
+                "critical": {
+                    "cmp": "gt",
+                    "val": 99.000000,
+                    "weight": 1.000000
+                }
             },
-            "alert": {
-                "cmp": "gt",
-                "val": 95.000000,
-                "weight": 1.000000
+            "pcpu": {
+                "type": "frac",
+                "warning": {
+                    "cmp": "gt",
+                    "val": 45.000000,
+                    "weight": 1.000000,
+                    "origin": "tenant"
+                },
+                "alert": {
+                    "cmp": "gt",
+                    "val": 50.000000,
+                    "weight": 1.000000
+                },
+                "critical": {
+                    "cmp": "gt",
+                    "val": 99.000000,
+                    "weight": 1.000000
+                }
             },
-            "critical": {
-                "cmp": "gt",
-                "val": 99.000000,
-                "weight": 1.000000
-            }
-        },
-        "pcpu": {
-            "type": "frac",
-            "warning": {
-                "cmp": "gt",
-                "val": 45.000000,
-                "weight": 1.000000,
-                "origin": "tenant"
-            },
-            "alert": {
-                "cmp": "gt",
-                "val": 50.000000,
-                "weight": 1.000000
-            },
-            "critical": {
-                "cmp": "gt",
-                "val": 99.000000,
-                "weight": 1.000000
-            }
-        },
-...
+    /* ... */
+        }
     }
-}
 ```
 
 **NOTES:**
@@ -409,25 +409,25 @@ POST /{TENANT}/watcher/{METER}
 
 **INPUT:**
 ```javascript
-{
-    "watcher": {
-        "warning":{
-            "cmp": {MATCHFUNCTION},
-            "val": {MATCHVALUE},
-            "weight": 1.0
-        },
-        "alert":{
-            "cmp": {MATCHFUNCTION},
-            "val": {MATCHVALUE},
-            "weight": 1.0
-        },
-        "critical":{
-            "cmp": {MATCHFUNCTION},
-            "val": {MATCHVALUE},
-            "weight": 1.0
+    {
+        "watcher": {
+            "warning":{
+                "cmp": {MATCHFUNCTION},
+                "val": {MATCHVALUE},
+                "weight": 1.0
+            },
+            "alert":{
+                "cmp": {MATCHFUNCTION},
+                "val": {MATCHVALUE},
+                "weight": 1.0
+            },
+            "critical":{
+                "cmp": {MATCHFUNCTION},
+                "val": {MATCHVALUE},
+                "weight": 1.0
+            }
         }
     }
-}
 ```
 
 **NOTES:**
@@ -453,29 +453,29 @@ GET /{TENANT}/host
 
 **OUTPUT:**
 
-```json
-{
-    "host": [
-        {
-            "id": "65d13b37-41d0-4579-9331-ed4ed4c01259",
-            "usage": 1156821,
-            "start": "2014-10-03T17:18:00",
-            "end": "2014-10-05T13:13:00"
-        },
-        {
-            "id": "0d19d114-55c8-4077-9cab-348579c70612",
-            "usage": 1704224,
-            "start": "2014-10-03T17:03:00",
-            "end": "2014-10-05T13:13:00"
-        },
-        {
-            "id": "2b331038-aac4-4d8b-a7cd-5271b603bd1e",
-            "usage": 1663072,
-            "start": "2014-10-03T17:15:00",
-            "end": "2014-10-05T13:13:00"
-        }
-    ]
-}
+```javascript
+    {
+        "host": [
+            {
+                "id": "65d13b37-41d0-4579-9331-ed4ed4c01259",
+                "usage": 1156821,
+                "start": "2014-10-03T17:18:00",
+                "end": "2014-10-05T13:13:00"
+            },
+            {
+                "id": "0d19d114-55c8-4077-9cab-348579c70612",
+                "usage": 1704224,
+                "start": "2014-10-03T17:03:00",
+                "end": "2014-10-05T13:13:00"
+            },
+            {
+                "id": "2b331038-aac4-4d8b-a7cd-5271b603bd1e",
+                "usage": 1663072,
+                "start": "2014-10-03T17:15:00",
+                "end": "2014-10-05T13:13:00"
+            }
+        ]
+    }
 ```
 
 **NOTES:**
@@ -491,25 +491,25 @@ GET /{TENANT}/host/overview
 **OUTPUT:**
 
 ```javascript
-{
-    "overview": {
-        "65d13b37-41d0-4579-9331-ed4ed4c01259": {
-            "status": "WARN",
-            "pcpu": 7.406250,
-            "loadavg": 1.406250,
-            "net/in_kbs": 1,
-            "net/in_pps": 1,
-            ...
+    {
+        "overview": {
+            "65d13b37-41d0-4579-9331-ed4ed4c01259": {
+                "status": "WARN",
+                "pcpu": 7.406250,
+                "loadavg": 1.406250,
+                "net/in_kbs": 1,
+                "net/in_pps": 1,
+                /* ... */
+            }
+            "1caf0cbc-0968-478d-b17d-d3dd63dc8d11": {
+                "status": "OK",
+                "pcpu": 2.15,
+                "loadavg": 0.02188,
+                /* ... */
+            }
+            /* ... */
         }
-        "1caf0cbc-0968-478d-b17d-d3dd63dc8d11": {
-            "status": "OK",
-            "pcpu": 2.15,
-            "loadavg": 0.02188,
-            ...
-        }
-        ...
     }
-}
 ```
 
 GET /{TENANT}/host/{HOST}
@@ -520,24 +520,24 @@ GET /{TENANT}/host/{HOST}
 **OUTPUT:**
 
 ```javascript
-{
-    "status": "WARN",
-    "problems": [
-        "proc/stuck",
-        "df/pused"
-    ],
-    "badness": 45.438000,
-    "agent": {
-        "ip": "::ffff:92.108.228.195"
-    },
-    "hostname": "giskard.local",
-    "os": {
-        "kernel": "Darwin",
-        "version": "14.0.0",
-        "arch": "x86_64"
-    },
-...
-}
+    {
+        "status": "WARN",
+        "problems": [
+            "proc/stuck",
+            "df/pused"
+        ],
+        "badness": 45.438000,
+        "agent": {
+            "ip": "::ffff:92.108.228.195"
+        },
+        "hostname": "giskard.local",
+        "os": {
+            "kernel": "Darwin",
+            "version": "14.0.0",
+            "arch": "x86_64"
+        },
+    /* ... */
+    }
 ```
 
 **NOTES:**
@@ -563,14 +563,14 @@ POST /{TENANT}/host/{HOST}/watcher/{METER}
 **INPUT:** 
 
 ```javascript```
-{
-    "watcher": {
-        "warning": {
-            "value": {MATCHVALUE},
-            "weight": 1.0
+    {
+        "watcher": {
+            "warning": {
+                "value": {MATCHVALUE},
+                "weight": 1.0
+            }
         }
     }
-}
 ```
 
 **NOTES:**
