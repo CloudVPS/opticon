@@ -191,6 +191,9 @@ int load_cached_token (void) {
                     /* refresh the file */
                     write_cached_token (token);
                 }
+                else {
+                    OPTIONS.keystone_token = NULL;
+                }
             }
             else {
                 OPTIONS.keystone_token = strdup (token);
