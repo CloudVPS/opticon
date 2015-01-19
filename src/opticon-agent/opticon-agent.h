@@ -16,7 +16,8 @@
 typedef enum probetype_e {
     PROBE_NONE, /**< Uninitialized */
     PROBE_BUILTIN, /**< One of the compiled-in probes */
-    PROBE_EXEC /**< An external process */
+    PROBE_EXEC, /**< An external process */
+    PROBE_NAGIOS /**< A nagios plugin script */
 } probetype;
 
 struct probe_s; /**< Forward declaration */
@@ -29,6 +30,7 @@ typedef struct probe_s {
     conditional      pulse; /**< Trigger to ask probe to run once */
     probetype        type; /**< The type */
     const char      *call; /**< String representation of probe call */
+    const char      *id; /**< The probe name/id string */
     probefunc_f      func; /**< Function that performs one probe */
     struct probe_s  *prev; /**< Link neighbour */
     struct probe_s  *next; /**< Link neighbour */
@@ -88,7 +90,8 @@ extern appcontext APP; /**< The keep-it-all-together blob */
 /* ============================= FUNCTIONS ============================= */
 
 probe           *probe_alloc (void);
-int              probelist_add (probelist *, probetype, const char *, int);
+int              probelist_add (probelist *, probetype, const char *,
+                                const char *, int);
 void             probelist_start (probelist *);
 void             probelist_cancel (probelist *);
 authresender    *authresender_create (outtransport *);

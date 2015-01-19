@@ -103,7 +103,10 @@ int daemon_main (int argc, const char *argv[]) {
         }
         
         int collected = 0;
+        int ncollected = 0; /* true if nagios statuses were collected */
         host *h = host_alloc();
+        var *vnagios_r = var_alloc();
+        var *vnagios = var_get_dict_forkey (vnagios_r, "chk");
         
         /* If we're in a slow round, we already know we're scheduled. Otherwise,
            see if the next scheduled moment for sending a (fast lane) packet
@@ -115,7 +118,7 @@ int daemon_main (int argc, const char *argv[]) {
             if (! slowround) while (nextsend <= tnow) nextsend += 60;
             log_debug ("Collecting probes");
         
-            /* Go over the probes again, picking up the one relevant to the
+            /* Go over the probes again, picking up the ones relevant to the
                current round being performed */
             p = APP.probes.first;
             while (p) {
@@ -127,9 +130,33 @@ int daemon_main (int argc, const char *argv[]) {
                         ((!slowround) && p->interval<61)) {
                         log_debug ("Collecting <%s>", p->call);
                         
-                        host_import (h, (var *) v);
+                        if (p->type == PROBE_NAGIOS) {
+                            /* Check for alert/warning state and
+                             * summarize before adding to host struct */
+                             int pstatus = var_get_int_forkey ((var*)v, "status");
+                             if (pstatus) {
+                                 var *arr;
+                                 switch (pstatus) {
+                                    case 1:
+                                        arr = var_get_array_forkey (vnagios,
+                                                                    "warn");
+                                        break;
+                                    
+                                    default:
+                                        arr = var_get_array_forkey (vnagios,
+                                                                    "alert");
+                                        break;
+                                }
+                                collected++;
+                                ncollected++;
+                            }
+                             
+                        }
+                        else {
+                            host_import (h, (var *) v);
+                            collected++;
+                        }
                         p->lastdispatch = tnow;
-                        collected++;
                     }
                 }
                 else {
@@ -140,6 +167,11 @@ int daemon_main (int argc, const char *argv[]) {
                 }
                 p = p->next;
             }
+        }
+        
+        if (ncollected) {
+            /* Add the chk tree with nagios self-checks to the data */
+            host_import (h, vnagios);
         }
         
         /* If any data was collected, encode it */
@@ -261,7 +293,8 @@ int conf_probe (const char *id, var *v, updatetype tp) {
     
     if (vtp && call && interval) {
         if (strcmp (vtp, "exec") == 0) t = PROBE_EXEC;
-        if (probelist_add (&APP.probes, t, call, interval)) {
+        else if (strcmp (vtp, "nagios") == 0) t = PROBE_NAGIOS;
+        if (probelist_add (&APP.probes, t, call, id, interval)) {
             return 1;
         }
         else {

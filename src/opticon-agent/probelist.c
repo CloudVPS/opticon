@@ -9,6 +9,7 @@ probe *probe_alloc (void) {
     conditional_init (&res->pulse);
     res->type = PROBE_NONE;
     res->call = NULL;
+    res->id = NULL;
     res->prev = res->next = NULL;
     res->vcurrent = res->vold = NULL;
     res->lastpulse = 0;
@@ -32,13 +33,24 @@ var *runprobe_exec (probe *self) {
             break;
         }
     }
-    pclose (proc);
+    int pret = pclose (proc);
+    int status = WEXITSTATUS (pret);
     var *res = var_alloc();
-    if (! var_parse_json (res, buffer)) {
-        log_error ("Error parsing output from <%s>: %s", self->call,
-                    parse_error());
-        var_free (res);
-        return NULL;
+    
+    /* nagios probes don't return json, and have an exit code */
+    if (self->type == PROBE_NAGIOS) {
+        char *c = strchr (buffer, '\n');
+        *c = 0;
+        log_info ("Check result: %i %s", status, buffer);
+        var_set_int_forkey (res, "status", status);
+    }
+    else {
+        if (! var_parse_json (res, buffer)) {
+            log_error ("Error parsing output from <%s>: %s", self->call,
+                        parse_error());
+            var_free (res);
+            return NULL;
+        }
     }
     return res;
 }
@@ -81,7 +93,8 @@ probefunc_f probe_find_builtin (const char *id) {
 }
 
 /** Add a probe to a list */
-int probelist_add (probelist *self, probetype t, const char *call, int iv) {
+int probelist_add (probelist *self, probetype t, const char *call, 
+                   const char *id, int iv) {
     probefunc_f func;
     if (t == PROBE_BUILTIN) func = probe_find_builtin (call);
     else func = runprobe_exec;
@@ -90,6 +103,7 @@ int probelist_add (probelist *self, probetype t, const char *call, int iv) {
     probe *p = probe_alloc();
     p->type = t;
     p->call = strdup (call);
+    p->id = strdup (id);
     p->func = func;
     p->interval = iv;
     
