@@ -105,8 +105,7 @@ int daemon_main (int argc, const char *argv[]) {
         int collected = 0;
         int ncollected = 0; /* true if nagios statuses were collected */
         host *h = host_alloc();
-        var *vnagios_r = var_alloc();
-        var *vnagios = var_get_dict_forkey (vnagios_r, "chk");
+        var *vnagios = var_alloc();
         
         /* If we're in a slow round, we already know we're scheduled. Otherwise,
            see if the next scheduled moment for sending a (fast lane) packet
@@ -139,12 +138,12 @@ int daemon_main (int argc, const char *argv[]) {
                                  switch (pstatus) {
                                     case 1:
                                         arr = var_get_array_forkey (vnagios,
-                                                                    "warn");
+                                                                    "chkwarn");
                                         break;
                                     
                                     default:
                                         arr = var_get_array_forkey (vnagios,
-                                                                    "alert");
+                                                                    "chkalert");
                                         break;
                                 }
                                 var_add_str (arr, p->id);
@@ -172,7 +171,7 @@ int daemon_main (int argc, const char *argv[]) {
         
         if (ncollected) {
             /* Add the chk tree with nagios self-checks to the data */
-            host_import (h, vnagios_r);
+            host_import (h, vnagios);
         }
         
         /* If any data was collected, encode it */
