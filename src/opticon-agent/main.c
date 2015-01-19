@@ -172,7 +172,7 @@ int daemon_main (int argc, const char *argv[]) {
         
         if (ncollected) {
             /* Add the chk tree with nagios self-checks to the data */
-            host_import (h, vnagios);
+            host_import (h, vnagios_r);
         }
         
         /* If any data was collected, encode it */
