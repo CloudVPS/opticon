@@ -147,6 +147,7 @@ int daemon_main (int argc, const char *argv[]) {
                                                                     "alert");
                                         break;
                                 }
+                                var_add_str (arr, p->id);
                                 collected++;
                                 ncollected++;
                             }
