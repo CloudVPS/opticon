@@ -270,6 +270,20 @@ int main (int argc, const char *argv[]) {
     M = host_get_meter (H, M_NET_IN_PPS);
     M = meter_next_sibling (M);
     assert (M != NULL);
+    
+    time_t future = time (NULL) + 3600;
+    
+    /* test meter expiry */
+    host_begin_update (H, future);
+    M = host_set_meter_str (H, M_NET_NAME, 2, D_NET_NAME);
+    M = host_set_meter_uint (H, M_NET_IN_KBS, 2, D_NET_IN_KBS);
+    M = host_set_meter_uint (H, M_NET_IN_PPS, 2, D_NET_IN_PPS);
+    M = host_set_meter_uint (H, M_NET_OUT_KBS, 2, D_NET_OUT_KBS);
+    M = host_set_meter_uint (H, M_NET_OUT_PPS, 2, D_NET_OUT_PPS);
+	host_end_update (H);
+	M = host_get_meter (H, M_LOADAVG);
+	assert (M->lastmodified == 0);    
+    
     host_delete (H);
     host_delete (HH);
     tenant_delete (T);

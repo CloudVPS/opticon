@@ -190,19 +190,30 @@ meter *host_find_prefix (host *h, meterid_t prefix, meter *prev) {
 /** Remove a meter from a host list and deallocate it */
 void host_delete_meter (host *h, meter *m) {
     if (m->prev) {
-        m->prev->next = m->next;
+        if (m->next) {
+            m->prev->next = m->next;
+            m->next->prev = m->prev;
+        }
+        else {
+            m->prev->next = NULL;
+            h->last = m->prev;
+        }
     }
     else {
-        h->first = m->next;
+        if (m->next) {
+            m->next->prev = NULL;
+            h->first = m->next;
+        }
+        else {
+            h->first = NULL;
+            h->last = NULL;
+        }
     }
-    if (m->next) {
-        m->next->prev = m->prev;
-    }
-    else {
-        h->last = m->prev;
-    }
+
     h->mcount--;
     meter_set_empty (m);
+    m->lastmodified = 0;
+    m->prev = m->next = NULL;
     free (m);
 }
 
@@ -222,7 +233,7 @@ void host_end_update (host *h) {
     while (m) {
         nm = m->next;
         if (m->lastmodified < last) {
-            if ((m->lastmodified - last) > default_meter_timeout) {
+            if ((last - m->lastmodified) > default_meter_timeout) {
                 host_delete_meter (h, m);
             }
         }
