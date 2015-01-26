@@ -393,6 +393,127 @@ fi
 saypass "$LIBMICROHTTPD"
 
 # ---------------------------------------------------------------------------
+# Check for libpthread functionality
+# ---------------------------------------------------------------------------
+
+cat >conftest.c <<EOF
+#include <pthread.h>
+#include <stdio.h>
+
+int main (int argc, char *argv[])
+{
+	pthread_attr_t attr;
+	pthread_mutexattr_t mattr;
+	pthread_t thr;
+	
+	pthread_attr_init (&attr);
+	pthread_mutexattr_init (&mattr);
+	
+	pthread_create (&thr, NULL, NULL, NULL);
+	return 1;
+}
+EOF
+
+saypending "checking for pthread support"
+if $COMPILER $COMPILERFLAGS -o conftest conftest.c >>configure.log 2>&1; then
+  LIBPTHREAD=""
+  saypass "yes"
+else
+  if $COMPILER $COMPILERFLAGS -o conftest conftest.c -lpthread >>configure.log 2>&1; then
+    LIBPTHREAD="-lpthread"
+	saypass "-lpthread"
+  elif $COMPILER $COMPILERFLAGS -o conftest conftest.c -lc_r >>configure.log 2>&1; then
+    LIBPTHREAD="-lc_r"
+    saypass "-lc_r"
+  else
+    sayfail "no - This application needs a working pthreads implementation."
+  fi
+fi
+
+saypending "checking for ctime_r"
+cat > conftest.c << EOF
+#include <time.h>
+int main (int argc, char *argv[])
+{
+	char buf[256];
+	char *result;
+	time_t ti;
+	result = ctime_r (&ti, buf);
+	return 0;
+}
+EOF
+if $COMPILER $COMPILERFLAGS -o conftest.o -c conftest.c >>configure.log 2>&1; then
+  saypass "time.h"
+else
+  cat > conftest.c << EOF
+#define _POSIX_C_SOURCE 199506L
+#define _POSIX_PTHREAD_SEMANTICS 1
+#define _XOPEN_SOURCE 1
+#define __EXTENSIONS__ 1
+#include <pthread.h>
+#include <time.h>
+int main (int argc, char *argv[])
+{
+	char buf[256];
+	char *result;
+	time_t ti;
+	result = ctime_r (&ti, buf);
+	return 0;
+}
+EOF
+  if $COMPILER $COMPILERFLAGS -o conftest.o -c conftest.c >>configure.log 2>&1; then
+    saypass "time.h with solaris twist"
+    CTIME_R_INCLUDE="#include <pthread.h>"
+    CTIME_R_PTHREAD_DEFINE="#define _POSIX_PTHREAD_SEMANTICS 1"
+    CTIME_R_XOPEN_DEFINE="#define _XOPEN_SOURCE 1"
+    CTIME_R_XPG_DEFINE="#define __EXTENSIONS__ 1"
+    CTIME_R_DEFINE="#define _POSIX_C_SOURCE 199506L"
+  else
+    sayfail "screwed"
+  fi
+fi
+
+saypending "checking for pthread_rwlock_t"
+cat > conftest.c << EOF
+#include <pthread.h>
+int main (int argc, char *argv[])
+{
+	pthread_rwlock_t *rwlock;
+	pthread_rwlock_trywrlock (rwlock);
+	return 0;
+}
+EOF
+if $COMPILER $COMPILERFLAGS -o conftest.o -c conftest.c >>configure.log 2>&1; then
+  saypass "yes"
+  PTHREAD_HAVE_RWLOCK="#define PTHREAD_HAVE_RWLOCK 1"
+  saypending "checking for pthread_rwlock_timedwrlock"
+  cat > conftest.c << EOF
+#include <pthread.h>
+#include <time.h>
+int main (int argc, char *argv[])
+{
+	pthread_rwlock_t *rwlock;
+	struct timespec ts;
+	pthread_rwlock_timedwrlock (rwlock, &ts);
+	return 0;
+}
+EOF
+  if $COMPILER $COMPILERFLAGS -o conftest.o -c conftest.c >> configure.log 2>&1; then
+    saypass "yes"
+    PTHREAD_HAVE_TIMEDLOCK="#define PTHREAD_HAVE_TIMEDLOCK 1"
+  else
+    saypass "no"
+    PTHREAD_HAVE_TIMEDLOCK=""
+  fi
+else
+  saypass "no"
+  PTHREAD_HAVE_RWLOCK=""
+  PTHREAD_HAVE_TIMEDLOCK=""
+fi
+
+
+rm -f conftest conftest.o conftest.c
+# ---------------------------------------------------------------------------
 # Create the makeinclude file
 # ---------------------------------------------------------------------------
 
@@ -414,7 +535,8 @@ LDFLAGS = $LDFLAGS
 LDSHARED = $LDSHARED
 LIBCURL = $LIBCURL
 LIBMICROHTTPD = $LIBMICROHTTPD
-LIBS = $LIBCURL $LIBMICROHTTPD
+LIBS = $LIBCURL $LIBMICROHTTPD $LIBPTHREAD
+LPTHREAD = $LIBPTHREAD
 SHARED = $SHARED
 EOF
 
@@ -428,6 +550,14 @@ saypending "creating platform.h"
 cat >platform.h <<EOF
 #ifndef _PLATFORM_H
 #define _PLATFORM_H
+$CTIME_R_DEFINE
+$CTIME_R_PTHREAD_DEFINE
+$CTIME_R_XOPEN_DEFINE
+$CTIME_R_XPG_DEFINE
+$CTIME_R_INCLUDE
+$PTHREAD_HAVE_RWLOCK
+$PTHREAD_HAVE_TIMEDLOCK
+
 #endif
 EOF
 
