@@ -32,7 +32,7 @@ all: ../../bin/opticon
 
 ../../bin/opticon: $(OBJS_OPTICONCLI) $(LIBS)
 	@echo "[LINK ] opticon-cli"
-	@$(CC) $(LDFLAGS) -o ../../bin/opticon $(OBJS_OPTICONCLI) $(LIBS) $(LIBCURL) -lz
+	@$(CC) $(LDFLAGS) -o ../../bin/opticon $(OBJS_OPTICONCLI) $(LIBS) $(LIBCURL) -lm -lz
 
 clean:
 	rm -f *.o ../../bin/opticon

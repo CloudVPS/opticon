@@ -30,7 +30,7 @@ all: ../../bin/opticon-api
 ../../bin/opticon-api: $(OBJS_OPTICONAPI) $(LIBS)
 	@echo "[LINK ] opticon-api"
 	@$(CC) $(LDFLAGS) -o ../../bin/opticon-api $(OBJS_OPTICONAPI) $(LIBS) \
-		   $(LIBMICROHTTPD) $(LIBCURL) -lz 
+		   $(LIBMICROHTTPD) $(LIBCURL) $(LPTHREAD) -lm -lz 
 
 clean:
 	rm -f *.o ../../bin/opticon-api

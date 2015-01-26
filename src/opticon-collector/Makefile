@@ -32,7 +32,7 @@ all: ../../bin/opticon-collector
 ../../bin/opticon-collector: $(OBJS_OPTICONCOLLECTOR) $(LIBS)
 	@echo "[LINK ] opticon-collector"
 	@$(CC) $(LDFLAGS) -o ../../bin/opticon-collector \
-		$(OBJS_OPTICONCOLLECTOR) $(LIBS) -lz
+		$(OBJS_OPTICONCOLLECTOR) $(LIBS) $(LPTHREAD) -lm -lz
 
 clean:
 	rm -f *.o ../../bin/opticon-collector
