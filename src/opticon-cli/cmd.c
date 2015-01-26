@@ -7,6 +7,9 @@
 #include <stdarg.h>
 #include <ctype.h>
 
+#define __STDC_FORMAT_MACROS
+#include <inttypes.h>
+
 #include <libopticon/datatypes.h>
 #include <libopticon/aes.h>
 #include <libopticon/codec_json.h>
@@ -36,7 +39,7 @@ int cmd_tenant_list (int argc, const char *argv[]) {
         if (var_get_count (res_tenant)) {
             var *crsr = res_tenant->value.arr.first;
             while (crsr) {
-                printf ("%s %5llu  %s\n",
+                printf ("%s %5" PRIu64 "  %s\n",
                         var_get_str_forkey (crsr, "id"),
                         var_get_int_forkey (crsr, "hostcount"),
                         var_get_str_forkey (crsr, "name"));
@@ -131,7 +134,7 @@ int cmd_host_overview (int argc, const char *argv[]) {
         netio += var_get_int_forkey (crsr, "net/out_kbs");
         double cpu = var_get_double_forkey (crsr, "pcpu");
         int rcpu = (cpu+5.0) / 10;
-        printf ("%-31s %-8s %6.2f %8llu %6.2f %% -[",
+        printf ("%-31s %-8s %6.2f %8" PRIu64 " %6.2f %% -[",
                 shortname, hstat, load, netio, cpu);
         for (int i=0; i<10; i++) {
             if (i< rcpu) printf ("#");
@@ -333,7 +336,7 @@ void print_data (const char *meterid, const char *trig, var *v) {
     
     switch (val->type) {
         case VAR_INT:
-            sprintf (valst, "%llu", var_get_int (val));
+            sprintf (valst, "%" PRIu64, var_get_int (val));
             break;
         
         case VAR_DOUBLE:
@@ -515,7 +518,7 @@ int cmd_host_list (int argc, const char *argv[]) {
             start[10] = ' ';
             end[10] = ' ';
 
-            printf ("%s %4llu %s %s  %s\n",
+            printf ("%s %4" PRIu64 " %s %s  %s\n",
                     var_get_str_forkey (crsr, "id"),
                     usage, unit, start, end);
             crsr = crsr->next;
@@ -578,14 +581,14 @@ int cmd_get_record (int argc, const char *argv[]) {
     uint64_t u_sec = uptime % 60;
     
     if (u_days) {
-        sprintf (uptimestr, "%llu day%s, %llu:%02llu:%02llu", u_days,
+        sprintf (uptimestr, "%" PRIu64 " day%s, %" PRIu64 ":%02" PRIu64 ":%02" PRIu64 "", u_days,
                  (u_days==1)?"":"s", u_hours, u_mins, u_sec);
     }
     else if (u_hours) {
-        sprintf (uptimestr, "%llu:%02llu:%02llu", u_hours, u_mins, u_sec);
+        sprintf (uptimestr, "%" PRIu64 ":%02" PRIu64 ":%02" PRIu64, u_hours, u_mins, u_sec);
     }
     else {
-        sprintf (uptimestr, "%llu minute%s, %llu second%s",
+        sprintf (uptimestr, "%" PRIu64 " minute%s, %" PRIu64 " second%s",
                  u_mins, (u_mins==1)?"":"s", u_sec, (u_sec==1)?"":"s");
     }
     
@@ -598,9 +601,9 @@ int cmd_get_record (int argc, const char *argv[]) {
     
     /* -------------------------------------------------------------*/
     print_hdr ("RESOURCES");
-    print_value ("Processes","\033[1m%llu\033[0m "
-                             "(\033[1m%llu\033[0m running, "
-                             "\033[1m%llu\033[0m stuck)",
+    print_value ("Processes","\033[1m%" PRIu64 "\033[0m "
+                             "(\033[1m%" PRIu64 "\033[0m running, "
+                             "\033[1m%" PRIu64 "\033[0m stuck)",
                              VDint("proc","total"),
                              VDint("proc","run"),
                              VDint("proc","stuck"));
