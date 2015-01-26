@@ -38,7 +38,7 @@ all: ../../lib/libopticon.a
 
 ../../lib/libopticon.a: $(OBJS_LIBOPTICON)
 	@echo "[LINK ] libopticon.a"
-	@ar cr ../../lib/libopticon.a $(OBJS_LIBOPTICON)
+	@ar cr ../../lib/libopticon.a $(OBJS_LIBOPTICON) $(LPTHREAD)
 
 clean:
 	rm -f *.o ../../lib/libopticon.a
