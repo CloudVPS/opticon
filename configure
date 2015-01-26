@@ -514,6 +514,31 @@ fi
 
 rm -f conftest conftest.o conftest.c
 # ---------------------------------------------------------------------------
+# Figure out whether we need libm
+# ---------------------------------------------------------------------------
+
+cat >conftest.c <<EOF
+#include <math.h>
+
+int main (int argc, char *argv[])
+{
+	double test = sqrt (3.141592653589793236);
+    return 1;
+}
+EOF
+
+saypending "checking whether sqrt needs -lm"
+if $COMPILER $COMPILERFLAGS -o conftest conftest.c >>configure.log 2>&1; then
+  LIBM=""
+  saypass "no"
+else
+  LIBM="-lm"
+  saypass "yes"
+fi
+
+rm -f conftest.c conftest
+
+# ---------------------------------------------------------------------------
 # Create the makeinclude file
 # ---------------------------------------------------------------------------
 
@@ -535,7 +560,7 @@ LDFLAGS = $LDFLAGS
 LDSHARED = $LDSHARED
 LIBCURL = $LIBCURL
 LIBMICROHTTPD = $LIBMICROHTTPD
-LIBS = $LIBCURL $LIBMICROHTTPD $LIBPTHREAD
+LIBS = $LIBCURL $LIBMICROHTTPD $LIBPTHREAD $LIBM
 LPTHREAD = $LIBPTHREAD
 SHARED = $SHARED
 EOF

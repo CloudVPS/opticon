@@ -2,3 +2,4 @@ cc
 libcurl
 libmicrohttpd
 pthread
+libm
