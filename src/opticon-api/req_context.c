@@ -286,7 +286,8 @@ void req_matchlist_dispatch (req_matchlist *self, const char *url,
         crsr = crsr->next;
     }
 
-    /* No matches, bail out */    
+    /* No matches, bail out */
+    log_error ("No matches");
     err_server_error (ctx, targ, ctx->response, &ctx->status);
     req_write_response (conn, ctx->response, ctx->status, out, 0);
     req_arg_free (targ);
