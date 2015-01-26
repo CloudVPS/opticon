@@ -268,6 +268,10 @@ int conf_tenant (const char *id, var *v, updatetype tp) {
 int conf_host (const char *id, var *v, updatetype tp) {
     if (tp == UPDATE_REMOVE) exit (0);
     APP.hostid = mkuuid (var_get_str (v));
+    if (! uuidvalid (APP.hostid)) {
+        log_error ("Invalid host uuid: %s", var_get_str (v));
+        return 0;
+    }
     return 1;
 }
 

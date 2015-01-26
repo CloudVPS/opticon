@@ -6,6 +6,7 @@
 #include <libopticon/var_parse.h>
 #include <libopticon/ioport_buffer.h>
 #include <libopticon/var_dump.h>
+#include <libopticon/log.h>
 #include "req_context.h"
 
 /** Allocate a request argument list */
