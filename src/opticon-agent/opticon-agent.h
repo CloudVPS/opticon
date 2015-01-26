@@ -10,6 +10,8 @@
 #include <libopticon/thread.h>
 #include <libopticon/packetqueue.h>
 
+#include <pthread.h>
+
 /* =============================== TYPES =============================== */
 
 /** Types of metering probes */
@@ -36,7 +38,8 @@ typedef struct probe_s {
     struct probe_s  *next; /**< Link neighbour */
     volatile var    *vcurrent; /**< Current value */
     volatile var    *vold; /**< Previous value */
-    time_t           lastpulse; /**< Last rigger time */
+    pthread_mutex_t  vlock; /**< Lock on the value */
+    time_t           lastpulse; /**< Last trigger time */
     volatile time_t  lastreply; /**< Last update time */
     time_t           lastdispatch; /**< Last time it was dispatched */
     int              interval; /**< Configured time interval */

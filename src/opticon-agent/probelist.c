@@ -7,6 +7,7 @@
 probe *probe_alloc (void) {
     probe *res = (probe *) malloc (sizeof (probe));
     conditional_init (&res->pulse);
+    pthread_mutex_init (&res->vlock, NULL);
     res->type = PROBE_NONE;
     res->call = NULL;
     res->id = NULL;
@@ -66,11 +67,13 @@ void probe_run (thread *t) {
     while (1) {
         var *nvar = self->func (self);
         if (nvar) {
+            pthread_mutex_lock (&self->vlock);
             if (self->vold) {
                 var_free ((var *) self->vold);
                 self->vold = NULL;
             }
             self->vold = self->vcurrent;
+            pthread_mutex_unlock (&self->vlock);
             self->vcurrent = nvar;
             self->lastreply = time (NULL);
         }

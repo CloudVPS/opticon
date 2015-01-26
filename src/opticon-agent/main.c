@@ -121,6 +121,7 @@ int daemon_main (int argc, const char *argv[]) {
                current round being performed */
             p = APP.probes.first;
             while (p) {
+                pthread_mutex_lock (&p->vlock);
                 volatile var *v = p->vcurrent;
                 /* See if data for this probe has been collected since the last kick */
                 if (v && (p->lastdispatch <= p->lastreply)) {
@@ -165,6 +166,7 @@ int daemon_main (int argc, const char *argv[]) {
                                   p->call, tnow - p->lastreply);
                     }
                 }
+                pthread_mutex_unlock (&p->vlock);
                 p = p->next;
             }
         }
