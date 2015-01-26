@@ -33,7 +33,7 @@ all: ../../bin/opticon-agent
 ../../bin/opticon-agent: $(OBJS_OPTICONAGENT) $(LIBS)
 	@echo "[LINK ] opticon-agent"
 	@$(CC) $(LDFLAGS) -o ../../bin/opticon-agent \
-		$(OBJS_OPTICONAGENT) $(LIBS) $(LPTHREAD) -lz
+		$(OBJS_OPTICONAGENT) $(LIBS) $(LPTHREAD) -lm -lz
 
 clean:
 	rm -f *.o ../../bin/opticon-agent
