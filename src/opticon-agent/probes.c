@@ -1,5 +1,6 @@
 #include <sys/utsname.h>
 #include <unistd.h>
+#include <libopticon/log.h>
 #include <libopticon/var.h>
 #include "probes.h"
 #include "wordlist.h"
@@ -34,13 +35,26 @@ var *runprobe_who (probe *self) {
     char *c;
     wordlist *args;
     FILE *f = popen ("/usr/bin/who","r");
+    int fd = fileno (f);
+    fd_set fds;
+    struct timeval tv;
+    
     if (! f) return res;
     while (! feof (f)) {
         *buf = 0;
-        fgets (buf, 1023, f);
-        buf[1023] = 0;
-        if (*buf == 0) continue;
-        if (! strchr (buf, '(')) continue;
+        tv.tv_sec = 30; tv.tv_usec = 0;
+        FD_ZERO (&fds);
+        FD_SET (fd, &fds);
+        if (select (fd+1, &fds, NULL, NULL, &tv) > 0) {
+            fgets (buf, 1023, f);
+            buf[1023] = 0;
+            if (*buf == 0) continue;
+            if (! strchr (buf, '(')) continue;
+        }
+        else {
+            log_error ("probe_who timeout");
+            break;
+        }
         
         args = wordlist_make (buf);
         if (args->argc > 4) {

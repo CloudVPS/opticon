@@ -2,6 +2,7 @@
 #include <libopticon/log.h>
 #include "opticon-agent.h"
 #include "probes.h"
+#include <sys/select.h>
 
 /** Allocate and initialize a probe object in memory */
 probe *probe_alloc (void) {
@@ -26,11 +27,25 @@ var *runprobe_exec (probe *self) {
     char buffer[4096];
     buffer[0] = 0;
     FILE *proc = popen (self->call, "r");
+    int procfd = fileno (proc);
+    fd_set fds;
+    struct timeval tv;
+    
     if (! proc) return NULL;
     while (!feof (proc)) {
-        size_t res = fread (buffer, 1, 4096, proc);
-        if (res && res < 4096) {
-            buffer[res] = 0;
+        tv.tv_sec = 30;
+        tv.tv_usec = 0;
+        FD_ZERO (&fds);
+        FD_SET (procfd, &fds);
+        if (select (procfd+1, &fds, NULL, NULL, &tv) > 0) {
+            size_t res = fread (buffer, 1, 4096, proc);
+            if (res && res < 4096) {
+                buffer[res] = 0;
+                break;
+            }
+        }
+        else {
+            log_error ("probe_exec timeout on '%s'", self->call);
             break;
         }
     }
