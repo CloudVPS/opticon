@@ -143,7 +143,7 @@ meter *host_find_meter (host *h, meterid_t id) {
   *         linked into the host's meterlist.
   */
 meter *host_get_meter (host *h, meterid_t id) {
-    meterid_t rid = (id & MMASK_NAME);
+    meterid_t rid = (id & (MMASK_TYPE | MMASK_NAME));
     meter *m = h->first;
     meter *nm = NULL;
     if (! m) {
@@ -156,6 +156,9 @@ meter *host_get_meter (host *h, meterid_t id) {
     }
     while (m) {
         if (m->id == rid) return m;
+        if ((m->id & MMASK_NAME) == (rid & MMASK_NAME)) {
+            if (m->count == SZ_EMPTY_ARRAY) return m;
+        }
         if (m->next) m = m->next;
         else {
             nm = meter_alloc();

@@ -62,6 +62,10 @@ int pktcodec_decode_host (ioport *io, host *h) {
                 }
                 continue;
             }
+            else {
+                crsr = host_find_meter_name (h, mid);
+                if (crsr) meter_set_empty_array (crsr);
+            }
         }
         
         /* If the id has a prefix, get rid of a possible node that
