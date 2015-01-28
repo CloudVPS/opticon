@@ -818,7 +818,10 @@ time_t localdb_get_hostmeta_changed (db *d, uuid hostid) {
     uuid2str (hostid, uuidstr);
     char *metapath = (char *) malloc (strlen (self->path) + 64);
     sprintf (metapath, "%s%s.metadata", self->path, uuidstr);
-    if (stat (metapath, &st) != 0) return 0;
+    if (stat (metapath, &st) != 0) {
+        free (metapath);
+        return 0;
+    }
     free (metapath);
     return st.st_mtime;
 }
