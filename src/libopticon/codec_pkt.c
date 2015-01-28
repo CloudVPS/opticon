@@ -64,7 +64,9 @@ int pktcodec_decode_host (ioport *io, host *h) {
             }
             else {
                 crsr = host_find_meter_name (h, mid);
-                if (crsr) meter_set_empty_array (crsr);
+                if (crsr) {
+                    meter_set_empty_array (crsr);
+                
             }
         }
         
@@ -82,7 +84,7 @@ int pktcodec_decode_host (ioport *io, host *h) {
             }
         }
         
-        M = host_find_meter (h, mid);
+        M = host_find_meter_name (h, mid);
         if (! M) {
             if (h->mcount <= default_host_max_meters) {
                 M = host_get_meter (h, mid);
@@ -92,7 +94,10 @@ int pktcodec_decode_host (ioport *io, host *h) {
         uint64_t ival;
         double dval;
 
-        if (M) meter_setcount (M, count);
+        if (M) {
+            meter_setcount (M, count);
+            M->id = (M->id & (MMASK_NAME | MMASK_COUNT)) | (mid & MMASK_TYPE);
+        }
         if (! count) count=1;
         if (count >= SZ_EMPTY_VAL) continue;
         for (uint8_t i=0; i<count; ++i) {
