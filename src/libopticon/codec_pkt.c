@@ -66,7 +66,7 @@ int pktcodec_decode_host (ioport *io, host *h) {
                 crsr = host_find_meter_name (h, mid);
                 if (crsr) {
                     meter_set_empty_array (crsr);
-                
+                }
             }
         }
         
