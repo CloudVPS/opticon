@@ -74,6 +74,7 @@ typedef struct appcontext_s {
     var             *conf;
     int              loglevel;
     const char      *logpath;
+    const char      *dumppath;
     const char      *confpath;
     const char      *pidfile;
     int              foreground;

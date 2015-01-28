@@ -195,18 +195,18 @@ int daemon_main (int argc, const char *argv[]) {
                 continue;
             }
 
-            /*            
-            FILE *pktf = fopen ("packet.json","a");
-            fprintf (pktf, "\n--- %s ---\n\n", slowround?"Slow":"Fast");
-            ioport *dump = ioport_create_filewriter (pktf);
-            log_debug ("dump %llx", dump);
-            codec *jsonc = codec_create_json();
-            log_debug ("jsonc %llx", jsonc);
-            codec_encode_host (jsonc, dump, h);
-            codec_release (jsonc);
-            ioport_close (dump);
-            fclose (pktf);
-            */
+            if (APP.dumppath) {
+                FILE *pktf = fopen (APP.dumppath,"a");
+                fprintf (pktf, "\n--- %s ---\n\n", slowround?"Slow":"Fast");
+                ioport *dump = ioport_create_filewriter (pktf);
+                log_debug ("dump %llx", dump);
+                codec *jsonc = codec_create_json();
+                log_debug ("jsonc %llx", jsonc);
+                codec_encode_host (jsonc, dump, h);
+                codec_release (jsonc);
+                ioport_close (dump);
+                fclose (pktf);
+            }
         
             log_debug ("Encoded %i bytes", ioport_read_available (encoded));
 
@@ -334,6 +334,12 @@ int set_logpath (const char *i, const char *v) {
     return 1;
 }
 
+/** Handle --dump-packets */
+int set_dumppath (const char *i, const char *v) {
+    APP.dumppath = v;
+    return 1;
+}
+
 /** Handle --loglevel */
 int set_loglevel (const char *i, const char *v) {
     if (strcmp (v, "CRIT") == 0) APP.loglevel = LOG_CRIT;
@@ -374,6 +380,13 @@ cliopt CLIOPT[] = {
         OPT_VALUE,
         "INFO",
         set_loglevel
+    },
+    {
+        "--dump-packets",
+        "-D",
+        OPT_VALUE,
+        NULL,
+        set_dumppath
     },
     {
         "--config-path",
