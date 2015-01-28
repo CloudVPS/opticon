@@ -103,9 +103,10 @@ int daemon_main (int argc, const char *argv[]) {
         }
         
         int collected = 0;
-        int ncollected = 0; /* true if nagios statuses were collected */
         host *h = host_alloc();
         var *vnagios = var_alloc();
+        var *vchkwarn = var_get_array_forkey (vnagios, "chkwarn");
+        var *vchkalert = var_get_array_forkey (vnagios, "chkalert");
         
         /* If we're in a slow round, we already know we're scheduled. Otherwise,
            see if the next scheduled moment for sending a (fast lane) packet
@@ -138,18 +139,14 @@ int daemon_main (int argc, const char *argv[]) {
                                  var *arr;
                                  switch (pstatus) {
                                     case 1:
-                                        arr = var_get_array_forkey (vnagios,
-                                                                    "chkwarn");
+                                        var_add_str (vchkwarn, p->id);
                                         break;
                                     
                                     default:
-                                        arr = var_get_array_forkey (vnagios,
-                                                                    "chkalert");
+                                        var_add_str (vchkalert, p->id);
                                         break;
                                 }
-                                var_add_str (arr, p->id);
                                 collected++;
-                                ncollected++;
                             }
                              
                         }
@@ -171,10 +168,8 @@ int daemon_main (int argc, const char *argv[]) {
             }
         }
         
-        if (ncollected) {
-            /* Add the chk tree with nagios self-checks to the data */
-            host_import (h, vnagios);
-        }
+        /* Add the chk tree with nagios self-checks to the data */
+        if (slowround) host_import (h, vnagios);
         
         /* If any data was collected, encode it */
         if (collected) {
