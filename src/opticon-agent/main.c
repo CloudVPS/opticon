@@ -103,6 +103,7 @@ int daemon_main (int argc, const char *argv[]) {
         }
         
         int collected = 0;
+        int ncollected = 0;
         host *h = host_alloc();
         var *vnagios = var_alloc();
         var *vchkwarn = var_get_array_forkey (vnagios, "chkwarn");
@@ -148,7 +149,7 @@ int daemon_main (int argc, const char *argv[]) {
                                 }
                                 collected++;
                             }
-                             
+                            ncollected++;
                         }
                         else {
                             host_import (h, (var *) v);
@@ -169,8 +170,8 @@ int daemon_main (int argc, const char *argv[]) {
         }
         
         /* Add the chk tree with nagios self-checks to the data */
-        if (slowround) host_import (h, vnagios);
-        
+        if (ncollected) host_import (h, vnagios);
+         
         /* If any data was collected, encode it */
         if (collected) {
             log_debug ("Encoding probes");

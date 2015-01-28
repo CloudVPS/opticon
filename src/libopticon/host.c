@@ -143,7 +143,7 @@ meter *host_find_meter (host *h, meterid_t id) {
   *         linked into the host's meterlist.
   */
 meter *host_get_meter (host *h, meterid_t id) {
-    meterid_t rid = (id & (MMASK_TYPE | MMASK_NAME));
+    meterid_t rid = (id & MMASK_NAME);
     meter *m = h->first;
     meter *nm = NULL;
     if (! m) {
