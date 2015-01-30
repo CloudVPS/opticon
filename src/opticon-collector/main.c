@@ -65,7 +65,10 @@ void make_watcher (watchlist *w, meterid_t id, metertype_t mtp,
     if (weight < 0.01) weight = 1.0;
     weight = weight * vweight;
     
-    if (mtp == MTYPE_INT) {
+    if (strcmp (cmp, "count") == 0) {
+        watchlist_add_uint (w, id, WATCH_COUNT, ival, weight, tr);
+    }
+    else if (mtp == MTYPE_INT) {
         if (strcmp (cmp, "lt") == 0) {
             watchlist_add_uint (w, id, WATCH_UINT_LT, ival, weight, tr);
         }

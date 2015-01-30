@@ -12,7 +12,8 @@ typedef enum watchtype_e {
     WATCH_FRAC_GT, /** match on a fractional value being greater than N */
     WATCH_UINT_LT, /** Match on an integer value being less than N */
     WATCH_UINT_GT, /** Match on an integer value being greater than N */
-    WATCH_STR_MATCH /** Match on a specific string value */
+    WATCH_STR_MATCH, /** Match on a specific string value */
+    WATCH_COUNT /** Match a minimum number of array members */
 } watchtype;
 
 /** Data type indicator for a host-bound watch adjustment */

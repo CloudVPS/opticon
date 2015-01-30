@@ -450,7 +450,7 @@ int main (int _argc, const char *_argv[]) {
     }
     
     if (OPTIONS.keystone_url[0] == 0 && OPTIONS.opticon_token[0] == 0) {
-        fprintf (stderr, "%% No keystone endpoint found\n");
+        fprintf (stderr, "%% No keystone endpoint or opticon token found\n");
         return 1;
     }
 

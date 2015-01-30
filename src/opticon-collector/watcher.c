@@ -83,6 +83,8 @@ double calculate_badness (meter *m, meterwatch *w,
     uint64_t intadj;
     const char *stradj;
     fstring tstr;
+    int cnt = (m->count) ? m->count : 1;
+    if (m->count >= SZ_EMPTY_ARRAY) cnt = 0;
     
     for (int i=0; i<((m->count)?m->count:1); ++i) {
         switch (w->tp) {
@@ -141,6 +143,20 @@ double calculate_badness (meter *m, meterwatch *w,
                     if (w->trigger > *maxtrig) *maxtrig = w->trigger;
                 }
                 break;
+            
+            case WATCH_COUNT:
+                intadj = w->dat.u64;
+                if (adj && adj->type == WATCHADJUST_UINT) {
+                    if (adj->adjust[w->trigger].weight > 0.0001) {
+                        intadj = adj->adjust[w->trigger].data.u64;
+                        weight = adj->adjust[w->trigger].weight;
+                    }
+                }
+                if (cnt >= intadj) {
+                    res += w->badness;
+                    if (w->trigger > *maxtrig) *maxtrig = w->trigger;
+                }
+                break; 
             
             case WATCH_STR_MATCH:
                 stradj = w->dat.str.str;
