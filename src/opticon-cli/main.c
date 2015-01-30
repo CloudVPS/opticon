@@ -385,6 +385,7 @@ void usage (const char *cmdname) {
          "        watcher-delete        --tenant <uuid> [--host <uuid>\n"
          "                              --meter <meterid>\n"
          "        host-list             --tenant <uuid>\n"
+         "        host-overview         --tenant <uuid>\n"
          "        host-show             --tenant <uuid> --host <host> [--time <TIMESPEC>]\n"
          "\n"
          "  TYPE:\n"
