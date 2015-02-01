@@ -62,6 +62,26 @@ int cmd_host_get (req_context *ctx, req_arg *a, ioport *outio, int *status) {
     return 1;
 }
 
+/** DELETE /$TENANT/host/$HOST */
+int cmd_host_remove (req_context *ctx, req_arg *a, var *env, int *status) {
+    db *DB = localdb_create (OPTIONS.dbpath);
+    if (! db_open (DB, ctx->tenantid, NULL)) {
+        db_free (DB);
+        return 0;
+    }
+    
+    if (db_remove_host (DB, ctx->hostid)) {
+        var *env_host = var_get_dict_forkey (env, "host");
+        var_set_uuid_forkey (env_host, "deleted", ctx->hostid);
+        db_free (DB);
+        *status = 200;
+        return 1;
+    }
+    
+    *status = 400;
+    return err_generic (env, "Could not delete host");
+}
+
 /** GET /$TENANT/host/$HOST/watcher */
 int cmd_host_list_watchers (req_context *ctx, req_arg *a, 
                             var *env, int *status) {

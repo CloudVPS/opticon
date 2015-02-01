@@ -136,6 +136,15 @@ int db_set_metadata (db *d, var *v) {
     return d->set_metadata (d, v);
 }
 
+/** Remove host for bound tenant.
+  * \param d The bound database handle.
+  * \param u The host uuid.
+  * \return 1 on success, 0 on failure.
+  */
+int db_remove_host (db *d, uuid u) {
+    return d->remove_host (d, u);
+}
+
 /** Retrieve tenant summary information */
 var *db_get_summary (db *d) {
     if (! d->opened) return NULL;
@@ -220,3 +229,4 @@ int db_create_tenant (db *d, uuid u, var *meta) {
 int db_remove_tenant (db *d, uuid u) {
     return d->remove_tenant (d, u);
 }
+

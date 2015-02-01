@@ -29,6 +29,7 @@ typedef int (*get_usage_f)(struct db_s *, usage_info *, uuid);
 typedef uuid *(*list_hosts_f)(struct db_s *, int *);
 typedef var *(*get_metadata_f)(struct db_s *);
 typedef int (*set_metadata_f)(struct db_s *, var *);
+typedef int (*remove_host_f)(struct db_s *, uuid);
 typedef void (*close_db_f)(struct db_s *);
 typedef uuid *(*list_tenants_f)(struct db_s *, int *);
 typedef int (*create_tenant_f)(struct db_s *, uuid, var *);
@@ -55,6 +56,7 @@ typedef struct db_s {
     set_metadata_f   set_summary; /** method */
     get_metadata_f   get_overview; /** method */
     set_metadata_f   set_overview; /** method */
+    remove_host_f    remove_host; /** method */
     close_db_f       close; /** Method */
     list_tenants_f   list_tenants; /** Unbound method */
     create_tenant_f  create_tenant; /** Unbound method */
@@ -88,6 +90,7 @@ var         *db_get_summary (db *d);
 int          db_set_summary (db *d, var *v);
 var         *db_get_overview (db *d);
 int          db_set_overview (db *d, var *v);
+int          db_remove_host (db *d, uuid hostid);
 void         db_close (db *d);
 void         db_free (db *d);
 uuid        *db_list_tenants (db *d, int *outsz);

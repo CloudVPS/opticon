@@ -638,6 +638,21 @@ int localdb_remove_tenant (db *d, uuid tenantid) {
     return 1;
 }
 
+/** Implementation for db_remove_host() */
+int localdb_remove_host (db *d, uuid hostid) {
+    localdb *self = (localdb *) d;
+    char uuidstr[40];
+    char *tmpstr = (char *) malloc (strlen (self->path) + 128);
+    strcpy (tmpstr, self->path);
+    uuid2str (hostid, uuidstr);
+    strcat (tmpstr, uuidstr);
+    if (! localdb_remove_dir (tmpstr)) return 0;
+    strcat (tmpstr, ".metadata");
+    if (unlink (tmpstr) != 0) return 0;
+    free (tmpstr);
+    return 1;
+}
+
 /** Implementation for db_list_hosts() */
 uuid *localdb_list_hosts (db *d, int *outsz) {
     localdb *self = (localdb *) d;
@@ -818,10 +833,7 @@ time_t localdb_get_hostmeta_changed (db *d, uuid hostid) {
     uuid2str (hostid, uuidstr);
     char *metapath = (char *) malloc (strlen (self->path) + 64);
     sprintf (metapath, "%s%s.metadata", self->path, uuidstr);
-    if (stat (metapath, &st) != 0) {
-        free (metapath);
-        return 0;
-    }
+    if (stat (metapath, &st) != 0) return 0;
     free (metapath);
     return st.st_mtime;
 }
@@ -950,6 +962,7 @@ db *localdb_create (const char *prefix) {
     self->db.set_summary = localdb_set_summary;
     self->db.get_overview = localdb_get_overview;
     self->db.set_overview = localdb_set_overview;
+    self->db.remove_host = localdb_remove_host;
     self->db.close = localdb_close;
     self->db.list_tenants = localdb_list_tenants;
     self->db.create_tenant = localdb_create_tenant;

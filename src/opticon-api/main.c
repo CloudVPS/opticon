@@ -273,6 +273,7 @@ void setup_matches (void) {
     _P_ ("/%U/host/overview",         REQ_GET,    cmd_host_overview);
     _P_ ("/%U/host/%U*",              REQ_ANY,    flt_check_host);
     _T_ ("/%U/host/%U",               REQ_GET,    cmd_host_get);
+    _P_ ("/%U/host/%U",               REQ_DELETE, cmd_host_remove);
     _P_ ("/%U/host/%U",               REQ_ANY,    err_method_not_allowed);
     _P_ ("/%U/host/%U/watcher",       REQ_GET,    cmd_host_list_watchers);
     _P_ ("/%U/host/%U/watcher",       REQ_ANY,    err_method_not_allowed);

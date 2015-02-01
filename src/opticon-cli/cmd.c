@@ -531,7 +531,26 @@ int cmd_host_list (int argc, const char *argv[]) {
     return 0;
 }
 
-/** The get-recrod command */
+/** The delete-host command */
+int cmd_remove_host (int argc, const char *argv[]) {
+    if (OPTIONS.tenant[0] == 0) {
+        fprintf (stderr, "%% No tenantid provided\n");
+        return 1;
+    }
+    if (OPTIONS.host[0] == 0) {
+        fprintf (stderr, "%% No hostid provided\n");
+        return 1;
+    }
+    
+    var *p = var_alloc();
+    var *apires = api_call ("DELETE", p, "/%s/host/%s",
+                            OPTIONS.tenant, OPTIONS.host);
+    var_free (p);
+    var_free (apires);
+    return 0;
+}
+
+/** The get-record command */
 int cmd_get_record (int argc, const char *argv[]) {
     if (OPTIONS.tenant[0] == 0) {
         fprintf (stderr, "%% No tenantid provided\n");
