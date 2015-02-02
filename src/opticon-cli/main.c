@@ -363,8 +363,12 @@ void usage (const char *cmdname) {
     fprintf (stderr,
         "%% Usage: %s <command> [options]\n"
          "  Options:\n"
-         "        --path <path to database>\n"
          "        --json\n"
+         "        --config-file <file>\n"
+         "        --opticon-token <token>\n"
+         "        --keystone-token <token>\n"
+         "        --keystone-url <url>\n"
+         "        --api-url <url>\n"
          "\n"
          "  Commands:\n"
          "        tenant-list\n"
