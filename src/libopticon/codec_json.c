@@ -10,6 +10,25 @@
   * \param into The ioport to use
   */
 void jsoncodec_dump_val (metertype_t type, meter *m, int pos, ioport *into) {
+    if (m->count > SZ_EMPTY_VAL) return;
+    if (m->count == SZ_EMPTY_VAL) {
+        if (pos>0) return;
+        switch (type) {
+            case MTYPE_INT:
+                ioport_write (into, "0", 1);
+                break;
+            
+            case MTYPE_FRAC:
+                ioport_write (into, "0.0", 3);
+                break;
+            
+            default:
+                ioport_write (into, "\"\"", 2);
+                break;
+        }
+        return;
+    }
+    
     char buf[1024];
     switch (type) {
         case MTYPE_INT:

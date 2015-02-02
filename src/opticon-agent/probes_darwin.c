@@ -116,7 +116,7 @@ void run_top (thread *me) {
     int count = 0;
     int offs_cmd, offs_cpu, offs_mem, offs_user;
     memset (TOP, 0, 2*sizeof(topinfo));
-    FILE *f = popen ("/usr/bin/top -l 0 -o cpu -n 16 -c d -s 30", "r");
+    FILE *f = popen ("/usr/bin/top -l 0 -o cpu -n 16 -c n -s 30", "r");
     if (! f) {
         log_error ("Could not open top probe");
         return;
@@ -125,7 +125,7 @@ void run_top (thread *me) {
         if (feof (f)) {
             log_info ("Reopening top");
             pclose (f);
-            f = popen ("/usr/bin/top -l 0 -o cpu -n 16 -c d -s 30", "r");
+            f = popen ("/usr/bin/top -l 0 -o cpu -n 16 -c n -s 30", "r");
         }
         
         buf[0] = 0;
@@ -263,7 +263,7 @@ var *runprobe_top (probe *self) {
         var_set_str_forkey (procrow, "name", ti.records[i].cmd);
         var_set_double_forkey (procrow, "pcpu", ti.records[i].pcpu);
         double memperc = (double) ti.records[i].sizekb;
-        memperc = memperc / (double) ti.memsizekb;
+        memperc = memperc / (double) ti.kmem_avail;
         memperc = memperc * 100.0;
         var_set_double_forkey (procrow, "pmem", memperc);
     }
