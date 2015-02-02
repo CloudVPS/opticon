@@ -648,7 +648,7 @@ int localdb_remove_host (db *d, uuid hostid) {
     strcat (tmpstr, uuidstr);
     if (! localdb_remove_dir (tmpstr)) return 0;
     strcat (tmpstr, ".metadata");
-    if (unlink (tmpstr) != 0) return 0;
+    unlink (tmpstr);
     free (tmpstr);
     return 1;
 }
