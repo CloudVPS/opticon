@@ -116,7 +116,7 @@ void run_top (thread *me) {
     int count = 0;
     int offs_cmd, offs_cpu, offs_mem, offs_user;
     memset (TOP, 0, 2*sizeof(topinfo));
-    FILE *f = popen ("/usr/bin/top -l 0 -o cpu -n 16 -c n -s 30", "r");
+    FILE *f = popen ("/usr/bin/top -l 0 -o cpu -n 16 -c d -s 30", "r");
     if (! f) {
         log_error ("Could not open top probe");
         return;
@@ -125,7 +125,7 @@ void run_top (thread *me) {
         if (feof (f)) {
             log_info ("Reopening top");
             pclose (f);
-            f = popen ("/usr/bin/top -l 0 -o cpu -n 16 -c n -s 30", "r");
+            f = popen ("/usr/bin/top -l 0 -o cpu -n 16 -c d -s 30", "r");
         }
         
         buf[0] = 0;
@@ -152,7 +152,7 @@ void run_top (thread *me) {
             TOP[1].records[count].pid = atoi (buf);
             cpystr (TOP[1].records[count].cmd, buf+offs_cmd, 15);
             TOP[1].records[count].pcpu = atof (buf+offs_cpu);
-            TOP[1].records[count].sizekb = sz2kb (buf+offs_mem);
+            TOP[1].records[count].sizekb = 0; /* sz2kb (buf+offs_mem); */
             cpystr (TOP[1].records[count].user, buf+offs_user, 14);
             count++;
             if (count == 14) {
