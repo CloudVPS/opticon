@@ -388,6 +388,7 @@ void usage (const char *cmdname) {
          "        host-list             --tenant <uuid>\n"
          "        host-overview         --tenant <uuid>\n"
          "        host-show             --tenant <uuid> --host <host> [--time <TIMESPEC>]\n"
+         "        host-delete           --tenant <uuid> --host <uuid>\n"
          "\n"
          "  TYPE:\n"
          "        integer, string, or frac\n"
