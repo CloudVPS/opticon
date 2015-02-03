@@ -282,6 +282,7 @@ int main (int argc, const char *argv[]) {
     M = host_set_meter_uint (H, M_NET_OUT_PPS, 2, D_NET_OUT_PPS);
 	host_end_update (H);
 	M = host_get_meter (H, M_LOADAVG);
+	log_info ("lastmod %i future %i", M->lastmodified, future);
 	assert (M->lastmodified == 0);    
     
     host_delete (H);
