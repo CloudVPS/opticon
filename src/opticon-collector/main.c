@@ -458,7 +458,7 @@ void reaper_run (thread *self) {
                 quota = var_get_int_forkey (meta, "quota");
                 var_free (meta);
                 
-                if (!quota) quota = 16384;
+                if (!quota) quota = 128;
                 quota = quota * (1024ULL*1024ULL);
                 int numhosts = 0;
                 uuid *hosts = db_list_hosts (APP.reaperdb, &numhosts);
@@ -472,6 +472,11 @@ void reaper_run (thread *self) {
                 }
                 
                 if (totalsz > quota) {
+                    char uuidstr[40];
+                    uuid2str (tenants[i], uuidstr);
+                    log_info ("Tenant %s is %llu bytes over quota",
+                              uuidstr, (totalsz-quota));
+                              
                     for (int j=0; j<numhosts; ++j) {
                         db_delete_host_date (APP.reaperdb, hosts[j], earliest);
                     }
