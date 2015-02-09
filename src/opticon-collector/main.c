@@ -440,6 +440,35 @@ void handle_meter_packet (ioport *pktbuf, uint32_t netid) {
     ioport_close (unwrap);
 }
 
+void reaper_run (thread *self) {
+    while (1) {
+        int numtenants = 0;
+        uint64_t totalsz = 0;
+        time_t earliest = 0;
+        uuid *tenants = db_list_tenants (APP.reaperdb, &numtenants);
+        for (int i=0; i<numtenants; ++i) {
+            if (db_open (APP.reaperdb, tenants[i], NULL)) {
+                int numhosts = 0;
+                uuid *hosts = db_list_hosts (APP.reaperdb, &numhosts);
+                for (int ii=0; ii<numhosts; ++ii) {
+                    usage_info info = {0ULL,0,0};
+                    db_get_usage (APP.reaperdb, &info, hosts[ii]);
+                    totalsz += info.bytes;
+                    if ((! earliest) || info.earliest < earliest) {
+                        earliest = info.earliest;
+                    }
+                }
+                free (hosts);
+                db_close (APP.reaperdb);
+            }
+        }
+        free (tenants);
+        sleep (300);
+    }
+}
+
+
+
 /** Thread runner for handling configuration reload requests.
   * This is done to keep the signal handler path clean. */
 void conf_reloader_run (thread *t) {
@@ -604,6 +633,7 @@ int conf_db_path (const char *id, var *v, updatetype tp) {
     APP.db = localdb_create (var_get_str (v));
     APP.writedb = localdb_create (var_get_str (v));
     APP.overviewdb = localdb_create (var_get_str (v));
+    APP.reaperdb = localdb_create (var_get_str (v));
     return 1;
 }
 

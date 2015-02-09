@@ -23,11 +23,13 @@ typedef struct appcontext_s {
     db              *db;
     db              *writedb;
     db              *overviewdb;
+    db              *reaperdb;
     packetqueue     *queue;
     intransport     *transport;
     watchlist        watch;
     thread          *watchthread;
     thread          *overviewthread;
+    thread          *reaperthread;
     conf_reloader   *reloader;
     var             *conf;
     int              loglevel;
@@ -49,6 +51,7 @@ extern appcontext APP;
 void watchthread_run (thread *self);
 void overviewthread_run (thread *self);
 void conf_reloader_run (thread *);
+void reaper_run (thread *self);
 conf_reloader *conf_reloader_create (void);
 void conf_reloader_reload (conf_reloader *);
 
