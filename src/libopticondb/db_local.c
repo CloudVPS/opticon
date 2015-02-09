@@ -369,7 +369,8 @@ int localdb_save_record (db *dbctx, time_t when, host *h) {
     return 1;
 }
 
-void localdb_delete_host_date (db *dbctx, uuid hostid, datestamp dt) {
+void localdb_delete_host_date (db *dbctx, uuid hostid, time_t ti) {
+    datestamp dt = time2date (ti);
     localdb *self = (localdb *) dbctx;
     char uuidstr[40];
     char *dbpath = (char *) malloc (strlen (self->path) + 128);

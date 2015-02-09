@@ -76,7 +76,7 @@ int db_save_record (db *d, time_t when, host *what) {
   * \param hostid The host uuid
   * \param dt The date to expunge.
   */
-void db_delete_host_date (db *d, uuid hostid, datestamp dt) {
+void db_delete_host_date (db *d, uuid hostid, time_t dt) {
     if (! d->opened) return;
     d->delete_host_date (d, hostid, dt);
 }

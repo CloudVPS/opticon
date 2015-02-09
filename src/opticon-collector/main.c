@@ -449,10 +449,15 @@ void reaper_run (thread *self) {
     while (1) {
         int numtenants = 0;
         uint64_t totalsz = 0;
+        uint64_t quota = 0;
         time_t earliest = 0;
         uuid *tenants = db_list_tenants (APP.reaperdb, &numtenants);
         for (int i=0; i<numtenants; ++i) {
             if (db_open (APP.reaperdb, tenants[i], NULL)) {
+                var *meta = db_get_metadata (APP.reaperdb);
+                quota = var_get_int_forkey (meta, "quota");
+                if (!quota) quota = 16384;
+                quota = quota * (1024ULL*1024ULL);
                 int numhosts = 0;
                 uuid *hosts = db_list_hosts (APP.reaperdb, &numhosts);
                 for (int ii=0; ii<numhosts; ++ii) {
@@ -463,6 +468,14 @@ void reaper_run (thread *self) {
                         earliest = info.earliest;
                     }
                 }
+                
+                if (totalsz > quota) {
+                    for (int j=0; j<numhosts; ++j) {
+                        db_delete_host_date (APP.reaperdb, hosts[j], earliest);
+                    }
+                    --i;
+                }
+                
                 free (hosts);
                 db_close (APP.reaperdb);
             }
