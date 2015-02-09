@@ -440,6 +440,11 @@ void handle_meter_packet (ioport *pktbuf, uint32_t netid) {
     ioport_close (unwrap);
 }
 
+/** Thread runner for the reaper. This thread goes over the tenant list,
+  * figuring out how much storage they have in use. If this is over the
+  * set quota, it starts culling days from the database starting at
+  * the earliest recorded date, until the tenant is under quota again.
+  */
 void reaper_run (thread *self) {
     while (1) {
         int numtenants = 0;
@@ -466,8 +471,6 @@ void reaper_run (thread *self) {
         sleep (300);
     }
 }
-
-
 
 /** Thread runner for handling configuration reload requests.
   * This is done to keep the signal handler path clean. */
