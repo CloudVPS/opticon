@@ -451,6 +451,7 @@ void reaper_run (thread *self) {
         uint64_t totalsz = 0;
         uint64_t quota = 0;
         time_t earliest = 0;
+        time_t tnow = time (NULL);
         uuid *tenants = db_list_tenants (APP.reaperdb, &numtenants);
         for (int i=0; i<numtenants; ++i) {
             if (db_open (APP.reaperdb, tenants[i], NULL)) {
@@ -465,9 +466,15 @@ void reaper_run (thread *self) {
                 for (int ii=0; ii<numhosts; ++ii) {
                     usage_info info = {0ULL,0,0};
                     db_get_usage (APP.reaperdb, &info, hosts[ii]);
-                    totalsz += info.bytes;
-                    if ((! earliest) || info.earliest < earliest) {
-                        earliest = info.earliest;
+                    
+                    if (tnow - info.earliest > 86400) {
+                        db_remove_host (APP.reaperdb, hosts[ii]);
+                    }
+                    else {
+                        totalsz += info.bytes;
+                        if ((! earliest) || info.earliest < earliest) {
+                            earliest = info.earliest;
+                        }
                     }
                 }
                 
