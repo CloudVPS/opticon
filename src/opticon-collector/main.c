@@ -456,6 +456,8 @@ void reaper_run (thread *self) {
             if (db_open (APP.reaperdb, tenants[i], NULL)) {
                 var *meta = db_get_metadata (APP.reaperdb);
                 quota = var_get_int_forkey (meta, "quota");
+                var_free (meta);
+                
                 if (!quota) quota = 16384;
                 quota = quota * (1024ULL*1024ULL);
                 int numhosts = 0;
