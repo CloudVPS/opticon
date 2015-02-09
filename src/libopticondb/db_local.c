@@ -369,6 +369,20 @@ int localdb_save_record (db *dbctx, time_t when, host *h) {
     return 1;
 }
 
+void localdb_delete_host_date (db *dbctx, uuid hostid, datestamp dt) {
+    localdb *self = (localdb *) dbctx;
+    char uuidstr[40];
+    char *dbpath = (char *) malloc (strlen (self->path) + 128);
+    if (! dbpath) return;
+    
+    uuid2str (hostid, uuidstr);
+    sprintf (dbpath, "%s%s/%i.db", self->path, uuidstr, dt);
+    unlink (dbpath);
+    sprintf (dbpath, "%s%s/%i.idx", self->path, uuidstr, dt);
+    unlink (dbpath);
+    return;
+}
+
 int localdb_get_usage (db *dbctx, usage_info *into, uuid hostid) {
     localdb *self = (localdb *) dbctx;
     char uuidstr[40];
@@ -951,6 +965,7 @@ db *localdb_create (const char *prefix) {
     self->db.get_value_range_int = localdb_get_value_range_int;
     self->db.get_value_range_frac = localdb_get_value_range_frac;
     self->db.save_record = localdb_save_record;
+    self->db.delete_host_date = localdb_delete_host_date;
     self->db.get_hostmeta = localdb_get_hostmeta;
     self->db.get_hostmeta_changed = localdb_get_hostmeta_changed;
     self->db.set_hostmeta = localdb_set_hostmeta;

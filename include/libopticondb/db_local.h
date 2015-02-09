@@ -7,9 +7,6 @@
 
 /* =============================== TYPES =============================== */
 
-/** Representation of a date as a YYYYMMDD integer */
-typedef uint32_t datestamp;
-
 /** Class structure for localdb */
 typedef struct localdb_s {
     db               db; /** Super */

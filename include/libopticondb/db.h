@@ -7,6 +7,9 @@
 
 /* =============================== TYPES =============================== */
 
+/** Representation of a date as a YYYYMMDD integer */
+typedef uint32_t datestamp;
+
 struct db_s; /* forward declaration */
 
 typedef struct usage_info_s {
@@ -22,6 +25,7 @@ typedef uint64_t *(*get_vrangei_f)(struct db_s *, time_t, time_t, int,
 typedef double *(*get_vrangef_f)(struct db_s *, time_t, time_t, int,
                                  meterid_t, uint8_t, host *);
 typedef int (*save_record_f)(struct db_s *, time_t, host *);
+typedef void (*del_hostdate_f)(struct db_s *, uuid, datestamp);
 typedef var *(*get_hostmeta_f)(struct db_s *, uuid);
 typedef time_t (*get_hostmetach_f)(struct db_s *, uuid);
 typedef int (*set_hostmeta_f)(struct db_s *, uuid, var *);
@@ -45,6 +49,7 @@ typedef struct db_s {
     get_vrangei_f    get_value_range_int; /** Method */
     get_vrangef_f    get_value_range_frac; /** Method */
     save_record_f    save_record; /** Method */
+    del_hostdate_f   delete_host_date; /** method */
     get_hostmeta_f   get_hostmeta; /** Method */
     get_hostmetach_f get_hostmeta_changed; /** Method */
     set_hostmeta_f   set_hostmeta; /** Method */
@@ -79,6 +84,7 @@ double      *db_get_value_range_frac (db *d, time_t start, time_t end,
                                       int numsamples, meterid_t key,
                                       uint8_t arrayindex, host *host);
 int          db_save_record (db *d, time_t when, host *what);
+void         db_delete_host_date (db *d, uuid hostid, datestamp dt);
 var         *db_get_hostmeta (db *d, uuid hostid);
 time_t       db_get_hostmeta_changed (db *d, uuid hostid);
 int          db_set_hostmeta (db *d, uuid hostid, var *data);

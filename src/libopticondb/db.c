@@ -71,6 +71,16 @@ int db_save_record (db *d, time_t when, host *what) {
     return d->save_record (d, when, what);
 }
 
+/** Delete all data for a host on a specific date.
+  * \param d The database handle
+  * \param hostid The host uuid
+  * \param dt The date to expunge.
+  */
+void db_delete_host_date (db *d, uuid hostid, datestamp dt) {
+    if (! d->opened) return;
+    d->delete_host_date (d, hostid, dt);
+}
+
 /** Get the metadata associated with a host.
   * \param d The database handle
   * \param hostid The host uuid
