@@ -448,13 +448,13 @@ void handle_meter_packet (ioport *pktbuf, uint32_t netid) {
 void reaper_run (thread *self) {
     while (1) {
         sleep (10);
-        log_info ("Starting quota reaper run");
         int numtenants = 0;
         uint64_t totalsz = 0;
         uint64_t quota = 0;
         time_t earliest = 0;
         time_t tnow = time (NULL);
         uuid *tenants = db_list_tenants (APP.reaperdb, &numtenants);
+        log_info ("Starting quota reaper run for %i tenants", numtenants);
         for (int i=0; i<numtenants; ++i) {
             if (db_open (APP.reaperdb, tenants[i], NULL)) {
                 var *meta = db_get_metadata (APP.reaperdb);
