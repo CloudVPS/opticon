@@ -286,7 +286,7 @@ int cmd_tenant_update (req_context *ctx, req_arg *a, var *env, int *status) {
     if (vkey) strvkey = var_get_str (vkey);
     
     FILE *fvopts = fopen ("/tmp/vopts.json","w");
-    var_dump (vopts, fvopts);
+    var_dump (ctx->bodyjson, fvopts);
     fclose (fvopts);
 
     if (vkey && strlen (strvkey) == 0) {
