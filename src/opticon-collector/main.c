@@ -447,6 +447,8 @@ void handle_meter_packet (ioport *pktbuf, uint32_t netid) {
   */
 void reaper_run (thread *self) {
     while (1) {
+        sleep (10);
+        log_info ("Starting quota reaper run");
         int numtenants = 0;
         uint64_t totalsz = 0;
         uint64_t quota = 0;
@@ -561,6 +563,7 @@ int daemon_main (int argc, const char *argv[]) {
     APP.reloader = conf_reloader_create();
     APP.watchthread = thread_create (watchthread_run, NULL);
     APP.overviewthread = thread_create (overviewthread_run, NULL);
+    APP.reaperthread = thread_create (reaper_run, NULL);
     
     signal (SIGHUP, daemon_sighup_handler);
     
