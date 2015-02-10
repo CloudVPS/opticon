@@ -53,6 +53,8 @@ var *http_call (const char *mth, const char *url, var *hdr, var *data,
         var_write (data, outdata);
         curl_easy_setopt (curl, CURLOPT_READFUNCTION, curlread);
         curl_easy_setopt (curl, CURLOPT_READDATA, outdata);
+        curl_easy_setopt (curl, CURLOPT_INFILESIZE_LARGE,
+                          (curl_off_t) ioport_read_available (outdata));
         char slen[32];
         sprintf (slen, "%lu", ioport_read_available (outdata));
         var_set_str_forkey (hdr, "Content-Type", "application/json");
