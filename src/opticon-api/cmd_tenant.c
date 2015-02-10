@@ -300,13 +300,14 @@ int cmd_tenant_update (req_context *ctx, req_arg *a, var *env, int *status) {
         return err_not_allowed (ctx, a, env, status);
     }
 
+    var *outmeta = var_get_dict_forkey (env, "tenant");
+
     if (strvkey) {    
         key = aeskey_from_base64 (strvkey);
         strkey = aeskey_to_base64 (key);
+        var_set_str_forkey (outmeta, "key", strkey);
     }
     
-    var *outmeta = var_get_dict_forkey (env, "tenant");
-    var_set_str_forkey (outmeta, "key", strkey);
     if (sname) var_set_str_forkey (outmeta, "name", sname);
     
     db *DB = localdb_create (OPTIONS.dbpath);
