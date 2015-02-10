@@ -369,6 +369,7 @@ int localdb_save_record (db *dbctx, time_t when, host *h) {
     return 1;
 }
 
+/** Implementation for db_delete_host_date() */
 void localdb_delete_host_date (db *dbctx, uuid hostid, time_t ti) {
     datestamp dt = time2date (ti);
     localdb *self = (localdb *) dbctx;
@@ -384,6 +385,7 @@ void localdb_delete_host_date (db *dbctx, uuid hostid, time_t ti) {
     return;
 }
 
+/** Implementation for db_get_usage() */
 int localdb_get_usage (db *dbctx, usage_info *into, uuid hostid) {
     localdb *self = (localdb *) dbctx;
     char uuidstr[40];
@@ -465,6 +467,7 @@ void localdb_free (db *dbctx) {
     codec_release (self->codec);
 }
 
+/** Recurse over a directory structure fishing for uuids */
 void recurse_subs (const char *path, int depthleft,
                    int *alloc, int *outsz, uuid **res) {
     char *newpath;
@@ -500,6 +503,7 @@ void recurse_subs (const char *path, int depthleft,
     }
 }
 
+/** Implementation for db_list_tenants() */
 uuid *localdb_list_tenants (db *d, int *outsz) {
     localdb *self = (localdb *) d;
     int alloc = 4;
@@ -756,6 +760,7 @@ var *localdb_get_overview (db *d) {
     return localdb_get_tenantdata (d, "overview");
 }
 
+/** Generic function for storing tenant-related data */
 int localdb_store_tenantdata (db *d, var *v, const char *suffx) {
     localdb *self = (localdb *) d;
     int res = 0;
@@ -789,21 +794,22 @@ int localdb_store_tenantdata (db *d, var *v, const char *suffx) {
     return res;
 }
 
-/** Implementation for db_set_metadata */
+/** Implementation for db_set_metadata() */
 int localdb_set_metadata (db *d, var *v) {
     return localdb_store_tenantdata (d, v, "metadata");
 }
 
-/** Implementation for db_set_summary */
+/** Implementation for db_set_summary() */
 int localdb_set_summary (db *d, var *v) {
     return localdb_store_tenantdata (d, v, "summary");
 }
 
+/** Implementation for db_set_overview() */
 int localdb_set_overview (db *d, var *v) {
     return localdb_store_tenantdata (d, v, "overview");
 }
 
-/** Implementation for db_get_hostmeta */
+/** Implementation for db_get_hostmeta() */
 var *localdb_get_hostmeta (db *d, uuid hostid) {
     localdb *self = (localdb *) d;
     char uuidstr[40];
@@ -840,7 +846,7 @@ var *localdb_get_hostmeta (db *d, uuid hostid) {
     return res;
 }
 
-/** Implementation for db_get_hostmeta_changed */
+/** Implementation for db_get_hostmeta_changed() */
 time_t localdb_get_hostmeta_changed (db *d, uuid hostid) {
     struct stat st;
     localdb *self = (localdb *) d;
@@ -853,7 +859,7 @@ time_t localdb_get_hostmeta_changed (db *d, uuid hostid) {
     return st.st_mtime;
 }
 
-/** Implementation for db_set_metadata */
+/** Implementation for db_set_metadata() */
 int localdb_set_hostmeta (db *d, uuid hostid, var *v) {
     localdb *self = (localdb *) d;
     int res = 0;
@@ -887,6 +893,7 @@ int localdb_set_hostmeta (db *d, uuid hostid, var *v) {
     return res;
 }
 
+/** Implementation for db_set_global() */
 int localdb_set_global (db *d, const char *id, var *v) {
     int res = 0;
     FILE *F;
@@ -918,6 +925,7 @@ int localdb_set_global (db *d, const char *id, var *v) {
     return res;
 }
 
+/** Implementation for db_get_global() */
 var *localdb_get_global (db *d, const char *id) {
     localdb *self = (localdb *) d;
     struct stat st;
