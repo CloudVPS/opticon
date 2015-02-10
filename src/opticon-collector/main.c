@@ -456,7 +456,10 @@ void reaper_run (thread *self) {
         uuid *tenants = db_list_tenants (APP.reaperdb, &numtenants);
         log_info ("Starting quota reaper run for %i tenants", numtenants);
         for (int i=0; i<numtenants; ++i) {
+            char uuidstr[40];
+            uuid2str (tenants[i], uuidstr);
             if (db_open (APP.reaperdb, tenants[i], NULL)) {
+                log_info ("Checking tenant <%s>", uuidstr);
                 var *meta = db_get_metadata (APP.reaperdb);
                 quota = var_get_int_forkey (meta, "quota");
                 var_free (meta);
@@ -465,6 +468,7 @@ void reaper_run (thread *self) {
                 quota = quota * (1024ULL*1024ULL);
                 int numhosts = 0;
                 uuid *hosts = db_list_hosts (APP.reaperdb, &numhosts);
+                log_info ("Checking %i hosts", numhosts);
                 for (int ii=0; ii<numhosts; ++ii) {
                     usage_info info = {0ULL,0,0};
                     db_get_usage (APP.reaperdb, &info, hosts[ii]);
@@ -494,6 +498,9 @@ void reaper_run (thread *self) {
                 
                 free (hosts);
                 db_close (APP.reaperdb);
+            }
+            else {
+                log_error ("Could not open tenant <%s>", uuidstr);
             }
         }
         free (tenants);
