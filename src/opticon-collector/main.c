@@ -491,9 +491,9 @@ void reaper_run (thread *self) {
                               uuidstr, (totalsz-quota));
                               
                     for (int j=0; j<numhosts; ++j) {
-                        db_delete_host_date (APP.reaperdb, hosts[j], earliest);
+                        //db_delete_host_date (APP.reaperdb, hosts[j], earliest);
                     }
-                    --i;
+                    //--i;
                 }
                 
                 free (hosts);
@@ -669,6 +669,7 @@ int conf_db_path (const char *id, var *v, updatetype tp) {
         db_free (APP.db);
         db_free (APP.writedb);
         db_free (APP.overviewdb);
+        db_free (APP.reaperdb);
     }
     APP.db = localdb_create (var_get_str (v));
     APP.writedb = localdb_create (var_get_str (v));
