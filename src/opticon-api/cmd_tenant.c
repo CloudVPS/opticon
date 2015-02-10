@@ -285,10 +285,6 @@ int cmd_tenant_update (req_context *ctx, req_arg *a, var *env, int *status) {
     char *strkey = NULL;
     if (vkey) strvkey = var_get_str (vkey);
     
-    FILE *fvopts = fopen ("/tmp/vopts.json","w");
-    var_dump (ctx->bodyjson, fvopts);
-    fclose (fvopts);
-
     if (vkey && strlen (strvkey) == 0) {
         return err_bad_request (ctx, a, env, status);
     }
@@ -322,8 +318,6 @@ int cmd_tenant_update (req_context *ctx, req_arg *a, var *env, int *status) {
         free (strkey);
         return err_not_found (ctx, a, env, status);
     }
-    
-    log_info ("Update tenant with new quota %llu", iquota);
     
     var *dbmeta = db_get_metadata (DB);
     if (strkey) var_set_str_forkey (dbmeta, "key", strkey);
