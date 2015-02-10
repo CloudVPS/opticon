@@ -317,6 +317,8 @@ int cmd_tenant_update (req_context *ctx, req_arg *a, var *env, int *status) {
         return err_not_found (ctx, a, env, status);
     }
     
+    log_info ("Update tenant with new quota %llu", iquota);
+    
     var *dbmeta = db_get_metadata (DB);
     if (strkey) var_set_str_forkey (dbmeta, "key", strkey);
     if (sname) var_set_str_forkey (dbmeta, "name", sname);
