@@ -304,6 +304,7 @@ int cmd_tenant_update (req_context *ctx, req_arg *a, var *env, int *status) {
         key = aeskey_from_base64 (strvkey);
         strkey = aeskey_to_base64 (key);
     }
+    
     var *outmeta = var_get_dict_forkey (env, "tenant");
     var_set_str_forkey (outmeta, "key", strkey);
     if (sname) var_set_str_forkey (outmeta, "name", sname);
@@ -319,7 +320,7 @@ int cmd_tenant_update (req_context *ctx, req_arg *a, var *env, int *status) {
     if (strkey) var_set_str_forkey (dbmeta, "key", strkey);
     if (sname) var_set_str_forkey (dbmeta, "name", sname);
     if (iquota) var_set_int_forkey (dbmeta, "quota", iquota);
-    free (strkey);
+    if (strkey) free (strkey);
     db_set_metadata (DB, dbmeta);
     *status = 200;
     return 1;
