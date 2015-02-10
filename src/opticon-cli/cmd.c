@@ -106,7 +106,7 @@ int cmd_tenant_set_quota (int argc, const char *argv[]) {
     
     var *api_meta = api_get ("/%s", OPTIONS.tenant);
     var_set_int_forkey (api_meta, "quota", nquota);
-    var *res = api_call ("POST", api_meta, "/%s", OPTIONS.tenant);
+    var *res = api_call ("PUT", api_meta, "/%s", OPTIONS.tenant);
     var_free (api_meta);
     var_free (res);
     return 0;
