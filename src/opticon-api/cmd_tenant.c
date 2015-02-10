@@ -649,16 +649,17 @@ int cmd_tenant_list_hosts (req_context *ctx, req_arg *a,
     uuid *list = db_list_hosts (DB, &count);
     for (int i=0; i<count; ++i) {
         uuid2str (list[i], uuidstr);
-        db_get_usage (DB, &usage, list[i]);
-        str_early = timfmt (usage.earliest, 1);
-        str_late = timfmt (usage.last, 1);
-        var *crsr = var_add_dict (env_hosts);
-        var_set_str_forkey (crsr, "id", uuidstr);
-        var_set_int_forkey (crsr, "usage", usage.bytes);
-        var_set_str_forkey (crsr, "start", str_early);
-        var_set_str_forkey (crsr, "end", str_late);
-        free (str_early);
-        free (str_late);
+        if (db_get_usage (DB, &usage, list[i])) {
+            str_early = timfmt (usage.earliest, 1);
+            str_late = timfmt (usage.last, 1);
+            var *crsr = var_add_dict (env_hosts);
+            var_set_str_forkey (crsr, "id", uuidstr);
+            var_set_int_forkey (crsr, "usage", usage.bytes);
+            var_set_str_forkey (crsr, "start", str_early);
+            var_set_str_forkey (crsr, "end", str_late);
+            free (str_early);
+            free (str_late);
+        }
     }
     free (list);
     *status = 200;
