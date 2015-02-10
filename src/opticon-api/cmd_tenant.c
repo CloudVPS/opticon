@@ -283,15 +283,20 @@ int cmd_tenant_update (req_context *ctx, req_arg *a, var *env, int *status) {
     var *vkey = var_find_key (vopts, "key");
     const char *strvkey = NULL;
     char *strkey = NULL;
-    uint64_t iquota = var_get_int_forkey (vopts, "quota");
     if (vkey) strvkey = var_get_str (vkey);
+    
+    FILE *fvopts = fopen ("/tmp/vopts.json","w);
+    var_dump (vopts, fvopts);
+    fclose (fvopts);
 
     if (vkey && strlen (strvkey) == 0) {
         return err_bad_request (ctx, a, env, status);
     }
     
     const char *sname = var_get_str_forkey (vopts, "name");
+    uint64_t iquota = var_get_int_forkey (vopts, "quota");
     
+   
     if (sname && (ctx->userlevel != AUTH_ADMIN)) {
         return err_not_allowed (ctx, a, env, status);
     }
