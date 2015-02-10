@@ -285,7 +285,7 @@ int cmd_tenant_update (req_context *ctx, req_arg *a, var *env, int *status) {
     char *strkey = NULL;
     if (vkey) strvkey = var_get_str (vkey);
     
-    FILE *fvopts = fopen ("/tmp/vopts.json","w);
+    FILE *fvopts = fopen ("/tmp/vopts.json","w");
     var_dump (vopts, fvopts);
     fclose (fvopts);
 
