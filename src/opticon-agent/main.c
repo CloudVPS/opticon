@@ -332,7 +332,7 @@ int set_logpath (const char *i, const char *v) {
 
 /** Handle --dump-packets */
 int set_dumppath (const char *i, const char *v) {
-    APP.dumppath = v;
+    if (*v) APP.dumppath = v;
     return 1;
 }
 
@@ -381,7 +381,7 @@ cliopt CLIOPT[] = {
         "--dump-packets",
         "-D",
         OPT_VALUE,
-        NULL,
+        "",
         set_dumppath
     },
     {

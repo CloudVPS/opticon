@@ -283,6 +283,7 @@ int cmd_tenant_update (req_context *ctx, req_arg *a, var *env, int *status) {
     var *vkey = var_find_key (vopts, "key");
     const char *strvkey;
     char *strkey;
+    uint64_t iquota = var_get_int_forkey (vopts, "quota");
     if (vkey) strvkey = var_get_str (vkey);
 
     if ((!vkey) || strlen (strvkey) == 0) {
@@ -294,6 +295,10 @@ int cmd_tenant_update (req_context *ctx, req_arg *a, var *env, int *status) {
     const char *sname = var_get_str_forkey (vopts, "name");
     
     if (sname && (ctx->userlevel != AUTH_ADMIN)) {
+        return err_not_allowed (ctx, a, env, status);
+    }
+    
+    if (iquota && (ctx->userlevel != AUTH_ADMIN)) {
         return err_not_allowed (ctx, a, env, status);
     }
     
@@ -312,6 +317,7 @@ int cmd_tenant_update (req_context *ctx, req_arg *a, var *env, int *status) {
     var *dbmeta = db_get_metadata (DB);
     var_set_str_forkey (dbmeta, "key", strkey);
     if (sname) var_set_str_forkey (dbmeta, "name", sname);
+    if (iquota) var_set_int_forkey (dbmeta, "quota", iquota);
     free (strkey);
     db_set_metadata (DB, dbmeta);
     *status = 200;
