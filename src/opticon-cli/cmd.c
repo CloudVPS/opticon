@@ -107,6 +107,7 @@ int cmd_tenant_set_quota (int argc, const char *argv[]) {
     var *api_root = var_alloc();
     var *api_meta = var_get_dict_forkey (api_root, "tenant");
     var_set_int_forkey (api_meta, "quota", nquota);
+    var_dump (api_root, stdout);
     var *res = api_call ("PUT", api_root, "/%s", OPTIONS.tenant);
     var_free (api_root);
     var_free (res);
