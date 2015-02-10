@@ -281,17 +281,15 @@ int cmd_tenant_update (req_context *ctx, req_arg *a, var *env, int *status) {
     aeskey key;
     var *vopts = var_get_dict_forkey (ctx->bodyjson, "tenant");
     var *vkey = var_find_key (vopts, "key");
-    const char *strvkey;
-    char *strkey;
+    const char *strvkey = NULL;
+    char *strkey = NULL;
     uint64_t iquota = var_get_int_forkey (vopts, "quota");
     if (vkey) strvkey = var_get_str (vkey);
 
-    if ((!vkey) || strlen (strvkey) == 0) {
+    if (vkey && strlen (strvkey) == 0) {
         return err_bad_request (ctx, a, env, status);
     }
     
-    key = aeskey_from_base64 (strvkey);
-
     const char *sname = var_get_str_forkey (vopts, "name");
     
     if (sname && (ctx->userlevel != AUTH_ADMIN)) {
@@ -301,8 +299,11 @@ int cmd_tenant_update (req_context *ctx, req_arg *a, var *env, int *status) {
     if (iquota && (ctx->userlevel != AUTH_ADMIN)) {
         return err_not_allowed (ctx, a, env, status);
     }
-    
-    strkey = aeskey_to_base64 (key);
+
+    if (strvkey) {    
+        key = aeskey_from_base64 (strvkey);
+        strkey = aeskey_to_base64 (key);
+    }
     var *outmeta = var_get_dict_forkey (env, "tenant");
     var_set_str_forkey (outmeta, "key", strkey);
     if (sname) var_set_str_forkey (outmeta, "name", sname);
@@ -315,7 +316,7 @@ int cmd_tenant_update (req_context *ctx, req_arg *a, var *env, int *status) {
     }
     
     var *dbmeta = db_get_metadata (DB);
-    var_set_str_forkey (dbmeta, "key", strkey);
+    if (strkey) var_set_str_forkey (dbmeta, "key", strkey);
     if (sname) var_set_str_forkey (dbmeta, "name", sname);
     if (iquota) var_set_int_forkey (dbmeta, "quota", iquota);
     free (strkey);
