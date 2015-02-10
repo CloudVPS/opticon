@@ -309,6 +309,7 @@ int cmd_tenant_update (req_context *ctx, req_arg *a, var *env, int *status) {
     }
     
     if (sname) var_set_str_forkey (outmeta, "name", sname);
+    if (iquota) var_set_int_forkey (outmeta, "quota", iquota);
     
     db *DB = localdb_create (OPTIONS.dbpath);
     if (! db_open (DB, ctx->tenantid, NULL)) {
