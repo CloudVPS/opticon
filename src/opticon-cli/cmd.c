@@ -91,6 +91,27 @@ int cmd_tenant_set_metadata (int argc, const char *argv[]) {
     return 0;
 }
 
+/** The tenant-set-quota command */
+int cmd_tenant_set_quota (int argc, const char *argv[]) {
+    if (argc < 3) {
+        fprintf (stderr, "%% Missing quota value\n");
+        return 1;
+    }
+    
+    uint64_t nquota = strtoull (argv[2], NULL, 10);
+    if (! nquota) {
+        fprintf (stderr, "%% Illegal quota value\n");
+        return 1;
+    }
+    
+    var *api_meta = api_get ("/%s/meta", OPTIONS.tenant);
+    var_set_int_forkey (api_meta, "quota", nquota);
+    var *res = api_call ("POST", api_meta, "/%s/meta", OPTIONS.tenant);
+    var_free (api_meta);
+    var_free (res);
+    return 0;
+}
+
 /** The tenant-get-summary command */
 int cmd_tenant_get_summary (int argc, const char *argv[]) {
     if (OPTIONS.tenant[0] == 0) {
