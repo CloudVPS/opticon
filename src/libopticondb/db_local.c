@@ -378,6 +378,8 @@ void localdb_delete_host_date (db *dbctx, uuid hostid, time_t ti) {
     if (! dbpath) return;
     
     uuid2str (hostid, uuidstr);
+    log_debug ("delete_host_date: %s/%i", uuidstr, dt); 
+
     sprintf (dbpath, "%s%s/%i.db", self->path, uuidstr, dt);
     unlink (dbpath);
     sprintf (dbpath, "%s%s/%i.idx", self->path, uuidstr, dt);
@@ -594,6 +596,8 @@ int localdb_remove_dir (const char *path) {
     
     DIR *D = opendir (path);
     if (! D) return 1;
+    
+    log_debug ("rmdir: %s", path);
     
     while ((dir = readdir (D))) {
         if (strcmp (dir->d_name, ".") == 0) continue;
