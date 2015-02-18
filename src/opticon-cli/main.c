@@ -312,6 +312,7 @@ clicmd CLICMD[] = {
     {"tenant-get-metadata",cmd_tenant_get_metadata},
     {"tenant-set-metadata",cmd_tenant_set_metadata},
     {"tenant-set-quota",cmd_tenant_set_quota},
+    {"tenant-get-quota",cmd_tenant_get_quota},
     {"tenant-get-summary",cmd_tenant_get_summary},
     {"meter-list",cmd_meter_list},
     {"meter-create",cmd_meter_create},
@@ -378,6 +379,7 @@ void usage (const char *cmdname) {
          "        tenant-get-metadata   --tenant <uuid>\n"
          "        tenant-set-metadata   --tenant <uuid> <key> <value>\n"
          "        tenant-set-quota      --tenant <uuid> <quota megabytes>\n"
+         "        tenant-get-quota      --tenant <uuid>\n"
          "        tenant-get-summary    --tenant <uuid>\n"
          "        meter-list            --tenant <uuid>\n"
          "        meter-create          --tenant <uuid> --meter <meterid> --type <TYPE>\n"

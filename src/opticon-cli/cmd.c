@@ -114,6 +114,20 @@ int cmd_tenant_set_quota (int argc, const char *argv[]) {
     return 0;
 }
 
+/** The tenant-get-quota command */
+int cmd_tenant_get_quota (int argc, const char *argv[]) {
+    if (argc < 2) {
+        fprintf (stderr, "%% Syntax error");
+        return 1;
+    }
+    
+    var *meta = api_get ("/%s/meta", OPTIONS.tenant);
+    if (! meta) return 1;
+    var *mtenant = var_get_dict_forkey (meta, "tenant");
+    printf ("%llu\n", var_get_int_forkey (mtenant, "quota"));
+    return 0;
+}
+
 /** The tenant-get-summary command */
 int cmd_tenant_get_summary (int argc, const char *argv[]) {
     if (OPTIONS.tenant[0] == 0) {
