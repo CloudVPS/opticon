@@ -475,7 +475,7 @@ void reaper_run (thread *self) {
                     
                     if (tnow - info.last > 86400) {
                         char hoststr[40];
-                        uuid2str (hosts[i]], hoststr);
+                        uuid2str (hosts[i], hoststr);
                         log_info ("Removing stale host %s", hoststr);
                         db_remove_host (APP.reaperdb, hosts[ii]);
                     }
