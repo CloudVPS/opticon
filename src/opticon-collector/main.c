@@ -32,13 +32,15 @@ aeskey *resolve_sessionkey (uint32_t netid, uint32_t sid, uint32_t serial,
         return NULL;
     }
     if (S->lastserial >= serial) {
-        log_warn ("Rejecting old serial <%i> for session <%08x-%08x>",
-                  serial, sid, netid);
+        log_warn ("Rejecting old serial <%i> for session <%08x-%08x> which"
+                  " is currently <%i> at the session-level",
+                  serial, sid, netid, S->lastserial);
         return NULL;
     }
     if (S->host->lastserial >= serial) {
-        log_warn ("Rejecting old serial <%i> for session <%08x-%08x>",
-                  serial, sid, netid);
+        log_warn ("Rejecting old serial <%i> for session <%08x-%08x> which"
+                  " is currently <%i> at the host-level",
+                  serial, sid, netid, S->host->lastserial);
         return NULL;
     }
     S->host->lastserial = serial;
