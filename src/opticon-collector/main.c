@@ -459,6 +459,8 @@ void reaper_run (thread *self) {
         log_info ("Starting quota reaper run for %i tenants", numtenants);
         for (int i=0; i<numtenants; ++i) {
             char uuidstr[40];
+            totalsz = 0;
+            earliest = 0;
             uuid2str (tenants[i], uuidstr);
             if (db_open (APP.reaperdb, tenants[i], NULL)) {
                 log_info ("Checking tenant <%s>", uuidstr);
