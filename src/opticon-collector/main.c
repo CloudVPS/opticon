@@ -494,11 +494,15 @@ void reaper_run (thread *self) {
                     uuid2str (tenants[i], uuidstr);
                     log_info ("Tenant %s is %llu bytes over quota",
                               uuidstr, (totalsz-quota));
-                              
-                    for (int j=0; j<numhosts; ++j) {
-                        //db_delete_host_date (APP.reaperdb, hosts[j], earliest);
+                    
+                    if (tnow - earliest > 86399) {
+                        log_info ("Deleting records for ts=%i", 
+                                  time2date(earliest));
+                        for (int j=0; j<numhosts; ++j) {
+                            db_delete_host_date (APP.reaperdb, hosts[j], earliest);
+                        }
+                        --i;
                     }
-                    //--i;
                 }
                 
                 free (hosts);
