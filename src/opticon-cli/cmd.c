@@ -121,7 +121,7 @@ int cmd_tenant_get_quota (int argc, const char *argv[]) {
         return 1;
     }
     
-    var *meta = api_get ("/%s/meta", OPTIONS.tenant);
+    var *meta = api_get ("/%s", OPTIONS.tenant);
     if (! meta) return 1;
     var *mtenant = var_get_dict_forkey (meta, "tenant");
     printf ("%llu\n", var_get_int_forkey (mtenant, "quota"));
