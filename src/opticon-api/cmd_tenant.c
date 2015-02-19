@@ -228,6 +228,35 @@ int cmd_tenant_get (req_context *ctx, req_arg *a, var *env, int *status) {
     return 1;
 }
 
+/** GET /$TENANT/quota */
+int cmd_tenant_get_quota (req_context *ctx, req_arg *a, var *env, int *st) {
+    db *DB = localdb_create (OPTIONS.dbpath);
+    if (! db_open (DB, ctx->tenantid, NULL)) {
+        db_free (DB);
+        return err_not_found (ctx, a, env, st);
+    }
+    var *meta = db_get_metadata (DB);
+    uint64_t quota = var_get_int_forkey (meta, "quota");
+    if (! quota) quota = 128;
+    uint64_t bytequota = quota * (1024ULL*1024ULL);
+    int numhosts = 0;
+    uint64_t usage = 0ULL;
+    uuid *hosts = db_list_hosts (DB, &numhosts);
+    for (int i=0; i<numhosts; ++i) {
+        usage_info info = {0ULL,0,0};
+        db_get_usage (DB, &info, hosts[i]);
+        usage += info.bytes;
+    }
+    free (hosts);
+    double percentage = 100.0 * ((double) usage) / ((double) bytequota);
+    var_set_int_forkey (env, "quota", quota);
+    var_set_double_forkey (env, "usage", usage);
+    var_free (meta);
+    db_free (DB);
+    *st = 200;
+    return 1;
+}
+
 /** POST /$TENANT
   * tenant: {
   *     key: "base64", # optional

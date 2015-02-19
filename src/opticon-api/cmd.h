@@ -21,6 +21,7 @@ int err_conflict (req_context *, req_arg *, var *, int *);
 int cmd_list_tenants (req_context *, req_arg *, var *, int *);
 int cmd_token (req_context *, req_arg *, var *, int *);
 int cmd_tenant_get (req_context *, req_arg *, var *, int *);
+int cmd_tenant_get_quota (req_context *, req_arg *, var *, int *);
 int cmd_tenant_create (req_context *, req_arg *, var *, int *);
 int cmd_tenant_update (req_context *, req_arg *, var *, int *);
 int cmd_tenant_delete (req_context *, req_arg *, var *, int *);
