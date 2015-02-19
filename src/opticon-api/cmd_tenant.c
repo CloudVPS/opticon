@@ -250,7 +250,7 @@ int cmd_tenant_get_quota (req_context *ctx, req_arg *a, var *env, int *st) {
     free (hosts);
     double percentage = 100.0 * ((double) usage) / ((double) bytequota);
     var_set_int_forkey (env, "quota", quota);
-    var_set_double_forkey (env, "usage", usage);
+    var_set_double_forkey (env, "usage", percentage);
     var_free (meta);
     db_free (DB);
     *st = 200;
