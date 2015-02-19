@@ -379,6 +379,7 @@ void overviewthread_run (thread *self) {
         }
         t_next += 60;
         while (t_next < t_now) t_next += 60;
+        while ((t_next - t_now) > 60) t_next -= 60;
     }
 }
 
