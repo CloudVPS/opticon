@@ -121,10 +121,13 @@ int cmd_tenant_get_quota (int argc, const char *argv[]) {
         return 1;
     }
     
-    var *meta = api_get ("/%s", OPTIONS.tenant);
+    var *meta = api_get ("/%s/quota", OPTIONS.tenant);
     if (! meta) return 1;
-    var *mtenant = var_get_dict_forkey (meta, "tenant");
-    printf ("%llu\n", var_get_int_forkey (mtenant, "quota"));
+    printf ("Tenant storage quota: %llu MB\n",
+            var_get_int_forkey (meta, "quota");
+    printf ("Current usage: %.2f %%\n",
+            var_get_double_forkey (meta, "usage"));
+    var_free (meta);
     return 0;
 }
 
