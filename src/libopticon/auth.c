@@ -46,6 +46,7 @@ var *sessionlist_save (void) {
     return v_root;
 }
 
+/** Restore the sessionlist from imported JSON */
 void sessionlist_restore (var *list) {
     var *v_session = var_get_array_forkey (list, "session");
     var *crsr = v_session->value.arr.first;
