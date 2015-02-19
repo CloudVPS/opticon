@@ -143,6 +143,7 @@ int cmd_tenant_get_summary (int argc, const char *argv[]) {
     return 0;
 }
 
+/** The host-overview command */
 int cmd_host_overview (int argc, const char *argv[]) {
     if (OPTIONS.tenant[0] == 0) {
         fprintf (stderr, "%% No tenantid provided\n");
@@ -768,6 +769,7 @@ int cmd_get_record (int argc, const char *argv[]) {
     return 0;    
 }
 
+/** The session-list command [admin] */
 int cmd_session_list (int argc, const char *argv[]) {
     var *v = api_get ("/session");
 
@@ -800,6 +802,7 @@ int cmd_session_list (int argc, const char *argv[]) {
     return 0;
 }
 
+/** The dancing-bears command */
 int cmd_bears (int argc, const char *argv[]) {
     var *v = api_get ("/obligatory-dancing-bears");
     puts (var_get_str_forkey (v,"bear"));
