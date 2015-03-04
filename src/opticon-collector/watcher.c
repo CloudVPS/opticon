@@ -370,7 +370,7 @@ void overviewthread_run (thread *self) {
         }
         
         t_now = time (NULL);
-        if (t_now < t_next) {
+        if (t_now <= t_next) {
             log_debug ("Overview took %i seconds", 60-(t_next-t_now));
             sleep (t_next-t_now);
         }
