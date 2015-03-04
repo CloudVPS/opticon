@@ -212,6 +212,9 @@ void var_free (var *self) {
   * \return Pointer to the child var, or NULL if not found.
   */
 var *var_find_key (var *self, const char *key) {
+    if (! self) return NULL;
+    if (! key) return NULL;
+    
     if (self->type == VAR_NULL) {
         self->type = VAR_DICT;
         self->value.arr.first = self->value.arr.last = NULL;
