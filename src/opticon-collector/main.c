@@ -465,8 +465,10 @@ void reaper_run (thread *self) {
             if (db_open (APP.reaperdb, tenants[i], NULL)) {
                 log_info ("Checking tenant <%s>", uuidstr);
                 var *meta = db_get_metadata (APP.reaperdb);
-                quota = var_get_int_forkey (meta, "quota");
-                var_free (meta);
+                if(meta) {
+                    quota = var_get_int_forkey (meta, "quota");
+                    var_free (meta);
+                }
                 
                 if (!quota) quota = 128;
                 quota = quota * (1024ULL*1024ULL);
