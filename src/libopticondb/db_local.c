@@ -503,6 +503,8 @@ void recurse_subs (const char *path, int depthleft,
         }
         free (newpath);
     }
+    
+    closedir (D);
 }
 
 /** Implementation for db_list_tenants() */
