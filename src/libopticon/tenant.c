@@ -155,3 +155,64 @@ tenant *tenant_create (uuid tenantid, aeskey key) {
     t->key = key;
     return t;
 }
+
+/** Set notification status for a host */
+void tenant_set_notification (tenant *self, bool isproblem, const char *problems,
+                              const char *status, uuid hostid) {
+    if (! self) return;
+    notification *n = notifylist_find (&self->notify, hostid);
+    if (n) {
+        strncpy (n->problems, problems, 127);
+        n->problems[127] = 0;
+        strncpy (n->status, status, 15);
+        n->status[15] = 0;
+
+        /* Don't do anything else if we're still in the same amount of
+           trouble */
+        if (n->isproblem == isproblem) return;
+
+        /* is it a problem that went away before notification? */
+        if (n->isproblem && (! n->notified)) {
+            notifylist_remove (&self->notify, n);
+            notification_free (n);
+            return NULL;
+        }
+        n->lastchange = time (NULL);
+        n->notified = false;
+    }
+    else {
+        /* Ignore non-problems that weren't problems */
+        if (isproblem) {
+            n = notification_create();
+            strncpy (n->problems, problems, 127);
+            n->problems[127] = 0;
+            strncpy (n->status, status, 15);
+            n->status[15] = 0;
+            n->notified = false;
+            n->isproblem = isproblem;
+            n->lastchange = time (NULL);
+            n->hostid = hostid;
+            notifylist_link (&self->notify, n);
+        }
+    }
+}
+
+void tenant_check_notification (tenant *self) {
+    if (notifylist_check_actionable (&self->notify)) {
+        var *env = var_alloc();
+        var *nenv = var_get_dict_forkey (env, "issues");
+        notification *n = notifylist_find_overdue (&self->notify, NULL);
+        while (n) {
+            char uuidstr[40];
+            uuid2str (n->hostid, uuidstr);
+            var *v = var_get_dict_forkey (nenv, uuidstr);
+            var_set_str_forkey (v, "status", n->status);
+            var_set_str_forkey (v, "problems", n->problems);
+            n->notified = true;
+            n = notifylist_find_overdue (&self->notify, n);
+        }
+        
+        /* ideally, do something with env before discarding :)*/
+        var_free (env);
+    }
+}

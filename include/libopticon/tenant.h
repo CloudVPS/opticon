@@ -4,6 +4,7 @@
 #include <libopticon/aes.h>
 #include <libopticon/watchlist.h>
 #include <libopticon/summary.h>
+#include <libopticon/notify.h>
 
 /* =============================== TYPES =============================== */
 
@@ -16,6 +17,7 @@ typedef struct tenant_s {
     uuid                 uuid; /**< The tenant's uuid */
     aeskey               key; /**< Key used for auth packets */
     watchlist            watch; /**< Tenant-specific watchers */
+    notificationlist     notify; /**< List of outstanding notifications */
     summaryinfo          summ; /**< Per tenant meter summaries */
     pthread_rwlock_t     lock; /**< Lock */
 } tenant;
@@ -45,5 +47,10 @@ tenant      *tenant_first (tenantlock);
 tenant      *tenant_next (tenant *, tenantlock);
 void         tenant_done (tenant *);
 tenant      *tenant_create (uuid tenantid, aeskey key);
+void         tenant_set_notification (tenant *t, bool isproblem,
+                                      const char *problems,
+                                      const char *status,
+                                      uuid hostid);
+void         tenant_check_notifications (tenant *t);
 
 #endif

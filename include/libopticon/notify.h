@@ -13,6 +13,7 @@ typedef struct notification_s {
     char                     problems[128];
     uuid                     hostid;
     bool                     notified;
+    bool                     isproblem;
     char                     status[16];
     time_t                   lastchange;
 } notification;
