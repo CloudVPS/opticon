@@ -343,6 +343,19 @@ $ opticon tenant-get-metadata
 }
 ```
 
+Tenants also have a storage quota. Non-admin users can get information about
+their current quota and usage metrics using the `tenant-get-quota` sub-command.
+Admin users can change a tenant's storage quota using `tenant-set-quota`:
+
+```Apex
+$ opticon tenant-get-quota 
+Tenant storage quota: 64 MB
+Current usage: 90.62 %
+```
+
+The opticon collector will remove all host data for the oldest date recorded
+when a tenant's quota usage reaches 100%.
+
 ### Navigating hosts
 
 To get an overview of the hosts being monitored by the system, use the

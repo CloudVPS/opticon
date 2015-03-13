@@ -209,6 +209,8 @@ void watchthread_handle_host (host *host) {
         if (strcmp (ostatus.str, "STALE") != 0) {
             uuid2str (host->uuid, uuidstr);
             log_info ("Status change host <%s> %s -> STALE", uuidstr, ostatus.str);
+            tenant_set_notification (host->tenant, true, "stale", "STALE",
+                                     host->uuid);
         }
         meter_set_str (m_status, 0, "STALE");
     }
@@ -324,6 +326,8 @@ void watchthread_handle_host (host *host) {
         if (strcmp (nstatus, ostatus.str) != 0) {
             uuid2str (host->uuid, uuidstr);
             log_info ("Status change host <%s> %s -> %s", uuidstr, ostatus.str, nstatus);
+            bool isproblem = (host->badness>= 80.0);
+            tenant_set_notification (host->tenant, isproblem, "", nstatus, host->uuid);
         }
     
         meter_set_str (m_status, 0, nstatus);
@@ -366,6 +370,9 @@ void overviewthread_run (thread *self) {
                 db_set_overview (APP.overviewdb, overv);
                 db_close (APP.overviewdb);
             }
+            
+            tenant_check_notification (tcrsr);
+            
             tcrsr = tenant_next (tcrsr, TENANT_LOCK_READ);
         }
         
