@@ -17,7 +17,7 @@ typedef struct tenant_s {
     uuid                 uuid; /**< The tenant's uuid */
     aeskey               key; /**< Key used for auth packets */
     watchlist            watch; /**< Tenant-specific watchers */
-    notificationlist     notify; /**< List of outstanding notifications */
+    notifylist           notify; /**< List of outstanding notifications */
     summaryinfo          summ; /**< Per tenant meter summaries */
     pthread_rwlock_t     lock; /**< Lock */
 } tenant;

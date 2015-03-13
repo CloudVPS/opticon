@@ -19,6 +19,7 @@ tenant *tenant_alloc (void) {
     memset (&res->key, 0, sizeof (aeskey));
     watchlist_init (&res->watch);
     summaryinfo_init (&res->summ);
+    notifylist_init (&res->notify);
     pthread_rwlock_init (&res->lock, NULL);
     return res;
 }
@@ -59,6 +60,7 @@ void tenant_delete (tenant *t) {
     }
     watchlist_clear (&t->watch);
     summaryinfo_clear (&t->summ);
+    notifylist_clear (&t->notify);
     pthread_rwlock_destroy (&t->lock);
     free (t);
 }
@@ -174,8 +176,8 @@ void tenant_set_notification (tenant *self, bool isproblem, const char *problems
         /* is it a problem that went away before notification? */
         if (n->isproblem && (! n->notified)) {
             notifylist_remove (&self->notify, n);
-            notification_free (n);
-            return NULL;
+            notification_delete (n);
+            return;
         }
         n->lastchange = time (NULL);
         n->notified = false;
@@ -197,6 +199,7 @@ void tenant_set_notification (tenant *self, bool isproblem, const char *problems
     }
 }
 
+/** Check and handle outstanding notifications for a tenant */
 void tenant_check_notification (tenant *self) {
     if (notifylist_check_actionable (&self->notify)) {
         var *env = var_alloc();

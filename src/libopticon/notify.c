@@ -10,8 +10,9 @@ notification *notification_create (void) {
     res->status[0] = 0;
     res->isproblem = false;
     res->notified = false;
-    res->hostid = {0ULL,0ULL};
+    res->hostid = (uuid){0ULL,0ULL};
     res->lastchange = time (NULL);
+    return res;
 }
 
 /** Free up memory for a notification object. Should be removed from its
@@ -26,6 +27,18 @@ void notification_delete (notification *self) {
   * \param self The notifylist object to initialize.
   */
 void notifylist_init (notifylist *self) {
+    self->first = self->last = NULL;
+}
+
+/** Clean up the linked list */
+void notifylist_clear (notifylist *self) {
+    notification *n, *nn;
+    n = self->first;
+    while (n) {
+        nn = n->next;
+        notification_delete (n);
+        n = nn;
+    }
     self->first = self->last = NULL;
 }
 
@@ -97,7 +110,7 @@ bool notifylist_check_actionable (notifylist *self) {
     notification *n = self->first;
     time_t tnow = time (NULL);
     while (n) {
-        if (tnow - n->lastchange > 290) return true;
+        if ((tnow - n->lastchange > 290) && (!n->notified)) return true;
         n = n->next;
     }
     return false;
@@ -122,7 +135,7 @@ notification *notifylist_find_overdue (notifylist *self, notification *n) {
     time_t tnow = time (NULL);
     
     while (n) {
-        if (n->lastchange - tnow > 120) return n;
+        if ((n->lastchange - tnow > 120) && (! n->notified)) return n;
         n = n->next;
     }
     

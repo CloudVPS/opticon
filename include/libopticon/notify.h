@@ -4,6 +4,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <libopticon/uuid.h>
+#include <time.h>
 
 /* =============================== TYPES =============================== */
 
@@ -26,8 +27,9 @@ typedef struct notifylist_s {
 /* ============================= FUNCTIONS ============================= */
 
 notification *notification_create (void);
-void          notification_delete (void);
+void          notification_delete (notification *);
 void          notifylist_init (notifylist *);
+void          notifylist_clear (notifylist *);
 void          notifylist_remove (notifylist *, notification *);
 void          notifylist_link (notifylist *, notification *);
 notification *notifylist_find (notifylist *, uuid);
