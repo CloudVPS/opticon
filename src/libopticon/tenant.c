@@ -159,13 +159,11 @@ tenant *tenant_create (uuid tenantid, aeskey key) {
 }
 
 /** Set notification status for a host */
-void tenant_set_notification (tenant *self, bool isproblem, const char *problems,
+void tenant_set_notification (tenant *self, bool isproblem,
                               const char *status, uuid hostid) {
     if (! self) return;
     notification *n = notifylist_find (&self->notify, hostid);
     if (n) {
-        strncpy (n->problems, problems, 127);
-        n->problems[127] = 0;
         strncpy (n->status, status, 15);
         n->status[15] = 0;
 
@@ -186,8 +184,6 @@ void tenant_set_notification (tenant *self, bool isproblem, const char *problems
         /* Ignore non-problems that weren't problems */
         if (isproblem) {
             n = notification_create();
-            strncpy (n->problems, problems, 127);
-            n->problems[127] = 0;
             strncpy (n->status, status, 15);
             n->status[15] = 0;
             n->notified = false;
@@ -210,7 +206,6 @@ var *tenant_check_notification (tenant *self) {
             uuid2str (n->hostid, uuidstr);
             var *v = var_get_dict_forkey (nenv, uuidstr);
             var_set_str_forkey (v, "status", n->status);
-            var_set_str_forkey (v, "problems", n->problems);
             n->notified = true;
             n = notifylist_find_overdue (&self->notify, n);
         }

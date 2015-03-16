@@ -11,7 +11,6 @@
 typedef struct notification_s {
     struct notification_s   *next;
     struct notification_s   *prev;
-    char                     problems[128];
     uuid                     hostid;
     bool                     notified;
     bool                     isproblem;

@@ -6,7 +6,6 @@
 notification *notification_create (void) {
     notification *res = (notification *) malloc (sizeof (notification));
     res->next = res->prev = NULL;
-    res->problems[0] = 0;
     res->status[0] = 0;
     res->isproblem = false;
     res->notified = false;

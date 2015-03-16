@@ -48,7 +48,6 @@ tenant      *tenant_next (tenant *, tenantlock);
 void         tenant_done (tenant *);
 tenant      *tenant_create (uuid tenantid, aeskey key);
 void         tenant_set_notification (tenant *t, bool isproblem,
-                                      const char *problems,
                                       const char *status,
                                       uuid hostid);
 var         *tenant_check_notification (tenant *t);

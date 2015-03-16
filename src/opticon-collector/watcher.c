@@ -209,8 +209,7 @@ void watchthread_handle_host (host *host) {
         if (strcmp (ostatus.str, "STALE") != 0) {
             uuid2str (host->uuid, uuidstr);
             log_info ("Status change host <%s> %s -> STALE", uuidstr, ostatus.str);
-            tenant_set_notification (host->tenant, true, "stale", "STALE",
-                                     host->uuid);
+            tenant_set_notification (host->tenant, true, "STALE", host->uuid);
         }
         meter_set_str (m_status, 0, "STALE");
     }
@@ -327,7 +326,7 @@ void watchthread_handle_host (host *host) {
             uuid2str (host->uuid, uuidstr);
             log_info ("Status change host <%s> %s -> %s", uuidstr, ostatus.str, nstatus);
             bool isproblem = (host->badness>= 80.0);
-            tenant_set_notification (host->tenant, isproblem, "", nstatus, host->uuid);
+            tenant_set_notification (host->tenant, isproblem, nstatus, host->uuid);
         }
     
         meter_set_str (m_status, 0, nstatus);
