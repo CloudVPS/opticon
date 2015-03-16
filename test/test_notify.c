@@ -25,6 +25,8 @@ void hexdump_buffer (ioport *io) {
     if (i&31) printf ("\n");
 }
 
+void breakme (void) {}
+
 int main (int argc, const char *argv[]) {
     const char *stenantid = "001b71534f4b4f1cb281cc06b134f98f";
     const char *shostid = "6f943a0d-bcd9-42fa-b0c9-6ede92f9a46a";
@@ -52,7 +54,10 @@ int main (int argc, const char *argv[]) {
     T->notify.first->lastchange = time (NULL) - 300;
     
     assert (notifylist_check_actionable (&T->notify));
-    
+    var *vnot = tenant_check_notification (T);
+    assert (vnot);
+    var_dump (vnot, stdout);
+    breakme();
     tenant_delete (T);
     return 0;
 }

@@ -200,7 +200,7 @@ void tenant_set_notification (tenant *self, bool isproblem, const char *problems
 }
 
 /** Check and handle outstanding notifications for a tenant */
-void tenant_check_notification (tenant *self) {
+var *tenant_check_notification (tenant *self) {
     if (notifylist_check_actionable (&self->notify)) {
         var *env = var_alloc();
         var *nenv = var_get_dict_forkey (env, "issues");
@@ -215,7 +215,7 @@ void tenant_check_notification (tenant *self) {
             n = notifylist_find_overdue (&self->notify, n);
         }
         
-        /* ideally, do something with env before discarding :)*/
-        var_free (env);
+        return env;
     }
+    return NULL;
 }

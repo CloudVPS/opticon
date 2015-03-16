@@ -32,4 +32,4 @@ clean:
 .SUFFIXES: .c .o
 .c.o:
 	@echo "* COMPILE $<"
-	@$(CC) $(CFLAGS) -I../include -c $<
+	@$(CC) $(CFLAGS) -g -I../include -c $<

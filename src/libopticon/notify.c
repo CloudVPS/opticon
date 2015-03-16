@@ -128,14 +128,16 @@ bool notifylist_check_actionable (notifylist *self) {
   *         round.
   */
 notification *notifylist_find_overdue (notifylist *self, notification *n) {
-    if (! n) n = self->first;
+    if (! n) {
+        n = self->first;
+    }
+    else n = n->next;
     if (! n) return NULL;
-    n = n->next;
     
     time_t tnow = time (NULL);
     
     while (n) {
-        if ((n->lastchange - tnow > 120) && (! n->notified)) return n;
+        if ((tnow - n->lastchange > 120) && (! n->notified)) return n;
         n = n->next;
     }
     

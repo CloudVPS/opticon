@@ -371,7 +371,11 @@ void overviewthread_run (thread *self) {
                 db_close (APP.overviewdb);
             }
             
-            tenant_check_notification (tcrsr);
+            var *n = tenant_check_notification (tcrsr);
+            if (n) {
+                // FIXME do something
+                var_free (n);
+            }
             
             tcrsr = tenant_next (tcrsr, TENANT_LOCK_READ);
         }
