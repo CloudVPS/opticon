@@ -337,7 +337,7 @@ saypass "$CURLINC"
 
 saypending "looking for curl library"
 echo 'int main(){}' > conftest.c
-$CC -o conftest.bin conftest.c -lmicrohttpd >/dev/null 2>&1 && LIBCURL="-lcurl"
+$CC -o conftest.bin conftest.c -lcurl >/dev/null 2>&1 && LIBCURL="-lcurl"
 rm -f conftest.bin conftest.c 
 
 if [ -z "$LIBCURL" ]; then
