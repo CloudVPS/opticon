@@ -206,6 +206,7 @@ var *tenant_check_notification (tenant *self) {
             uuid2str (n->hostid, uuidstr);
             var *v = var_get_dict_forkey (nenv, uuidstr);
             var_set_str_forkey (v, "status", n->status);
+            var_set_int_forkey (v, "isproblem", n->isproblem?1:0);
             n->notified = true;
             n = notifylist_find_overdue (&self->notify, n);
         }
