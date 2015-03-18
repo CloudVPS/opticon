@@ -46,7 +46,7 @@ int main (int argc, const char *argv[]) {
     assert (T->uuid.msb == 0x001b71534f4b4f1c);
     assert (T->uuid.lsb == 0xb281cc06b134f98f);
 
-    tenant_set_notification (T, true, "test", "ALERT", hostid);
+    tenant_set_notification (T, true, "ALERT", hostid);
     assert (notifylist_check_actionable (&T->notify) == false);
     
     /* hack timing */
