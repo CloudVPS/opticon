@@ -40,7 +40,7 @@ void packetqueue_run (thread *t) {
   */
 pktbuf *packetqueue_waitpkt (packetqueue *self) {
     while (self->rpos == self->wpos) {
-        conditional_wait_fresh (self->cond);
+        conditional_wait (self->cond);
     }
     pktbuf *res = self->buffer + self->rpos;
     self->rpos++;
