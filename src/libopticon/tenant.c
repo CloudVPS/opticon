@@ -20,7 +20,7 @@ tenant *tenant_alloc (void) {
     watchlist_init (&res->watch);
     summaryinfo_init (&res->summ);
     notifylist_init (&res->notify);
-    res->inuse = false;
+    res->inuse = 0;
     return res;
 }
 
@@ -70,7 +70,7 @@ tenant *tenant_find (uuid tenantid, tenantlock lockt) {
         nt = tenant_alloc();
         nt->uuid = tenantid;
         TENANTS.first = TENANTS.last = nt;
-        nt->inuse = true;
+        nt->inuse++;
         pthread_rwlock_unlock (&TENANTS.lock);
         return nt;
     }
@@ -89,7 +89,7 @@ tenant *tenant_find (uuid tenantid, tenantlock lockt) {
             break;
         }
     }
-    if (t) t->inuse = true;
+    if (t) t->inuse++;
     pthread_rwlock_unlock (&TENANTS.lock);
     return t;
 }
@@ -102,7 +102,7 @@ tenant *tenant_first (tenantlock lockt) {
     pthread_rwlock_rdlock (&TENANTS.lock);
     if (TENANTS.first) {
         res = TENANTS.first;
-        res->inuse = true;
+        res->inuse++;
     }
     pthread_rwlock_unlock (&TENANTS.lock);
     return res;
@@ -113,15 +113,15 @@ tenant *tenant_next (tenant *t, tenantlock lockt) {
     pthread_rwlock_rdlock (&TENANTS.lock);
     tenant *next = t->next;
     if (next) {
-        next->inuse = true;
+        next->inuse++;
     }
-    t->inuse = false;
+    t->inuse--;
     pthread_rwlock_unlock (&TENANTS.lock);
     return next;
 }
 
 void tenant_done (tenant *t) {
-    if (t) t->inuse = false;
+    if (t) t->inuse--;
 }
 
 /** Create a new tenant */

@@ -20,7 +20,7 @@ typedef struct tenant_s {
     watchlist            watch; /**< Tenant-specific watchers */
     notifylist           notify; /**< List of outstanding notifications */
     summaryinfo          summ; /**< Per tenant meter summaries */
-    bool                 inuse; /**< Lock */
+    uint8_t              inuse; /**< Lock */
 } tenant;
 
 /** List of tenants */
