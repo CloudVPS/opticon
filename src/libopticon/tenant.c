@@ -35,13 +35,23 @@ void tenant_delete (tenant *t) {
     pthread_rwlock_wrlock (&TENANTS.lock);
     
     if (t->prev) {
-        pthread_rwlock_wrlock (&t->prev->lock);
+        // Don't delete if we can't. We'll run into it again.
+        if (pthread_rwlock_trywrlock (&t->prev->lock) != 0) {
+            pthread_rwlock_unlock (&TENANTS.lock);
+            return;
+        }
         t->prev->next = t->next;
     }
     else TENANTS.first = t->next;
     
     if (t->next) {
-        pthread_rwlock_wrlock (&t->next->lock);
+        if (pthread_rwlock_trywrlock (&t->next->lock) != 0) {
+            // Back out of the deal.
+            if (t->prev) t->prev->next = t;
+            else TENANTS.first = t;
+            pthread_rwlock_unlock (&TENANTS.lock);
+            return;
+        }
         t->next->prev = t->prev;
     }
     else TENANTS.last = t->prev;
@@ -68,21 +78,27 @@ void tenant_delete (tenant *t) {
 /** Find a tenant in the list by id, or create one if it doesn't
     exist yet. */
 tenant *tenant_find (uuid tenantid, tenantlock lockt) {
-    pthread_rwlock_wrlock (&TENANTS.lock);
+    pthread_rwlock_rdlock (&TENANTS.lock);
     tenant *nt;
     tenant *t = TENANTS.first;
     if (! t) {
-        nt = tenant_alloc();
-        nt->uuid = tenantid;
-        TENANTS.first = TENANTS.last = nt;
-        if (lockt == TENANT_LOCK_READ) {
-            pthread_rwlock_rdlock (&nt->lock);
-        }
-        else {
-            pthread_rwlock_wrlock (&nt->lock);
+        pthread_rwlock_unlock (&TENANTS.lock);
+        pthread_rwlock_wrlock (&TENANTS.lock);
+        if (! TENANTS.first) {
+            nt = tenant_alloc();
+            nt->uuid = tenantid;
+            TENANTS.first = TENANTS.last = nt;
+            if (lockt == TENANT_LOCK_READ) {
+                pthread_rwlock_rdlock (&nt->lock);
+            }
+            else {
+                pthread_rwlock_wrlock (&nt->lock);
+            }
+            pthread_rwlock_unlock (&TENANTS.lock);
+            return nt;
         }
         pthread_rwlock_unlock (&TENANTS.lock);
-        return nt;
+        pthread_rwlock_rdlock (&TENANTS.lock);
     }
     while (t) {
         if (uuidcmp (t->uuid, tenantid)) break;
