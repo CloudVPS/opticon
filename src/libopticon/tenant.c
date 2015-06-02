@@ -190,7 +190,6 @@ void tenant_set_notification (tenant *self, bool isproblem,
         /* is it a problem that went away before notification? */
         if (n->isproblem && (! n->notified)) {
             notifylist_remove (&self->notify, n);
-            notification_delete (n);
             return;
         }
         n->lastchange = time (NULL);
