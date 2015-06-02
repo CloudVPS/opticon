@@ -5,7 +5,6 @@
 #include <libopticon/watchlist.h>
 #include <libopticon/summary.h>
 #include <libopticon/notify.h>
-#include <stdbool.h>
 
 /* =============================== TYPES =============================== */
 
@@ -20,7 +19,7 @@ typedef struct tenant_s {
     watchlist            watch; /**< Tenant-specific watchers */
     notifylist           notify; /**< List of outstanding notifications */
     summaryinfo          summ; /**< Per tenant meter summaries */
-    uint8_t              inuse; /**< Lock */
+    pthread_rwlock_t     lock; /**< Lock */
 } tenant;
 
 /** List of tenants */

@@ -328,6 +328,7 @@ void watchthread_handle_host (host *host) {
             bool isproblem = (host->badness>= 80.0);
             tenant_set_notification (host->tenant, isproblem, nstatus, host->uuid);
         }
+    
         meter_set_str (m_status, 0, nstatus);
     }
     
