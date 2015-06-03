@@ -792,13 +792,13 @@ var *localdb_get_hostmeta (db *d, uuid hostid) {
     sprintf (metapath, "%s%s.metadata", self->path, uuidstr);
     if (stat (metapath, &st) != 0) {
         free (metapath);
-        return NULL;
+        return var_alloc();
     }
     F = fopen (metapath, "r");
     if (! F) {
         log_debug ("Could open stat: %s\n", metapath);
         free (metapath);
-        return NULL;
+        return var_alloc();
     }
     flock (fileno (F), LOCK_SH);
     char *data = (char *) malloc (st.st_size + 16);
@@ -810,7 +810,7 @@ var *localdb_get_hostmeta (db *d, uuid hostid) {
     if (! var_parse_json (res, data)) {
         log_error ("Parse error: %s\n", parse_error());
         var_free (res);
-        res = NULL;
+        res = var_alloc();
     }
     free (metapath);
     free (data);
