@@ -59,11 +59,19 @@ void host_to_overview (host *h, var *ovdict) {
 }
 
 var *tenant_overview (tenant *t) {
+    time_t tnow = time (NULL);
     var *res = var_alloc();
     var *ov = var_get_dict_forkey (res, "overview");
     host *h = t->first;
     while (h) {
-        host_to_overview (h, ov);
+        if (tnow - h->lastmodified < 300) {
+            host_to_overview (h, ov);
+        }
+        else {
+            if (tnow - h->lastmodified > 3600) {
+                host_delete (h);
+            }
+        }
         h = h->next;
     }
     return res;
