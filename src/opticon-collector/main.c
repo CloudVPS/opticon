@@ -733,11 +733,11 @@ int main (int _argc, const char *_argv[]) {
     
     /* Preload the default meter set */
     var *defmeters = get_default_meterdef();
-    sprintf (defmeters->id, "meter");
+    strcpy (defmeters->id, "meter");
     var_link (defmeters, APP.conf);
     
     var *defsummary = get_default_summarydef();
-    sprintf (defsummary->id, "summary");
+    strcpy (defsummary->id, "summary");
     var_link (defsummary, APP.conf);
     
     /* Load other meters from meter.conf */
@@ -761,6 +761,7 @@ int main (int _argc, const char *_argv[]) {
     if (! intransport_setlistenport (APP.transport, APP.listenaddr, 
                                      APP.listenport)) {
         log_error ("Error setting listening port");
+        return 1;
     }
     if (! daemonize (APP.pidfile, argc, argv, daemon_main, APP.foreground)) {
         log_error ("Error spawning");
