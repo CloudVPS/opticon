@@ -348,10 +348,13 @@ void handle_host_metadata (host *H, var *meta) {
             const char *levels[3] = {"warning","alert","critical"};
             watchadjusttype atype = WATCHADJUST_NONE;
             const char *stype = var_get_str_forkey (v_adjust, "type");
+            
             if (! stype) break;
             if (memcmp (stype, "int", 3) == 0) atype = WATCHADJUST_UINT;
             else if (strcmp (stype, "frac") == 0) atype = WATCHADJUST_FRAC;
             else if (memcmp (stype, "str", 3) == 0) atype = WATCHADJUST_STR;
+            else break;
+            
             meterid_t mid_adjust = makeid (v_adjust->id, 0, 0);
             watchadjust *adj = adjustlist_get (&H->adjust, mid_adjust);
             adj->type = atype;
