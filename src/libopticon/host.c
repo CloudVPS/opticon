@@ -174,10 +174,16 @@ meter *host_get_meter (host *h, meterid_t id) {
     return NULL;
 }
 
+/** Function for iterating over all meters of a host fitting a
+  * specific prefix (e.g., "os/").
+  * \param h The host to inspect
+  * \param prefix The prefix to search
+  * \param The current cursor position, NULL to start a run.
+  * \return The next matching meter in the list.
+  */
 meter *host_find_prefix (host *h, meterid_t prefix, meter *prev) {
-    meter *crsr = prev ? prev : h->first;
+    meter *crsr = prev ? prev->next : h->first;
     meterid_t mask = id2mask (prefix);
-    crsr = crsr->next;
     while (crsr) {
         char meter[16];
         id2str (crsr->id &mask, meter);

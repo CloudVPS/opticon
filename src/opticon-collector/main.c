@@ -254,7 +254,12 @@ aeskey *resolve_tenantkey (uuid tenantid, uint32_t serial) {
     return res;
 }
 
-/** Handler for an auth packet */
+/** Handler for an auth packet. These are used to communicate a session
+  * key that is used by the actual metering packets. The idea behind is
+  * that it minimizes the frequency of packets that use a non-changing
+  * encryption key. It also means hosts sharing a common tenant key
+  * still send metering packets encrypted with different keys.
+  */
 void handle_auth_packet (ioport *pktbuf, uint32_t netid,
                          struct sockaddr_storage *remote) {
     authinfo *auth = ioport_unwrap_authdata (pktbuf, resolve_tenantkey);
@@ -396,7 +401,9 @@ void handle_host_metadata (host *H, var *meta) {
     }
 }
 
-/** Handler for a meter packet */
+/** Handler for a meter packet. Decodes the packet and updates the
+  * associated host data.
+  */
 void handle_meter_packet (ioport *pktbuf, uint32_t netid) {
     session *S = NULL;
     ioport *unwrap;
@@ -633,6 +640,7 @@ int set_confpath (const char *i, const char *v) {
     return 1;
 }
 
+/** Set up meter configuration file path */
 int set_mconfpath (const char *i, const char *v) {
     APP.mconfpath = v;
     return 1;
