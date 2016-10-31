@@ -19,12 +19,12 @@ typedef struct conf_reloader_s {
 
 /** Useful access to application parts and configuration */
 typedef struct appcontext_s {
-    codec           *codec;
-    db              *db;
-    db              *writedb;
-    db              *overviewdb;
-    db              *reaperdb;
-    packetqueue     *queue;
+    codec           *codec; /* The packet codec */
+    db              *db; /* Generic db handle */
+    db              *writedb; /* Handle for host writes to db */
+    db              *overviewdb; /* Handle for overview thread */
+    db              *reaperdb; /* Handle for reaper thread */
+    packetqueue     *queue; 
     intransport     *transport;
     watchlist        watch;
     thread          *watchthread;

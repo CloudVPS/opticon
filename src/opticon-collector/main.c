@@ -349,12 +349,16 @@ void handle_host_metadata (host *H, var *meta) {
             watchadjusttype atype = WATCHADJUST_NONE;
             const char *stype = var_get_str_forkey (v_adjust, "type");
             
+            /* Skip unspecified type */
             if (! stype) break;
+            
+            /* Figure out adjustment type */
             if (memcmp (stype, "int", 3) == 0) atype = WATCHADJUST_UINT;
             else if (strcmp (stype, "frac") == 0) atype = WATCHADJUST_FRAC;
             else if (memcmp (stype, "str", 3) == 0) atype = WATCHADJUST_STR;
             else break;
             
+            /* Fill in the data */
             meterid_t mid_adjust = makeid (v_adjust->id, 0, 0);
             watchadjust *adj = adjustlist_get (&H->adjust, mid_adjust);
             adj->type = atype;
@@ -362,29 +366,28 @@ void handle_host_metadata (host *H, var *meta) {
                 var *v_level = var_get_dict_forkey (v_adjust, levels[i]);
                 switch (atype) {
                     case WATCHADJUST_UINT:
-                        /* +1 needed to skip WATCHADJUST_NONE */
-                        adj->adjust[i+1].data.u64 =
+                        adj->adjust[i].data.u64 =
                             var_get_int_forkey (v_level, "val");
                         break;
                     
                     case WATCHADJUST_FRAC:
-                        adj->adjust[i+1].data.frac =
+                        adj->adjust[i].data.frac =
                             var_get_double_forkey (v_level, "val");
                         break;
                     
                     case WATCHADJUST_STR:
-                        tstr = adj->adjust[i+1].data.str.str;
+                        tstr = adj->adjust[i].data.str.str;
                         strncpy (tstr,
                                  var_get_str_forkey(v_level, "val"), 127);
                         tstr[127] = 0;
                         break;
                     
                     default:
-                        adj->adjust[i+1].weight = 0.0;
+                        adj->adjust[i].weight = 0.0;
                         break;
                 }
                 if (atype != WATCHADJUST_NONE) {
-                    adj->adjust[i+1].weight =
+                    adj->adjust[i].weight =
                         var_get_double_forkey (v_level, "weight");
                 }
             }
@@ -571,7 +574,8 @@ int daemon_main (int argc, const char *argv[]) {
     log_info ("--- Opticon-collector ready for action ---");
 
     tenant_init();
-    
+
+    /* Restore sessionlist from disk, if available. */    
     var *slist = db_get_global (APP.db, "sessions");
     if (slist) {
         log_info ("Restoring sessions");
@@ -580,7 +584,6 @@ int daemon_main (int argc, const char *argv[]) {
         session_expire (time(NULL) - 905);
     }
     
-    
     /* Set up threads */
     APP.queue = packetqueue_create (1024, APP.transport);
     APP.reloader = conf_reloader_create();
@@ -588,8 +591,10 @@ int daemon_main (int argc, const char *argv[]) {
     APP.overviewthread = thread_create (overviewthread_run, NULL);
     APP.reaperthread = thread_create (reaper_run, NULL);
     
+    /* Set up signals */
     signal (SIGHUP, daemon_sighup_handler);
     
+    /* Loop de loop */
     while (1) {
         pktbuf *pkt = packetqueue_waitpkt (APP.queue);
         if (pkt) {
@@ -725,13 +730,16 @@ int main (int _argc, const char *_argv[]) {
     const char **argv = cliopt_dispatch (CLIOPT, _argv, &argc);
     if (! argv) return 1;
 
+    /* Set up configuration handlers */
     opticonf_add_reaction ("network", conf_network);
     opticonf_add_reaction ("database/path", conf_db_path);
     opticonf_add_reaction ("meter", conf_meters);
     
+    /* Create global transport and packet codec */
     APP.transport = intransport_create_udp();
     APP.codec = codec_create_pkt();
 
+    /* Set up configuration dictionary */
     APP.conf = var_alloc();
     
     /* Preload the default meter set */
@@ -739,33 +747,37 @@ int main (int _argc, const char *_argv[]) {
     strcpy (defmeters->id, "meter");
     var_link (defmeters, APP.conf);
     
+    /* Preload the default summary set */
     var *defsummary = get_default_summarydef();
     strcpy (defsummary->id, "summary");
     var_link (defsummary, APP.conf);
     
-    /* Load other meters from meter.conf */
+    /* Merge other meters from meter.conf */
     if (! var_load_json (defmeters, APP.mconfpath)) {
         log_error ("Error loading %s: %s\n",
                    APP.confpath, parse_error());
         return 1;
     }
     
-    /* Now load the main config in the same var space */
+    /* Now merge the main config in the same var space */
     if (! var_load_json (APP.conf, APP.confpath)) {
         log_error ("Error loading %s: %s\n",
                    APP.confpath, parse_error());
         return 1;
     }
     
+    /* Process the configuration file */
     opticonf_handle_config (APP.conf);
-    
     log_info ("Configuration loaded");
     
+    /* Start listening */
     if (! intransport_setlistenport (APP.transport, APP.listenaddr, 
                                      APP.listenport)) {
         log_error ("Error setting listening port");
         return 1;
     }
+    
+    /* Fork away */
     if (! daemonize (APP.pidfile, argc, argv, daemon_main, APP.foreground)) {
         log_error ("Error spawning");
         return 1;

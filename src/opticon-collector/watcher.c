@@ -421,8 +421,8 @@ void overviewthread_run (thread *self) {
 /** Main loop for the watchthread. This thread is responsible for
   * going over the current status of each host, looking at its values
   * through the different watcher definitions, raising the alert level
-  * if needed. During the same loop, per tenant summary information is
-  * also gathered.
+  * if needed, then writing the current record to the database.
+  * During the same loop, per tenant summary information is also gathered.
   */
 void watchthread_run (thread *self) {
     tenant *tcrsr;
