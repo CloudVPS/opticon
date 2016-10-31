@@ -95,11 +95,12 @@ double calculate_badness (meter *m, meterwatch *w,
     if (m->count >= SZ_EMPTY_ARRAY) cnt = 0;
     
     for (int i=0; i<((m->count)?m->count:1); ++i) {
+        if (w->trigger == WATCH_NONE) continue;
         switch (w->tp) {
             case WATCH_FRAC_GT:
                 fracadj = w->dat.frac;
                 if (adj && adj->type == WATCHADJUST_FRAC) {
-                    if (adj->adjust[w->trigger].weight > 0.0001) {
+                    if (adj->adjust[w->trigger-1].weight > 0.0001) {
                         fracadj = adj->adjust[w->trigger].data.frac;
                         weight = adj->adjust[w->trigger].weight;
                     }
@@ -113,7 +114,7 @@ double calculate_badness (meter *m, meterwatch *w,
             case WATCH_FRAC_LT:
                 fracadj = w->dat.frac;
                 if (adj && adj->type == WATCHADJUST_FRAC) {
-                    if (adj->adjust[w->trigger].weight > 0.0001) {
+                    if (adj->adjust[w->trigger-1].weight > 0.0001) {
                         fracadj = adj->adjust[w->trigger].data.frac;
                         weight = adj->adjust[w->trigger].weight;
                     }
@@ -127,7 +128,7 @@ double calculate_badness (meter *m, meterwatch *w,
             case WATCH_UINT_GT:
                 intadj = w->dat.u64;
                 if (adj && adj->type == WATCHADJUST_UINT) {
-                    if (adj->adjust[w->trigger].weight > 0.0001) {
+                    if (adj->adjust[w->trigger-1].weight > 0.0001) {
                         intadj = adj->adjust[w->trigger].data.u64;
                         weight = adj->adjust[w->trigger].weight;
                     }
@@ -141,7 +142,7 @@ double calculate_badness (meter *m, meterwatch *w,
             case WATCH_UINT_LT:
                 intadj = w->dat.u64;
                 if (adj && adj->type == WATCHADJUST_UINT) {
-                    if (adj->adjust[w->trigger].weight > 0.0001) {
+                    if (adj->adjust[w->trigger-1].weight > 0.0001) {
                         intadj = adj->adjust[w->trigger].data.u64;
                         weight = adj->adjust[w->trigger].weight;
                     }
@@ -155,7 +156,7 @@ double calculate_badness (meter *m, meterwatch *w,
             case WATCH_COUNT:
                 intadj = w->dat.u64;
                 if (adj && adj->type == WATCHADJUST_UINT) {
-                    if (adj->adjust[w->trigger].weight > 0.0001) {
+                    if (adj->adjust[w->trigger-1].weight > 0.0001) {
                         intadj = adj->adjust[w->trigger].data.u64;
                         weight = adj->adjust[w->trigger].weight;
                     }
@@ -169,7 +170,7 @@ double calculate_badness (meter *m, meterwatch *w,
             case WATCH_STR_MATCH:
                 stradj = w->dat.str.str;
                 if (adj && adj->type == WATCHADJUST_STR) {
-                    if (adj->adjust[w->trigger].weight > 0.0001) {
+                    if (adj->adjust[w->trigger-1].weight > 0.0001) {
                         stradj = adj->adjust[w->trigger].data.str.str;
                         weight = adj->adjust[w->trigger].weight;
                     }
