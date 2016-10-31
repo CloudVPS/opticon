@@ -64,7 +64,8 @@ void tokencache_init (void) {
   * \param token The token to look up
   * \return The cached result (negative results will have a userlevel
   *         of AUTH_GUEST and a tenantid of nil) or NULL if no cached
-  *         data was found.
+  *         data was found. This is a newly allocated, copied, object
+  *         that has to be freed by the requester.
   */
 tcache_node *tokencache_lookup (const char *token) {
     uint32_t hash = hash_token (token);
