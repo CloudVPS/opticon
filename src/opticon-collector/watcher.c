@@ -16,6 +16,12 @@
 
 watchlist WATCHERS;
 
+/** Create overview data for a host's current metering. This picks up
+  * any non-array data that isn't part of proc/ or os/.
+  * \param h The host to create the data for.
+  * \param ovdict The dictionary to store the data in. Will create a
+  *               node with the host's uuid as its id.
+  */
 void host_to_overview (host *h, var *ovdict) {
     char mid[16];
     char uuidstr[40];
@@ -58,6 +64,10 @@ void host_to_overview (host *h, var *ovdict) {
     }
 }
 
+/** Create overview data for all hosts belonging to a tenant.
+  * \param t The tenant to handle.
+  * \return Dictionary object indexed by host uuid.
+  */
 var *tenant_overview (tenant *t) {
     time_t tnow = time (NULL);
     var *res = var_alloc();
@@ -190,7 +200,8 @@ double calculate_badness (meter *m, meterwatch *w,
 }
 
 /** Inspect a host's metering data to determine its current status
-  * and problems, then write it to disk.
+  * and problems, then write it to disk. Also goes over the host's
+  * meter data to add summary info.
   * \param host The host to inspect.
   */
 void watchthread_handle_host (host *host) {
@@ -362,6 +373,11 @@ void watchthread_handle_host (host *host) {
     pthread_rwlock_unlock (&host->lock);
 }
 
+/** Thread generating per-tenant overviews of current host stats.
+  * This saves the API server from querying the current record of
+  * each individual host when showing an index of services with
+  * relevant status data.
+  */
 void overviewthread_run (thread *self) {
     tenant *tcrsr;
     time_t t_now = time (NULL);
@@ -402,7 +418,12 @@ void overviewthread_run (thread *self) {
     }
 }
 
-/** Main loop for the watchthread */
+/** Main loop for the watchthread. This thread is responsible for
+  * going over the current status of each host, looking at its values
+  * through the different watcher definitions, raising the alert level
+  * if needed. During the same loop, per tenant summary information is
+  * also gathered.
+  */
 void watchthread_run (thread *self) {
     tenant *tcrsr;
     host *hcrsr;
@@ -413,9 +434,12 @@ void watchthread_run (thread *self) {
     t_next += 60;
     
     while (1) {
+        /* Go over all tenants */
         tcrsr = tenant_first (TENANT_LOCK_READ);
         while (tcrsr) {
             summaryinfo_start_round (&tcrsr->summ);
+            
+            /* Go over all the tenant's hosts */
             hcrsr = tcrsr->first;
             while (hcrsr) {
                 watchthread_handle_host (hcrsr);
