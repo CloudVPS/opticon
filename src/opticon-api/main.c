@@ -111,7 +111,9 @@ int handle_openstack_token (req_context *ctx) {
         var *res_tenants = var_get_array_forkey (res, "tenants");
         ctx->auth_tenantcount = var_get_count (res_tenants);
         if (ctx->auth_tenantcount) {
-            ctx->auth_tenants = (uuid *) malloc (ctx->auth_tenantcount * sizeof (uuid));
+            ctx->auth_tenants =
+                (uuid *) malloc (ctx->auth_tenantcount * sizeof (uuid));
+                
             i = 0;
             var *crsr = res_tenants->value.arr.first;
             while (crsr) {
