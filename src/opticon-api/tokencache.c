@@ -25,6 +25,9 @@ void tcache_node_clear (tcache_node *self, int dofree) {
     self->userlevel = AUTH_GUEST;
 }
 
+/** Create a full copy of a cache node. Prevents concurrency issues
+  * with cache invalidation.
+  */
 tcache_node *tcache_node_copy (tcache_node *src) {
     tcache_node *dst = (tcache_node *) malloc (sizeof (tcache_node));
     if (! dst) return dst;
@@ -38,6 +41,7 @@ tcache_node *tcache_node_copy (tcache_node *src) {
     return dst;
 }
 
+/** Deallocate a tcache_node. */
 void tcache_node_free (tcache_node *self) {
     tcache_node_clear (self, 1);
     free (self);
