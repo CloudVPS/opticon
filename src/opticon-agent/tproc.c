@@ -1,5 +1,3 @@
-#ifdef OS_LINUX
-
 #include <strings.h>
 #include <string.h>
 #include <stdio.h>
@@ -173,5 +171,3 @@ void procrun_newround (procrun *p) {
 	
 	p->ti_start = p->ti_now;
 }
-
-#endif
