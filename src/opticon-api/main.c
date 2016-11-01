@@ -86,6 +86,11 @@ int answer_to_connection (void *cls, struct MHD_Connection *connection,
     return MHD_YES;
 }
 
+/** Calls keystone to check on an openstack token, adds associated
+  * tenant list to request context.
+  * \param ctx The request context.
+  * \return 1 on success, 0 on failure.
+  */
 int handle_openstack_token (req_context *ctx) {
     if (! ctx->openstack_token) return 0;
     if (! ctx->openstack_token[0]) return 0;
